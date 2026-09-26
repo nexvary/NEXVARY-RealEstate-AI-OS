@@ -112,6 +112,10 @@ export default function TenantBilling({ token, locale }: { token: string; locale
     () => accounts.filter((item) => !selectedInvoice || item.currency === selectedInvoice.currency),
     [accounts, selectedInvoice],
   );
+  const pendingSelectedTransfer = useMemo(
+    () => transfers.find((item) => item.invoice_id === selectedInvoiceId && item.status === "pending") || null,
+    [transfers, selectedInvoiceId],
+  );
 
   useEffect(() => {
     if (selectedInvoice && !eligibleAccounts.some((item) => item.id === selectedBankId)) {
@@ -238,7 +242,7 @@ export default function TenantBilling({ token, locale }: { token: string; locale
       <button className="primaryButton" disabled={busy || !selectedBankId}><UploadCloud size={16}/>{ar ? "إرسال للتحقق" : "Submit for verification"}</button>
     </form>}
 
-    {selectedInvoice?.status === "pending_verification" && <div className="pendingVerification panel">
+    {(selectedInvoice?.status === "pending_verification" || pendingSelectedTransfer) && <div className="pendingVerification panel">
       <Clock3 size={20}/>
       <div><strong>{ar ? "التحويل قيد المراجعة" : "Transfer awaiting verification"}</strong><span>{ar ? "لن يتغير الاشتراك إلى مدفوع قبل اعتماد مسؤول المنصة للتحويل." : "The subscription will not be marked paid until a platform administrator approves the transfer."}</span></div>
     </div>}
