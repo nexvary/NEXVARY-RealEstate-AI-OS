@@ -1,5 +1,5 @@
 #define MyAppName "NEXVARY RealEstate AI OS"
-#define MyAppVersion "1.0.0-stage170"
+#define MyAppVersion "1.1.0"
 #define MyAppPublisher "NEXVARY"
 #define MyAppURL "https://nexvary.com/"
 #define MyAppExeName "NEXVARY-RealEstate-AI-OS.exe"
@@ -15,7 +15,7 @@ DefaultDirName={autopf}\NEXVARY\RealEstate AI OS
 DefaultGroupName=NEXVARY RealEstate AI OS
 DisableProgramGroupPage=yes
 OutputDir=..\installer
-OutputBaseFilename=NEXVARY-RealEstate-AI-OS-Stage170-Setup
+OutputBaseFilename=NEXVARY-RealEstate-AI-OS-v1.1.0-Setup
 SetupIconFile=nexvary-realestate.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 Compression=lzma2/ultra64
