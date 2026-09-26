@@ -233,7 +233,7 @@ def export_backup(
 
     data: dict[str, Any] = {
         "format": "NEXVARY-RealEstate-AI-OS-backup",
-        "version": "1.1.0-platform-admin",
+        "version": "1.3.0",
         "exported_at": datetime.now(timezone.utc).isoformat(),
         "tenant": row_dict(tenant),
         "tables": {},
