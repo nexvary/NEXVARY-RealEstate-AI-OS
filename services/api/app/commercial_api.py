@@ -65,6 +65,15 @@ def next_period(start: datetime, cycle: BillingCycle) -> datetime:
     return start + timedelta(days=30)
 
 
+def is_past(value: datetime | None, now: datetime | None = None) -> bool:
+    if value is None:
+        return False
+    reference = now or utcnow()
+    candidate = value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+    reference = reference if reference.tzinfo else reference.replace(tzinfo=timezone.utc)
+    return candidate < reference
+
+
 def normalize_domain(value: str | None) -> str | None:
     if value in (None, ""):
         return None
@@ -542,7 +551,7 @@ def reject_bank_transfer(
     transfer.reviewed_at = now
     transfer.rejection_reason = (payload.rejection_reason or "Bank transfer could not be verified.").strip()
     if invoice.status == InvoiceStatus.pending_verification:
-        invoice.status = InvoiceStatus.overdue if invoice.due_at and invoice.due_at < now else InvoiceStatus.open
+        invoice.status = InvoiceStatus.overdue if is_past(invoice.due_at, now) else InvoiceStatus.open
 
     db.add(
         AuditEvent(
