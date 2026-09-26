@@ -10,7 +10,7 @@ settings = get_settings()
 validate_production_secrets()
 app = FastAPI(
     title=settings.app_name,
-    version="0.2.0",
+    version="0.3.0",
     description="Transactional real-estate core with AI/RAG orchestration boundaries.",
 )
 
@@ -31,7 +31,7 @@ def create_dev_schema() -> None:
 
 @app.get("/health")
 def health() -> dict[str, str]:
-    return {"status": "ok", "service": "nexvary-realestate-api", "version": "0.2.0"}
+    return {"status": "ok", "service": "nexvary-realestate-api", "version": "0.3.0"}
 
 
 app.include_router(router)
