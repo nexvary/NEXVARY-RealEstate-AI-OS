@@ -9,3 +9,5 @@ pytest>=8.4,<9
 httpx>=0.28,<1
 PyJWT>=2.10,<3
 cryptography>=45,<47
+beautifulsoup4>=4.12,<5
+defusedxml>=0.7,<1
