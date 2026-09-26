@@ -167,6 +167,17 @@ export default function CommercialAdmin({
     }
   }
 
+  async function seedDefaults() {
+    setBusy("seed"); setError(""); setNotice("");
+    try {
+      const seeded = await api<Template[]>("/api/v1/platform/templates/seed-defaults", token, { method: "POST" });
+      setTemplates(seeded);
+      setNotice(ar ? "تم تجهيز قوالب Starter وProfessional وEnterprise." : "Starter, Professional and Enterprise templates are ready.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Template seeding failed");
+    } finally { setBusy(""); }
+  }
+
   async function createTemplate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
@@ -316,7 +327,7 @@ export default function CommercialAdmin({
     </div>
 
     <section className="panel templateShelf">
-      <div className="panelHead"><h2>{ar ? "القوالب الجاهزة" : "Tenant templates"}</h2><span>{templates.length}</span></div>
+      <div className="panelHead"><div><h2>{ar ? "القوالب الجاهزة" : "Tenant templates"}</h2><span>{templates.length}</span></div><button className="secondaryButton" onClick={() => void seedDefaults()} disabled={busy==="seed"}>{busy==="seed" ? <RefreshCw size={15} className="spin"/> : <Sparkles size={15}/>} {ar ? "القوالب الافتراضية" : "Default templates"}</button></div>
       <div className="templateCards">{templates.map(t=><article key={t.id}><span className="templateColor" style={{background:t.primary_color}}/><div><strong>{t.name}</strong><span>{t.plan} · {t.max_users} users · {t.max_units.toLocaleString()} units</span><small>{t.integration_providers.join(" · ") || "No integrations"}</small></div><b>{Number(t.subscription_amount).toLocaleString()} {t.subscription_currency}/{t.billing_cycle}</b></article>)}</div>
     </section>
   </section>;
