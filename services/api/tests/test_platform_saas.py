@@ -172,3 +172,33 @@ def test_integration_secrets_are_encrypted_and_never_returned():
     )
     assert listed.status_code == 200
     assert "super-secret-token" not in listed.text
+
+
+
+def test_custom_domain_resolves_public_white_label_branding():
+    headers = claim_platform_admin()
+    tenants = client.get("/api/v1/platform/tenants", headers=headers).json()
+    tenant_a = next(item for item in tenants if item["slug"] == "company-a")
+
+    updated = client.patch(
+        f"/api/v1/platform/tenants/{tenant_a['id']}",
+        headers=headers,
+        json={
+            "custom_domain": "CRM.COMPANY-A.TEST.",
+            "brand_name": "Company A White Label",
+            "primary_color": "#224466",
+            "logo_data_url": "data:image/png;base64,aGVsbG8=",
+            "powered_by_nexvary": False,
+        },
+    )
+    assert updated.status_code == 200
+    assert updated.json()["custom_domain"] == "crm.company-a.test"
+
+    resolved = client.get("/api/v1/branding/resolve?host=crm.company-a.test:443")
+    assert resolved.status_code == 200
+    body = resolved.json()
+    assert body["tenant_slug"] == "company-a"
+    assert body["brand_name"] == "Company A White Label"
+    assert body["primary_color"] == "#224466"
+    assert body["powered_by_nexvary"] is False
+    assert body["logo_data_url"].startswith("data:image/png;base64,")
