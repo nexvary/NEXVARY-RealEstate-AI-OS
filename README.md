@@ -4,7 +4,7 @@ AI-first, multi-tenant, white-label operating system for real-estate companies.
 
 ## Current release line
 
-**v1.2.0 — Platform Admin + White-Label SEO Autopilot**
+**v1.3.0 — Commercial White-Label Platform + SEO Autopilot**
 
 The product now has two isolated workspaces:
 
@@ -35,6 +35,8 @@ The platform separates exact transactional data from probabilistic AI:
 - Encrypted per-tenant integration credentials for providers such as WhatsApp, OpenAI and Telegram.
 - Platform-admin authentication separated from company-user authentication.
 - Upgrade path: an existing first-company owner can claim the Platform Admin console once.
+- Commercial subscription lifecycle and invoice ledger per tenant.
+- Reusable tenant templates and one-click complete company provisioning.
 
 ## Company workspace
 
@@ -55,6 +57,8 @@ The platform separates exact transactional data from probabilistic AI:
 - Company logo, social links and custom white-label identity.
 - Integrated White-Label SEO Autopilot workspace copied from the preserved original SEO project.
 - Technical audits, bounded crawling, Search Console read-only analytics, opportunities, schema, performance and guarded dry-run SEO planning.
+- Per-tenant WhatsApp channel configuration with encrypted credentials and readiness checks.
+- Transactional SEO page generation for real-estate projects and units, including price and availability sourced directly from the database.
 
 ## Security boundaries
 
@@ -113,3 +117,4 @@ docker compose up -d postgres redis n8n
 - [Stage 170 release](docs/STAGE_170_RELEASE.md)
 - [Platform Admin & White Label](docs/PLATFORM_ADMIN.md)
 - [White-Label SEO Autopilot integration](docs/SEO_AUTOPILOT_INTEGRATION.md)
+- [Commercial Platform v1.3.0](docs/COMMERCIAL_PLATFORM_V13.md)
