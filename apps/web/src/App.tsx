@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   CircleDollarSign,
   Home,
+  Globe2,
   Info,
   KeyRound,
   Languages,
@@ -135,6 +136,15 @@ type TenantSettings = {
   plan: string;
   lifecycle: string;
 };
+
+type BrandingResolve = {
+  tenant_slug: string;
+  brand_name: string;
+  primary_color: string;
+  logo_data_url?: string | null;
+  powered_by_nexvary: boolean;
+};
+
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://localhost:8000" : window.location.origin);
 const SESSION_KEY = "nexvary-realestate-session";
@@ -357,6 +367,16 @@ function FirstRunSetup({
   const dir = locale === "ar" ? "rtl" : "ltr";
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [domainBrand, setDomainBrand] = useState<BrandingResolve | null>(null);
+
+  useEffect(() => {
+    const host = window.location.hostname.toLowerCase();
+    if (!host || host === "localhost" || host === "127.0.0.1") return;
+    fetch(`${API_URL}/api/v1/branding/resolve?host=${encodeURIComponent(host)}`)
+      .then((response) => response.ok ? response.json() : null)
+      .then((data: BrandingResolve | null) => setDomainBrand(data))
+      .catch(() => undefined);
+  }, []);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -460,7 +480,7 @@ function Login({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          tenant_slug: String(data.get("tenant_slug") || "").trim().toLowerCase(),
+          tenant_slug: domainBrand?.tenant_slug || String(data.get("tenant_slug") || "").trim().toLowerCase(),
           email: String(data.get("email") || "").trim(),
           password: String(data.get("password") || ""),
         }),
@@ -485,9 +505,11 @@ function Login({
       <div className="loginGlow" />
       <section className="loginCard">
         <div className="loginBrand">
-          <div className="logoMark">N</div>
+          <div className={domainBrand?.logo_data_url ? "logoMark tenantLogoMark" : "logoMark"} style={domainBrand ? ({ "--tenant-primary": domainBrand.primary_color } as CSSProperties) : undefined}>
+            {domainBrand?.logo_data_url ? <img src={domainBrand.logo_data_url} alt={domainBrand.brand_name}/> : "N"}
+          </div>
           <div>
-            <strong>{t.brand}</strong>
+            <strong>{domainBrand?.brand_name || t.brand}</strong>
             <span>{t.subtitle}</span>
           </div>
         </div>
@@ -496,7 +518,11 @@ function Login({
         <h1>{t.loginTitle}</h1>
         <p>{t.loginText}</p>
         <form onSubmit={submit}>
-          <label>{t.companySlug}<input name="tenant_slug" required autoComplete="organization" placeholder="company-name" /></label>
+          {domainBrand ? (
+            <div className="resolvedDomainBadge"><Globe2 size={15}/><span>{domainBrand.brand_name}</span></div>
+          ) : (
+            <label>{t.companySlug}<input name="tenant_slug" required autoComplete="organization" placeholder="company-name" /></label>
+          )}
           <label>{t.email}<input name="email" type="email" required autoComplete="username" /></label>
           <label>{t.password}<input name="password" type="password" required minLength={10} autoComplete="current-password" /></label>
           {error && <div className="formError">{error}</div>}
@@ -568,7 +594,7 @@ function ControlCenter({
         onSignOut();
         return;
       }
-      setSystemError(t.systemError);
+      setSystemError(typed.message || t.systemError);
     } finally {
       setBusy(false);
     }
