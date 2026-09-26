@@ -95,7 +95,7 @@ test("white-label SEO workspace creates site, schema and guarded dry-run plan", 
 
   await page.getByPlaceholder("اسم الموقع").fill("SEO E2E Site");
   await page.getByPlaceholder("https://company.com").fill("https://example.com");
-  await page.getByRole("button", { name: "إضافة" }).click();
+  await page.getByRole("button", { name: "إضافة", exact: true }).click();
   await expect(page.getByText("SEO E2E Site")).toBeVisible();
 
   await page.getByRole("button", { name: "Schema" }).click();
