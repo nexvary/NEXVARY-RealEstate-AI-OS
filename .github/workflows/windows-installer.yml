@@ -2,7 +2,7 @@ name: Windows v1.1.0 Platform Admin Installer
 
 on:
   push:
-    branches: ["release/stage-170-windows"]
+    branches: ["release/stage-170-windows", "white-label/**"]
   pull_request:
     branches: ["main"]
   workflow_dispatch:
