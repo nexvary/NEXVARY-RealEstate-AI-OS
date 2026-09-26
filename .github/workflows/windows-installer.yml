@@ -54,6 +54,42 @@ jobs:
           pytest -q
           Set-Location ../..
 
+      - name: Run UI Release Gate
+        shell: pwsh
+        run: |
+          Set-Location apps/web
+          npx playwright install chromium
+          Set-Location ../..
+
+          Remove-Item "services/api/e2e-stage170.db" -ErrorAction SilentlyContinue
+          $env:APP_ENV = "desktop"
+          $env:DATABASE_URL = "sqlite:///./e2e-stage170.db"
+          $env:NEXVARY_STATIC_DIR = (Resolve-Path "apps/web/dist").Path
+          $env:JWT_SECRET = "stage170-release-gate-jwt-secret-at-least-32-bytes-long"
+          $env:PLATFORM_ADMIN_KEY = "stage170-release-gate-platform-key-at-least-32-bytes"
+          $server = Start-Process python -ArgumentList "-m","uvicorn","app.main:app","--host","127.0.0.1","--port","8000","--log-level","warning" -WorkingDirectory "services/api" -PassThru
+
+          try {
+            $ready = $false
+            for ($i = 0; $i -lt 60; $i++) {
+              try {
+                $health = Invoke-RestMethod -Uri "http://127.0.0.1:8000/health" -TimeoutSec 1
+                if ($health.status -eq "ok") { $ready = $true; break }
+              } catch {}
+              Start-Sleep -Milliseconds 500
+            }
+            if (-not $ready) { throw "E2E server did not become ready" }
+
+            Set-Location apps/web
+            $env:E2E_BASE_URL = "http://127.0.0.1:8000"
+            npm run test:e2e
+            if ($LASTEXITCODE -ne 0) { throw "UI Release Gate failed" }
+            Set-Location ../..
+          }
+          finally {
+            Stop-Process -Id $server.Id -Force -ErrorAction SilentlyContinue
+          }
+
       - name: Generate application icon
         shell: pwsh
         run: python desktop/build_icon.py
