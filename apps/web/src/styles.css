@@ -227,3 +227,84 @@ button:disabled { opacity: .6; cursor: wait; }
   .loginCard { padding: 22px; }
   .loginLanguage { top: 14px; inset-inline-end: 14px; }
 }
+
+
+/* Stage 170 operational modules */
+.sidebar nav { overflow-y: auto; padding-inline-end: 4px; scrollbar-width: thin; }
+.opsPage { display: flex; flex-direction: column; gap: 14px; }
+.opsHeading { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.opsHeading h2 { margin: 4px 0 0; font-size: 21px; }
+.opsGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.opsForm { display: flex; flex-direction: column; gap: 11px; }
+.opsForm.wideForm { grid-column: 1 / -1; }
+.opsTitle { display: flex; align-items: center; gap: 9px; color: #79d0ff; margin-bottom: 4px; }
+.opsForm label { display: flex; flex-direction: column; gap: 6px; color: #8da5ba; font-size: 11px; }
+.opsForm input, .opsForm select, .opsForm textarea,
+.conversationPane input, .conversationPane select, .messageComposer input {
+  width: 100%;
+  border: 1px solid #1d3a54;
+  border-radius: 10px;
+  background: #06101c;
+  color: #edf7ff;
+  padding: 10px 11px;
+  outline: 0;
+}
+.opsForm textarea { resize: vertical; min-height: 92px; }
+.opsForm input:focus, .opsForm select:focus, .opsForm textarea:focus,
+.conversationPane input:focus, .conversationPane select:focus, .messageComposer input:focus {
+  border-color: #279ceb;
+  box-shadow: 0 0 0 3px rgba(39,156,235,.1);
+}
+.inlineFields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.opsList { min-height: 220px; }
+.compactTable { display: flex; flex-direction: column; overflow-x: auto; }
+.compactRow { display: grid; grid-template-columns: minmax(95px,1fr) minmax(100px,1fr) 70px 100px minmax(125px,1fr) 100px; gap: 12px; align-items: center; min-width: 720px; padding: 11px 0; border-top: 1px solid #15283b; color: #8ba0b4; font-size: 11px; }
+.compactRow strong { color: #edf7ff; font-size: 12px; }
+.knowledgeGrid { display: grid; grid-template-columns: minmax(320px,.8fr) minmax(0,1.2fr); gap: 14px; }
+.hitList { display: flex; flex-direction: column; gap: 9px; margin-top: 16px; max-height: 530px; overflow: auto; }
+.hitList article { border: 1px solid #183249; background: #071522; border-radius: 12px; padding: 13px; }
+.hitList article strong { display: block; margin: 4px 0 7px; font-size: 12px; }
+.hitList article p { margin: 0; color: #8ba2b6; line-height: 1.7; font-size: 11px; }
+.hitList article small { display: block; margin-top: 8px; color: #5d7c96; }
+.docRow { display: grid; grid-template-columns: 28px minmax(180px,1fr) 120px 100px; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid #15283b; color: #7f98ad; font-size: 11px; }
+.docRow strong { color: #eaf4ff; font-size: 12px; }
+.tasksLayout { display: grid; grid-template-columns: minmax(300px,.7fr) minmax(0,1.3fr); gap: 14px; }
+.taskRow { display: grid; grid-template-columns: minmax(0,1fr) auto auto; gap: 10px; align-items: center; padding: 12px 0; border-top: 1px solid #15283b; }
+.taskRow > div { display: flex; flex-direction: column; gap: 5px; }
+.taskRow strong { font-size: 12px; }
+.taskRow div span { color: #6f899f; font-size: 10px; line-height: 1.5; }
+.inboxLayout { display: grid; grid-template-columns: 310px minmax(0,1fr); gap: 14px; min-height: 540px; }
+.conversationPane { padding: 15px; }
+.conversationPane form { display: flex; flex-direction: column; gap: 8px; }
+.conversationList { display: flex; flex-direction: column; gap: 5px; margin-top: 14px; max-height: 360px; overflow: auto; }
+.conversationItem { width: 100%; border: 1px solid transparent; border-radius: 10px; background: #07121e; color: #b6c7d7; padding: 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: start; }
+.conversationItem span { color: #6c859b; font-size: 10px; }
+.conversationItem.active { border-color: #235678; background: #0c2437; }
+.messagePane { display: flex; flex-direction: column; min-height: 540px; }
+.messageList { flex: 1; overflow: auto; display: flex; flex-direction: column; gap: 9px; padding: 4px 0 16px; }
+.messageBubble { max-width: min(72%,620px); border: 1px solid #17324a; background: #091827; border-radius: 14px; padding: 10px 12px; align-self: flex-start; }
+[dir="rtl"] .messageBubble { align-self: flex-end; }
+.messageBubble.outbound { align-self: flex-end; background: #102846; border-color: #23577c; }
+[dir="rtl"] .messageBubble.outbound { align-self: flex-start; }
+.messageBubble.internal { background: #251f3d; border-color: #44366d; }
+.messageBubble small { color: #6d8da7; font-size: 9px; }
+.messageBubble p { margin: 5px 0 0; color: #dce9f4; line-height: 1.6; font-size: 12px; }
+.messageComposer { display: grid; grid-template-columns: minmax(0,1fr) 48px; gap: 8px; border-top: 1px solid #173047; padding-top: 12px; }
+.teamRow { display: grid; grid-template-columns: 42px minmax(0,1fr) auto; gap: 11px; align-items: center; padding: 11px 0; border-top: 1px solid #15283b; }
+.teamRow > div:nth-child(2) { display: flex; flex-direction: column; gap: 4px; }
+.teamRow strong { font-size: 12px; }
+.teamRow div span { color: #6f879b; font-size: 10px; }
+
+@media (max-width: 980px) {
+  .mobileNav { display: flex; overflow-x: auto; grid-template-columns: none; }
+  .mobileNav button { min-width: 54px; flex: 1 0 54px; }
+  .opsGrid, .knowledgeGrid, .tasksLayout, .inboxLayout { grid-template-columns: 1fr; }
+  .conversationPane { max-height: 420px; }
+}
+@media (max-width: 620px) {
+  .inlineFields { grid-template-columns: 1fr; }
+  .docRow { grid-template-columns: 28px minmax(150px,1fr); }
+  .docRow span { display: none; }
+  .taskRow { grid-template-columns: minmax(0,1fr) auto; }
+  .taskRow .secondaryButton { grid-column: 1 / -1; width: 100%; }
+}
