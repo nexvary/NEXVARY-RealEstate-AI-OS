@@ -1,4 +1,5 @@
 import os
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -18,10 +19,18 @@ from .workspace_api import router as workspace_router
 settings = get_settings()
 validate_production_secrets()
 
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    if settings.app_env in {"development", "test", "desktop"}:
+        Base.metadata.create_all(bind=engine)
+    yield
+
+
 app = FastAPI(
     title=settings.app_name,
-    version="0.4.0",
-    description="Transactional real-estate core with AI/RAG orchestration boundaries.",
+    version="1.0.0-stage170",
+    description="Transactional real-estate core with grounded AI/RAG orchestration boundaries.",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -32,16 +41,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-@app.on_event("startup")
-def create_schema() -> None:
-    if settings.app_env in {"development", "test", "desktop"}:
-        Base.metadata.create_all(bind=engine)
-
-
 @app.get("/health")
 def health() -> dict[str, str]:
-    return {"status": "ok", "service": "nexvary-realestate-api", "version": "0.4.0"}
+    return {"status": "ok", "service": "nexvary-realestate-api", "version": "1.0.0-stage170"}
 
 
 app.include_router(setup_router)
