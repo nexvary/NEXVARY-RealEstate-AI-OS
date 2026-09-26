@@ -96,15 +96,15 @@ test("white-label SEO workspace creates site, schema and guarded dry-run plan", 
   await page.getByPlaceholder("اسم الموقع").fill("SEO E2E Site");
   await page.getByPlaceholder("https://company.com").fill("https://example.com");
   await page.getByRole("button", { name: "إضافة", exact: true }).click();
-  await expect(page.getByText("SEO E2E Site")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "SEO E2E Site", exact: true })).toBeVisible();
 
-  await page.getByRole("button", { name: "Schema" }).click();
+  await page.getByRole("button", { name: "Schema", exact: true }).click();
   const schemaForm = page.locator("form").filter({ hasText: "Structured Data" });
   await schemaForm.locator('textarea[name="visible_data"]').fill('{"name":"SEO E2E Realty","url":"https://example.com"}');
   await schemaForm.getByRole("button", { name: "بناء Schema" }).click();
   await expect(page.locator(".codeResult pre")).toContainText('"@type": "Organization"');
 
-  await page.getByRole("button", { name: "Autopilot" }).click();
+  await page.getByRole("button", { name: "Autopilot", exact: true }).click();
   const planForm = page.locator("form").filter({ hasText: "خطة تغيير محمية" });
   await planForm.locator('select[name="action"]').selectOption("title_change");
   await planForm.locator('textarea[name="before"]').fill('{"title":"Old"}');
