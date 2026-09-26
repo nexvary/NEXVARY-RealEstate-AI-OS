@@ -36,7 +36,12 @@ def configure_runtime() -> tuple[Path, Path]:
 
     jwt_secret = values.get("jwt_secret") or secrets.token_urlsafe(64)
     platform_admin_key = values.get("platform_admin_key") or secrets.token_urlsafe(48)
-    values = {"jwt_secret": jwt_secret, "platform_admin_key": platform_admin_key}
+    integration_master_secret = values.get("integration_master_secret") or secrets.token_urlsafe(64)
+    values = {
+        "jwt_secret": jwt_secret,
+        "platform_admin_key": platform_admin_key,
+        "integration_master_secret": integration_master_secret,
+    }
     secrets_file.write_text(json.dumps(values, indent=2), encoding="utf-8")
 
     database_file = data_dir / "realestate.db"
@@ -46,6 +51,7 @@ def configure_runtime() -> tuple[Path, Path]:
     os.environ["DATABASE_URL"] = f"sqlite:///{database_file.as_posix()}"
     os.environ["JWT_SECRET"] = jwt_secret
     os.environ["PLATFORM_ADMIN_KEY"] = platform_admin_key
+    os.environ["INTEGRATION_MASTER_SECRET"] = integration_master_secret
     os.environ["NEXVARY_STATIC_DIR"] = str(static_dir)
     os.environ.setdefault("DEFAULT_LOCALE", "ar")
 
