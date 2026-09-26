@@ -9,7 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from .commercial_models import BillingInvoice, SaaSSubscription, SEOEntityPage, TenantTemplate, WhatsAppChannel
+from .commercial_models import BankTransferSubmission, BillingInvoice, SaaSSubscription, SEOEntityPage, TenantTemplate, WhatsAppChannel
 from .db import get_db
 from .finance_models import BrokerCommission, Contract, Installment
 from .models import (
@@ -219,6 +219,7 @@ def export_backup(
         "tenant_integrations": (TenantIntegration, {"encrypted_secret_json"}),
         "saas_subscriptions": (SaaSSubscription, set()),
         "billing_invoices": (BillingInvoice, set()),
+        "bank_transfer_submissions": (BankTransferSubmission, set()),
         "whatsapp_channels": (WhatsAppChannel, set()),
         "seo_entity_pages": (SEOEntityPage, set()),
         "seo_projects": (SEOProject, set()),
@@ -233,7 +234,7 @@ def export_backup(
 
     data: dict[str, Any] = {
         "format": "NEXVARY-RealEstate-AI-OS-backup",
-        "version": "1.3.0",
+        "version": "1.4.0",
         "exported_at": datetime.now(timezone.utc).isoformat(),
         "tenant": row_dict(tenant),
         "tables": {},

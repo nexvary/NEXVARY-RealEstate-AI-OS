@@ -1,3 +1,4 @@
+import BankTransferAdmin from "./BankTransferAdmin";
 import { FormEvent, useEffect, useState } from "react";
 import { Building2, CheckCircle2, CircleDollarSign, FileText, Layers3, Plus, RefreshCw, Sparkles } from "lucide-react";
 
@@ -118,7 +119,7 @@ export default function CommercialAdmin({
           billing_cycle: String(data.get("billing_cycle") || "monthly"),
           amount: Number(data.get("amount") || 0),
           currency: String(data.get("currency") || "USD"),
-          provider: "manual",
+          provider: "bank_transfer",
           cancel_at_period_end: data.get("cancel_at_period_end") === "on",
           apply_plan_limits: data.get("apply_plan_limits") === "on",
         }),
@@ -287,7 +288,7 @@ export default function CommercialAdmin({
         <div><strong>{invoice.number}</strong><span>{invoice.description || "—"} · {new Date(invoice.created_at).toLocaleDateString(ar?"ar-EG":"en-US")}</span></div>
         <b>{Number(invoice.total).toLocaleString()} {invoice.currency}</b>
         <span className={`statusBadge status-${invoice.status}`}>{invoice.status}</span>
-        <div className="invoiceActions">{invoice.status !== "paid" && invoice.status !== "void" && <button className="secondaryButton" onClick={() => void invoiceAction(invoice.id,"pay")}>{ar?"مدفوعة":"Paid"}</button>}{invoice.status !== "paid" && invoice.status !== "void" && <button className="secondaryButton" onClick={() => void invoiceAction(invoice.id,"void")}>{ar?"إلغاء":"Void"}</button>}</div>
+        <div className="invoiceActions">{invoice.status !== "paid" && invoice.status !== "void" && <button className="secondaryButton" onClick={() => void invoiceAction(invoice.id,"void")}>{ar?"إلغاء":"Void"}</button>}</div>
       </article>)}</div>
     </section>}
 
@@ -330,5 +331,7 @@ export default function CommercialAdmin({
       <div className="panelHead"><div><h2>{ar ? "القوالب الجاهزة" : "Tenant templates"}</h2><span>{templates.length}</span></div><button className="secondaryButton" onClick={() => void seedDefaults()} disabled={busy==="seed"}>{busy==="seed" ? <RefreshCw size={15} className="spin"/> : <Sparkles size={15}/>} {ar ? "القوالب الافتراضية" : "Default templates"}</button></div>
       <div className="templateCards">{templates.map(t=><article key={t.id}><span className="templateColor" style={{background:t.primary_color}}/><div><strong>{t.name}</strong><span>{t.plan} · {t.max_users} users · {t.max_units.toLocaleString()} units</span><small>{t.integration_providers.join(" · ") || "No integrations"}</small></div><b>{Number(t.subscription_amount).toLocaleString()} {t.subscription_currency}/{t.billing_cycle}</b></article>)}</div>
     </section>
+
+    <BankTransferAdmin token={token} locale={locale} />
   </section>;
 }

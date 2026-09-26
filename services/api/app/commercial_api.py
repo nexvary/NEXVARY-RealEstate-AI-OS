@@ -16,9 +16,12 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from .commercial_models import (
+    BankTransferStatus,
+    BankTransferSubmission,
     BillingCycle,
     BillingInvoice,
     InvoiceStatus,
+    PlatformBankAccount,
     SaaSSubscription,
     SEOEntityPage,
     SEOPageStatus,
@@ -60,6 +63,15 @@ def next_period(start: datetime, cycle: BillingCycle) -> datetime:
         day = min(start.day, 28)
         return start.replace(year=year, month=month, day=day)
     return start + timedelta(days=30)
+
+
+def is_past(value: datetime | None, now: datetime | None = None) -> bool:
+    if value is None:
+        return False
+    reference = now or utcnow()
+    candidate = value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+    reference = reference if reference.tzinfo else reference.replace(tzinfo=timezone.utc)
+    return candidate < reference
 
 
 def normalize_domain(value: str | None) -> str | None:
@@ -107,7 +119,7 @@ class SubscriptionUpsert(BaseModel):
     billing_cycle: BillingCycle = BillingCycle.monthly
     amount: Decimal = Field(default=0, ge=0)
     currency: str = Field(default="USD", min_length=3, max_length=8)
-    provider: str = Field(default="manual", min_length=2, max_length=60)
+    provider: str = Field(default="bank_transfer", min_length=2, max_length=60)
     external_subscription_id: str | None = Field(default=None, max_length=180)
     cancel_at_period_end: bool = False
     apply_plan_limits: bool = True
@@ -136,6 +148,89 @@ class InvoiceRead(BaseModel):
     due_at: datetime | None
     paid_at: datetime | None
     created_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+
+class BankAccountCreate(BaseModel):
+    label: str = Field(min_length=2, max_length=160)
+    bank_name: str = Field(min_length=2, max_length=180)
+    account_name: str = Field(min_length=2, max_length=180)
+    account_number: str | None = Field(default=None, max_length=120)
+    iban: str | None = Field(default=None, max_length=120)
+    swift_code: str | None = Field(default=None, max_length=40)
+    branch_name: str | None = Field(default=None, max_length=180)
+    currency: str = Field(default="EGP", min_length=3, max_length=8)
+    instructions: str | None = Field(default=None, max_length=2000)
+    is_active: bool = True
+    is_default: bool = False
+
+
+class BankAccountUpdate(BaseModel):
+    label: str | None = Field(default=None, min_length=2, max_length=160)
+    bank_name: str | None = Field(default=None, min_length=2, max_length=180)
+    account_name: str | None = Field(default=None, min_length=2, max_length=180)
+    account_number: str | None = Field(default=None, max_length=120)
+    iban: str | None = Field(default=None, max_length=120)
+    swift_code: str | None = Field(default=None, max_length=40)
+    branch_name: str | None = Field(default=None, max_length=180)
+    currency: str | None = Field(default=None, min_length=3, max_length=8)
+    instructions: str | None = Field(default=None, max_length=2000)
+    is_active: bool | None = None
+    is_default: bool | None = None
+
+
+class BankAccountRead(BaseModel):
+    id: str
+    label: str
+    bank_name: str
+    account_name: str
+    account_number: str | None
+    iban: str | None
+    swift_code: str | None
+    branch_name: str | None
+    currency: str
+    instructions: str | None
+    is_active: bool
+    is_default: bool
+    created_at: datetime
+    updated_at: datetime
+
+
+class BankTransferCreate(BaseModel):
+    bank_account_id: str
+    amount: Decimal = Field(gt=0)
+    currency: str = Field(min_length=3, max_length=8)
+    sender_name: str = Field(min_length=2, max_length=180)
+    sender_bank: str | None = Field(default=None, max_length=180)
+    transfer_reference: str = Field(min_length=3, max_length=180)
+    transferred_at: datetime
+    receipt_url: str | None = Field(default=None, max_length=2048)
+    receipt_note: str | None = Field(default=None, max_length=2000)
+
+
+class BankTransferReview(BaseModel):
+    rejection_reason: str | None = Field(default=None, max_length=2000)
+
+
+class BankTransferRead(BaseModel):
+    id: str
+    tenant_id: str
+    invoice_id: str
+    bank_account_id: str
+    status: BankTransferStatus
+    amount: Decimal
+    currency: str
+    sender_name: str
+    sender_bank: str | None
+    transfer_reference: str
+    transferred_at: datetime
+    receipt_url: str | None
+    receipt_note: str | None
+    reviewed_by: str | None
+    reviewed_at: datetime | None
+    rejection_reason: str | None
+    created_at: datetime
+    updated_at: datetime
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -244,6 +339,25 @@ class SEOPageRead(BaseModel):
     updated_at: datetime
 
 
+def bank_account_read(row: PlatformBankAccount) -> BankAccountRead:
+    return BankAccountRead(
+        id=row.id,
+        label=row.label,
+        bank_name=row.bank_name,
+        account_name=row.account_name,
+        account_number=row.account_number,
+        iban=row.iban,
+        swift_code=row.swift_code,
+        branch_name=row.branch_name,
+        currency=row.currency,
+        instructions=row.instructions,
+        is_active=bool(row.is_active),
+        is_default=bool(row.is_default),
+        created_at=row.created_at,
+        updated_at=row.updated_at,
+    )
+
+
 def subscription_read(row: SaaSSubscription) -> SubscriptionRead:
     return SubscriptionRead(
         id=row.id,
@@ -281,6 +395,286 @@ def template_read(row: TenantTemplate) -> TemplateRead:
         billing_cycle=row.billing_cycle,
         created_at=row.created_at,
     )
+
+
+@platform_router.get("/bank-accounts", response_model=list[BankAccountRead])
+def platform_bank_accounts(
+    _: PlatformContext = Depends(get_platform_context),
+    db: Session = Depends(get_db),
+) -> list[BankAccountRead]:
+    rows = db.scalars(
+        select(PlatformBankAccount).order_by(
+            PlatformBankAccount.is_default.desc(),
+            PlatformBankAccount.created_at.asc(),
+        )
+    ).all()
+    return [bank_account_read(row) for row in rows]
+
+
+@platform_router.post("/bank-accounts", response_model=BankAccountRead, status_code=201)
+def create_platform_bank_account(
+    payload: BankAccountCreate,
+    _: PlatformContext = Depends(get_platform_context),
+    db: Session = Depends(get_db),
+) -> BankAccountRead:
+    if payload.is_default:
+        db.query(PlatformBankAccount).update({PlatformBankAccount.is_default: 0})
+    row = PlatformBankAccount(
+        label=payload.label.strip(),
+        bank_name=payload.bank_name.strip(),
+        account_name=payload.account_name.strip(),
+        account_number=payload.account_number.strip() if payload.account_number else None,
+        iban=payload.iban.replace(" ", "").upper() if payload.iban else None,
+        swift_code=payload.swift_code.strip().upper() if payload.swift_code else None,
+        branch_name=payload.branch_name.strip() if payload.branch_name else None,
+        currency=payload.currency.upper(),
+        instructions=payload.instructions,
+        is_active=1 if payload.is_active else 0,
+        is_default=1 if payload.is_default else 0,
+    )
+    if not row.account_number and not row.iban:
+        raise HTTPException(status_code=422, detail="Bank account requires account number or IBAN")
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    return bank_account_read(row)
+
+
+@platform_router.patch("/bank-accounts/{bank_account_id}", response_model=BankAccountRead)
+def update_platform_bank_account(
+    bank_account_id: str,
+    payload: BankAccountUpdate,
+    _: PlatformContext = Depends(get_platform_context),
+    db: Session = Depends(get_db),
+) -> BankAccountRead:
+    row = db.scalar(select(PlatformBankAccount).where(PlatformBankAccount.id == bank_account_id))
+    if row is None:
+        raise HTTPException(status_code=404, detail="Bank account not found")
+    values = payload.model_dump(exclude_unset=True)
+    if values.get("is_default") is True:
+        db.query(PlatformBankAccount).filter(PlatformBankAccount.id != row.id).update({PlatformBankAccount.is_default: 0})
+    for key, value in values.items():
+        if key == "currency" and value:
+            value = value.upper()
+        if key == "iban" and value:
+            value = value.replace(" ", "").upper()
+        if key == "swift_code" and value:
+            value = value.upper()
+        if key in {"is_active", "is_default"} and value is not None:
+            value = 1 if value else 0
+        setattr(row, key, value)
+    if not row.account_number and not row.iban:
+        raise HTTPException(status_code=422, detail="Bank account requires account number or IBAN")
+    db.commit()
+    db.refresh(row)
+    return bank_account_read(row)
+
+
+@platform_router.get("/bank-transfers", response_model=list[BankTransferRead])
+def platform_bank_transfers(
+    status: BankTransferStatus | None = None,
+    _: PlatformContext = Depends(get_platform_context),
+    db: Session = Depends(get_db),
+) -> list[BankTransferSubmission]:
+    query = select(BankTransferSubmission)
+    if status is not None:
+        query = query.where(BankTransferSubmission.status == status)
+    return list(db.scalars(query.order_by(BankTransferSubmission.created_at.desc())).all())
+
+
+@platform_router.post("/bank-transfers/{transfer_id}/approve", response_model=BankTransferRead)
+def approve_bank_transfer(
+    transfer_id: str,
+    ctx: PlatformContext = Depends(get_platform_context),
+    db: Session = Depends(get_db),
+) -> BankTransferSubmission:
+    transfer = db.scalar(select(BankTransferSubmission).where(BankTransferSubmission.id == transfer_id))
+    if transfer is None:
+        raise HTTPException(status_code=404, detail="Bank transfer not found")
+    if transfer.status != BankTransferStatus.pending:
+        raise HTTPException(status_code=409, detail="Bank transfer has already been reviewed")
+    invoice = db.scalar(select(BillingInvoice).where(BillingInvoice.id == transfer.invoice_id))
+    if invoice is None:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    if invoice.status in {InvoiceStatus.paid, InvoiceStatus.void}:
+        raise HTTPException(status_code=409, detail="Invoice cannot accept this transfer")
+
+    now = utcnow()
+    transfer.status = BankTransferStatus.approved
+    transfer.reviewed_by = ctx.email
+    transfer.reviewed_at = now
+    transfer.rejection_reason = None
+    invoice.status = InvoiceStatus.paid
+    invoice.paid_at = now
+
+    if invoice.subscription_id:
+        subscription = db.scalar(select(SaaSSubscription).where(SaaSSubscription.id == invoice.subscription_id))
+        if subscription:
+            subscription.status = SubscriptionStatus.active
+            subscription.current_period_start = now
+            subscription.current_period_end = next_period(now, subscription.billing_cycle)
+
+    db.add(
+        AuditEvent(
+            tenant_id=transfer.tenant_id,
+            actor=f"platform:{ctx.email}",
+            action="billing.bank_transfer.approve",
+            entity_type="billing_invoice",
+            entity_id=invoice.id,
+            details=f"transfer={transfer.id};reference={transfer.transfer_reference}",
+        )
+    )
+    db.commit()
+    db.refresh(transfer)
+    return transfer
+
+
+@platform_router.post("/bank-transfers/{transfer_id}/reject", response_model=BankTransferRead)
+def reject_bank_transfer(
+    transfer_id: str,
+    payload: BankTransferReview,
+    ctx: PlatformContext = Depends(get_platform_context),
+    db: Session = Depends(get_db),
+) -> BankTransferSubmission:
+    transfer = db.scalar(select(BankTransferSubmission).where(BankTransferSubmission.id == transfer_id))
+    if transfer is None:
+        raise HTTPException(status_code=404, detail="Bank transfer not found")
+    if transfer.status != BankTransferStatus.pending:
+        raise HTTPException(status_code=409, detail="Bank transfer has already been reviewed")
+    invoice = db.scalar(select(BillingInvoice).where(BillingInvoice.id == transfer.invoice_id))
+    if invoice is None:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+
+    now = utcnow()
+    transfer.status = BankTransferStatus.rejected
+    transfer.reviewed_by = ctx.email
+    transfer.reviewed_at = now
+    transfer.rejection_reason = (payload.rejection_reason or "Bank transfer could not be verified.").strip()
+    if invoice.status == InvoiceStatus.pending_verification:
+        invoice.status = InvoiceStatus.overdue if is_past(invoice.due_at, now) else InvoiceStatus.open
+
+    db.add(
+        AuditEvent(
+            tenant_id=transfer.tenant_id,
+            actor=f"platform:{ctx.email}",
+            action="billing.bank_transfer.reject",
+            entity_type="billing_invoice",
+            entity_id=invoice.id,
+            details=f"transfer={transfer.id};reason={transfer.rejection_reason[:300]}",
+        )
+    )
+    db.commit()
+    db.refresh(transfer)
+    return transfer
+
+
+@tenant_router.get("/billing/bank-accounts", response_model=list[BankAccountRead])
+def tenant_bank_accounts(
+    ctx: RequestContext = Depends(get_request_context),
+    db: Session = Depends(get_db),
+) -> list[BankAccountRead]:
+    del ctx
+    rows = db.scalars(
+        select(PlatformBankAccount)
+        .where(PlatformBankAccount.is_active == 1)
+        .order_by(PlatformBankAccount.is_default.desc(), PlatformBankAccount.created_at.asc())
+    ).all()
+    return [bank_account_read(row) for row in rows]
+
+
+@tenant_router.get("/billing/invoices", response_model=list[InvoiceRead])
+def tenant_billing_invoices(
+    ctx: RequestContext = Depends(manage_users),
+    db: Session = Depends(get_db),
+) -> list[BillingInvoice]:
+    return list(
+        db.scalars(
+            select(BillingInvoice)
+            .where(BillingInvoice.tenant_id == ctx.tenant_id)
+            .order_by(BillingInvoice.created_at.desc())
+        ).all()
+    )
+
+
+@tenant_router.get("/billing/bank-transfers", response_model=list[BankTransferRead])
+def tenant_bank_transfers(
+    ctx: RequestContext = Depends(manage_users),
+    db: Session = Depends(get_db),
+) -> list[BankTransferSubmission]:
+    return list(
+        db.scalars(
+            select(BankTransferSubmission)
+            .where(BankTransferSubmission.tenant_id == ctx.tenant_id)
+            .order_by(BankTransferSubmission.created_at.desc())
+        ).all()
+    )
+
+
+@tenant_router.post("/billing/invoices/{invoice_id}/bank-transfer", response_model=BankTransferRead, status_code=201)
+def submit_bank_transfer(
+    invoice_id: str,
+    payload: BankTransferCreate,
+    ctx: RequestContext = Depends(manage_users),
+    db: Session = Depends(get_db),
+) -> BankTransferSubmission:
+    invoice = tenant_record(db, BillingInvoice, invoice_id, ctx.tenant_id)
+    if invoice.status in {InvoiceStatus.paid, InvoiceStatus.void}:
+        raise HTTPException(status_code=409, detail="Invoice does not accept bank transfer")
+    existing = db.scalar(
+        select(BankTransferSubmission).where(
+            BankTransferSubmission.invoice_id == invoice.id,
+            BankTransferSubmission.status.in_([BankTransferStatus.pending, BankTransferStatus.approved]),
+        )
+    )
+    if existing:
+        raise HTTPException(status_code=409, detail="Invoice already has a transfer awaiting or completing verification")
+    bank = db.scalar(
+        select(PlatformBankAccount).where(
+            PlatformBankAccount.id == payload.bank_account_id,
+            PlatformBankAccount.is_active == 1,
+        )
+    )
+    if bank is None:
+        raise HTTPException(status_code=404, detail="Bank account not found")
+    currency = payload.currency.upper()
+    if currency != invoice.currency.upper() or currency != bank.currency.upper():
+        raise HTTPException(status_code=422, detail="Transfer currency must match invoice and bank account currency")
+    if payload.amount.quantize(Decimal("0.01")) != invoice.total.quantize(Decimal("0.01")):
+        raise HTTPException(status_code=422, detail="Transfer amount must equal invoice total")
+
+    transfer = BankTransferSubmission(
+        tenant_id=ctx.tenant_id,
+        invoice_id=invoice.id,
+        bank_account_id=bank.id,
+        amount=payload.amount,
+        currency=currency,
+        sender_name=payload.sender_name.strip(),
+        sender_bank=payload.sender_bank.strip() if payload.sender_bank else None,
+        transfer_reference=payload.transfer_reference.strip(),
+        transferred_at=payload.transferred_at,
+        receipt_url=payload.receipt_url,
+        receipt_note=payload.receipt_note,
+        submitted_by_user_id=ctx.user_id,
+    )
+    invoice.status = InvoiceStatus.pending_verification
+    db.add(transfer)
+    db.add(
+        AuditEvent(
+            tenant_id=ctx.tenant_id,
+            actor=ctx.actor,
+            action="billing.bank_transfer.submit",
+            entity_type="billing_invoice",
+            entity_id=invoice.id,
+            details=f"reference={transfer.transfer_reference};amount={transfer.amount} {transfer.currency}",
+        )
+    )
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="This bank transfer reference has already been submitted") from exc
+    db.refresh(transfer)
+    return transfer
 
 
 @platform_router.get("/tenants/{tenant_id}/subscription", response_model=SubscriptionRead | None)

@@ -31,9 +31,16 @@ class BillingCycle(str, enum.Enum):
 class InvoiceStatus(str, enum.Enum):
     draft = "draft"
     open = "open"
+    pending_verification = "pending_verification"
     paid = "paid"
     void = "void"
     overdue = "overdue"
+
+
+class BankTransferStatus(str, enum.Enum):
+    pending = "pending"
+    approved = "approved"
+    rejected = "rejected"
 
 
 class WhatsAppChannelStatus(str, enum.Enum):
@@ -63,7 +70,7 @@ class SaaSSubscription(Base):
     current_period_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     current_period_end: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     cancel_at_period_end: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    provider: Mapped[str] = mapped_column(String(60), default="manual", nullable=False)
+    provider: Mapped[str] = mapped_column(String(60), default="bank_transfer", nullable=False)
     external_subscription_id: Mapped[str | None] = mapped_column(String(180))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
@@ -149,4 +156,50 @@ class SEOEntityPage(Base):
     status: Mapped[SEOPageStatus] = mapped_column(Enum(SEOPageStatus), default=SEOPageStatus.ready, nullable=False, index=True)
     source_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     generated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class PlatformBankAccount(Base):
+    __tablename__ = "platform_bank_accounts"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uuid_str)
+    label: Mapped[str] = mapped_column(String(160), nullable=False)
+    bank_name: Mapped[str] = mapped_column(String(180), nullable=False)
+    account_name: Mapped[str] = mapped_column(String(180), nullable=False)
+    account_number: Mapped[str | None] = mapped_column(String(120))
+    iban: Mapped[str | None] = mapped_column(String(120), index=True)
+    swift_code: Mapped[str | None] = mapped_column(String(40))
+    branch_name: Mapped[str | None] = mapped_column(String(180))
+    currency: Mapped[str] = mapped_column(String(8), default="EGP", nullable=False, index=True)
+    instructions: Mapped[str | None] = mapped_column(Text)
+    is_active: Mapped[int] = mapped_column(Integer, default=1, nullable=False, index=True)
+    is_default: Mapped[int] = mapped_column(Integer, default=0, nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class BankTransferSubmission(Base):
+    __tablename__ = "bank_transfer_submissions"
+    __table_args__ = (
+        UniqueConstraint("bank_account_id", "transfer_reference", name="uq_bank_transfer_reference"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uuid_str)
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
+    invoice_id: Mapped[str] = mapped_column(ForeignKey("billing_invoices.id"), nullable=False, index=True)
+    bank_account_id: Mapped[str] = mapped_column(ForeignKey("platform_bank_accounts.id"), nullable=False, index=True)
+    status: Mapped[BankTransferStatus] = mapped_column(Enum(BankTransferStatus), default=BankTransferStatus.pending, nullable=False, index=True)
+    amount: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)
+    currency: Mapped[str] = mapped_column(String(8), nullable=False)
+    sender_name: Mapped[str] = mapped_column(String(180), nullable=False)
+    sender_bank: Mapped[str | None] = mapped_column(String(180))
+    transfer_reference: Mapped[str] = mapped_column(String(180), nullable=False, index=True)
+    transferred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    receipt_url: Mapped[str | None] = mapped_column(String(2048))
+    receipt_note: Mapped[str | None] = mapped_column(Text)
+    submitted_by_user_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"), index=True)
+    reviewed_by: Mapped[str | None] = mapped_column(String(255))
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    rejection_reason: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

@@ -4,7 +4,7 @@ AI-first, multi-tenant, white-label operating system for real-estate companies.
 
 ## Current release line
 
-**v1.3.0 — Commercial White-Label Platform + SEO Autopilot**
+**v1.4.0 — Commercial White-Label Platform + Verified Bank Transfer Billing**
 
 The product now has two isolated workspaces:
 
@@ -36,6 +36,8 @@ The platform separates exact transactional data from probabilistic AI:
 - Platform-admin authentication separated from company-user authentication.
 - Upgrade path: an existing first-company owner can claim the Platform Admin console once.
 - Commercial subscription lifecycle and invoice ledger per tenant.
+- Verified bank-transfer subscription payments; no online card-payment gateway.
+- Tenant payment submission + Platform Admin approval/rejection workflow.
 - Reusable tenant templates and one-click complete company provisioning.
 
 ## Company workspace
@@ -118,3 +120,4 @@ docker compose up -d postgres redis n8n
 - [Platform Admin & White Label](docs/PLATFORM_ADMIN.md)
 - [White-Label SEO Autopilot integration](docs/SEO_AUTOPILOT_INTEGRATION.md)
 - [Commercial Platform v1.3.0](docs/COMMERCIAL_PLATFORM_V13.md)
+- [Verified Bank Transfer Billing v1.4.0](docs/BANK_TRANSFER_BILLING_V14.md)

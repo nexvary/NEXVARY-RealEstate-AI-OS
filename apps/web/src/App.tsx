@@ -3,6 +3,7 @@ import { AICopilotOps, FinanceOps, InventoryOps, InboxOps, KnowledgeOps, Setting
 import PlatformAdminCenter from "./PlatformAdmin";
 import SEOAutopilot from "./SEOAutopilot";
 import WhatsAppOps from "./CommercialOps";
+import TenantBilling from "./TenantBilling";
 
 import {
   ArrowLeft,
@@ -35,7 +36,7 @@ import {
 } from "lucide-react";
 
 type Locale = "ar" | "en";
-type View = "dashboard" | "leads" | "inventory" | "manage" | "appointments" | "finance" | "inbox" | "whatsapp" | "knowledge" | "tasks" | "team" | "settings" | "ai" | "seo" | "about";
+type View = "dashboard" | "leads" | "inventory" | "manage" | "appointments" | "finance" | "billing" | "inbox" | "whatsapp" | "knowledge" | "tasks" | "team" | "settings" | "ai" | "seo" | "about";
 
 type User = {
   id: string;
@@ -161,6 +162,7 @@ const copy = {
     manage: "إدارة المخزون",
     appointments: "المعاينات",
     finance: "العقود والمالية",
+    billing: "الاشتراك والتحويل البنكي",
     inbox: "المحادثات",
     whatsapp: "قنوات WhatsApp",
     knowledge: "قاعدة المعرفة",
@@ -225,6 +227,7 @@ const copy = {
     manage: "Inventory Management",
     appointments: "Viewings",
     finance: "Contracts & Finance",
+    billing: "Subscription & Bank Transfer",
     inbox: "Inbox",
     whatsapp: "WhatsApp Channels",
     knowledge: "Knowledge Base",
@@ -289,6 +292,7 @@ const navItems = [
   { id: "manage" as View, icon: ClipboardCheck, key: "manage" as const },
   { id: "appointments" as View, icon: CalendarDays, key: "appointments" as const },
   { id: "finance" as View, icon: CircleDollarSign, key: "finance" as const },
+  { id: "billing" as View, icon: CircleDollarSign, key: "billing" as const },
   { id: "inbox" as View, icon: MessageSquare, key: "inbox" as const },
   { id: "whatsapp" as View, icon: MessageSquare, key: "whatsapp" as const },
   { id: "knowledge" as View, icon: BookOpen, key: "knowledge" as const },
@@ -575,6 +579,7 @@ function ControlCenter({
 
   const t = copy[locale];
   const dir = locale === "ar" ? "rtl" : "ltr";
+  const visibleNavItems = navItems.filter((item) => item.id !== "billing" || ["owner", "admin"].includes(session.user.role));
   const currentKey = navItems.find((item) => item.id === view)?.key ?? "dashboard";
   const title = useMemo(() => t[currentKey], [currentKey, t]);
 
@@ -669,7 +674,7 @@ function ControlCenter({
           <span>{t.subtitle}</span>
         </div>
         <nav>
-          {navItems.map(({ id, icon: Icon, key }) => (
+          {visibleNavItems.map(({ id, icon: Icon, key }) => (
             <button key={id} className={view === id ? "navItem active" : "navItem"} onClick={() => setView(id)}>
               <Icon size={19} />
               <span>{t[key]}</span>
@@ -800,6 +805,7 @@ function ControlCenter({
 
           {view === "manage" && <InventoryOps token={session.access_token} locale={locale} />}
           {view === "finance" && <FinanceOps token={session.access_token} locale={locale} />}
+          {view === "billing" && <TenantBilling token={session.access_token} locale={locale} />}
           {view === "inbox" && <InboxOps token={session.access_token} locale={locale} />}
           {view === "whatsapp" && <WhatsAppOps token={session.access_token} locale={locale} />}
           {view === "knowledge" && <KnowledgeOps token={session.access_token} locale={locale} />}
@@ -857,7 +863,7 @@ function ControlCenter({
       </main>
 
       <div className="mobileNav">
-        {navItems.filter((item) => item.id !== "about").map(({ id, icon: Icon, key }) => (
+        {visibleNavItems.filter((item) => item.id !== "about").map(({ id, icon: Icon, key }) => (
           <button key={id} className={view === id ? "active" : ""} onClick={() => setView(id)} aria-label={t[key]}>
             <Icon size={20}/>
           </button>
