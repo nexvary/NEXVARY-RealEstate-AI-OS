@@ -499,6 +499,18 @@ type TenantSettings = {
   slug: string;
   brand_name?: string | null;
   primary_color: string;
+  logo_data_url?: string | null;
+  contact_email?: string | null;
+  website_url?: string | null;
+  facebook_url?: string | null;
+  linkedin_url?: string | null;
+  youtube_url?: string | null;
+  x_url?: string | null;
+  tiktok_url?: string | null;
+  custom_domain?: string | null;
+  powered_by_nexvary: boolean;
+  plan: string;
+  lifecycle: string;
 };
 type AuditEntry = {
   id: string;
@@ -524,6 +536,7 @@ export function SettingsOps({
   const [audit, setAudit] = useState<AuditEntry[]>([]);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState("");
+  const [logoData, setLogoData] = useState<string | null>(null);
 
   async function load() {
     try {
@@ -532,6 +545,7 @@ export function SettingsOps({
         callApi<AuditEntry[]>("/api/v1/audit?limit=80", token),
       ]);
       setSettings(s);
+      setLogoData(s.logo_data_url || null);
       setAudit(a);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Load failed");
@@ -551,6 +565,14 @@ export function SettingsOps({
         body: JSON.stringify({
           brand_name: String(data.get("brand_name") || "").trim(),
           primary_color: String(data.get("primary_color") || "#0B1F33"),
+          logo_data_url: logoData,
+          contact_email: String(data.get("contact_email") || "").trim() || null,
+          website_url: String(data.get("website_url") || "").trim() || null,
+          facebook_url: String(data.get("facebook_url") || "").trim() || null,
+          linkedin_url: String(data.get("linkedin_url") || "").trim() || null,
+          youtube_url: String(data.get("youtube_url") || "").trim() || null,
+          x_url: String(data.get("x_url") || "").trim() || null,
+          tiktok_url: String(data.get("tiktok_url") || "").trim() || null,
         }),
       });
       setSettings(updated);
@@ -596,6 +618,40 @@ export function SettingsOps({
         <label>{ar ? "معرّف الشركة" : "Company identifier"}<input value={settings?.slug || ""} disabled /></label>
         <label>{ar ? "الاسم التجاري الظاهر" : "Displayed brand"}<input name="brand_name" defaultValue={settings?.brand_name || settings?.name || ""} key={settings?.brand_name || settings?.name}/></label>
         <label>{ar ? "لون الهوية" : "Brand color"}<input name="primary_color" type="color" defaultValue={settings?.primary_color || "#0B1F33"} key={settings?.primary_color}/></label>
+        <div className="brandLogoEditor">
+          <div className="brandLogoPreview">
+            {logoData ? <img src={logoData} alt="Company logo"/> : <Building2 size={28}/>}
+          </div>
+          <label>{ar ? "شعار الشركة PNG/JPG/WEBP" : "Company logo PNG/JPG/WEBP"}
+            <input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (!file) return;
+              if (file.size > 1_000_000) {
+                setError(ar ? "حجم الشعار يجب ألا يتجاوز 1 ميجابايت." : "Logo must be 1 MB or smaller.");
+                event.target.value = "";
+                return;
+              }
+              const reader = new FileReader();
+              reader.onload = () => setLogoData(typeof reader.result === "string" ? reader.result : null);
+              reader.readAsDataURL(file);
+            }}/>
+          </label>
+          {logoData && <button type="button" className="secondaryButton" onClick={() => setLogoData(null)}>{ar ? "إزالة الشعار" : "Remove logo"}</button>}
+        </div>
+        <div className="formGrid">
+          <label>{ar ? "بريد التواصل" : "Contact email"}<input name="contact_email" type="email" defaultValue={settings?.contact_email || ""}/></label>
+          <label>{ar ? "الموقع الإلكتروني" : "Website"}<input name="website_url" defaultValue={settings?.website_url || ""} placeholder="https://company.com"/></label>
+          <label>Facebook<input name="facebook_url" defaultValue={settings?.facebook_url || ""}/></label>
+          <label>LinkedIn<input name="linkedin_url" defaultValue={settings?.linkedin_url || ""}/></label>
+          <label>YouTube<input name="youtube_url" defaultValue={settings?.youtube_url || ""}/></label>
+          <label>X<input name="x_url" defaultValue={settings?.x_url || ""}/></label>
+          <label>TikTok<input name="tiktok_url" defaultValue={settings?.tiktok_url || ""}/></label>
+          <label>{ar ? "النطاق المخصص" : "Custom domain"}<input value={settings?.custom_domain || "—"} disabled/></label>
+        </div>
+        <div className="planReadOnly">
+          <span>{ar ? "الخطة" : "Plan"}: <strong>{settings?.plan || "—"}</strong></span>
+          <span>{ar ? "الحالة" : "Status"}: <strong>{settings?.lifecycle || "—"}</strong></span>
+        </div>
         <button className="primaryButton" type="submit">{ar ? "حفظ الهوية" : "Save branding"}</button>
         <button className="secondaryButton" type="button" onClick={() => void backup()}>{ar ? "تصدير نسخة احتياطية JSON" : "Export JSON backup"}</button>
       </form>
