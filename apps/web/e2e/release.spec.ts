@@ -74,7 +74,7 @@ test("platform admin creates and manages a second white-label company", async ({
   await expect(page.getByText("تم إنشاء الشركة ومساحة العمل وحساب المالك.")).toBeVisible();
   await expect(page.getByRole("button", { name: /ATLAS E2E/ })).toBeVisible();
 
-  await page.getByLabel("الحالة").selectOption("suspended");
+  await page.locator(".platformTenantForm").getByLabel("الحالة").selectOption("suspended");
   await page.getByRole("button", { name: "حفظ إعدادات الشركة" }).click();
   await expect(page.getByText("تم تحديث إعدادات الشركة.")).toBeVisible();
   await expect(page.locator(".tenantInspector .status-suspended")).toBeVisible();
