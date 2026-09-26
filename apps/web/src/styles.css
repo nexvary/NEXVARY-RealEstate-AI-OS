@@ -346,3 +346,18 @@ button:disabled { opacity: .6; cursor: wait; }
   .copilotUnits article { grid-template-columns: 80px minmax(0,1fr); }
   .copilotUnits article b { grid-column: 1 / -1; }
 }
+
+
+.settingsGrid { display: grid; grid-template-columns: minmax(300px,.7fr) minmax(0,1.3fr); gap: 14px; }
+.successNotice { border: 1px solid rgba(53,213,155,.25); background: rgba(39,160,116,.08); color: #78e5bc; border-radius: 11px; padding: 11px 13px; font-size: 12px; }
+.auditList { max-height: 560px; overflow: auto; }
+.auditRow { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 12px; align-items: center; padding: 11px 0; border-top: 1px solid #15283b; }
+.auditRow > div { display: flex; flex-direction: column; gap: 4px; }
+.auditRow strong { color: #eaf5ff; font-size: 11px; }
+.auditRow span { color: #718a9f; font-size: 9px; }
+.opsForm input[type="color"] { height: 44px; padding: 5px; cursor: pointer; }
+.opsForm input:disabled { opacity: .65; cursor: not-allowed; }
+
+@media (max-width: 900px) {
+  .settingsGrid { grid-template-columns: 1fr; }
+}
