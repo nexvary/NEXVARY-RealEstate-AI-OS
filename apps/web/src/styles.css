@@ -361,3 +361,216 @@ button:disabled { opacity: .6; cursor: wait; }
 @media (max-width: 900px) {
   .settingsGrid { grid-template-columns: 1fr; }
 }
+
+
+/* NEXVARY SaaS Platform Admin */
+.platformEntryButton {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 12px;
+  border: 1px solid rgba(124, 107, 255, .34);
+  border-radius: 11px;
+  background: linear-gradient(135deg, rgba(54, 72, 151, .18), rgba(82, 54, 151, .16));
+  color: #b9c4ff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.platformEntryButton:hover { border-color: rgba(124, 107, 255, .65); color: #e2e6ff; }
+
+.platformLoginPage { background:
+  radial-gradient(circle at 55% -5%, rgba(69, 92, 230, .24), transparent 36%),
+  radial-gradient(circle at 8% 88%, rgba(22, 180, 195, .12), transparent 28%),
+  #040914;
+}
+.platformLoginActions {
+  position: absolute;
+  top: 22px;
+  left: 22px;
+  right: 22px;
+  z-index: 4;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+.platformLoginCard { border-color: #2c3e70; box-shadow: 0 35px 100px rgba(0,0,0,.55), 0 0 60px rgba(87,93,238,.08); }
+
+.platformShell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 278px minmax(0, 1fr);
+  background: radial-gradient(circle at 70% -12%, #122b4b 0%, #07111f 30%, #040a12 68%);
+  color: #eaf2ff;
+}
+[dir="rtl"].platformShell { grid-template-columns: minmax(0, 1fr) 278px; }
+.platformSidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  grid-column: 1;
+  padding: 28px 20px;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, rgba(7,17,31,.99), rgba(4,9,17,.99));
+  border-right: 1px solid #182b42;
+}
+[dir="rtl"].platformShell .platformSidebar { grid-column: 2; grid-row: 1; border-left: 1px solid #182b42; border-right: 0; }
+.platformMain { min-width: 0; grid-column: 2; }
+[dir="rtl"].platformShell .platformMain { grid-column: 1; grid-row: 1; }
+.platformAdminIdentity {
+  margin-top: auto;
+  margin-bottom: 10px;
+  border-top: 1px solid #172a3d;
+  padding: 14px 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.platformAdminIdentity > div:last-child { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.platformAdminIdentity strong { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.platformAdminIdentity span { color: #718ca3; font-size: 9px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.platformHeader {
+  min-height: 92px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: 16px 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid rgba(31,52,73,.72);
+  background: rgba(5,13,23,.82);
+  backdrop-filter: blur(18px);
+}
+.platformHeader h1 { margin: 4px 0 0; font-size: clamp(20px, 2.6vw, 31px); letter-spacing: -.035em; }
+.platformHeaderActions { display: flex; gap: 9px; align-items: center; }
+.platformContent { padding: 28px 30px 70px; max-width: 1680px; margin: 0 auto; }
+.platformStats { display: grid; grid-template-columns: repeat(6, minmax(0,1fr)); gap: 10px; margin-bottom: 14px; }
+.platformStat {
+  min-height: 128px;
+  border: 1px solid #183149;
+  border-radius: 16px;
+  padding: 16px;
+  background: linear-gradient(150deg, rgba(12,29,47,.95), rgba(6,16,28,.95));
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.platformStat > div { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 10px; background: #102a42; color: #63caff; }
+.platformStat > div svg { width: 17px; }
+.platformStat strong { font-size: 25px; letter-spacing: -.03em; }
+.platformStat span { color: #718ba1; font-size: 10px; }
+.platformGrid { display: grid; grid-template-columns: 360px minmax(0,1fr); gap: 14px; margin-top: 14px; align-items: start; }
+.tenantDirectory { position: sticky; top: 108px; max-height: calc(100vh - 130px); overflow: hidden; display: flex; flex-direction: column; }
+.tenantSearchList { display: flex; flex-direction: column; gap: 6px; overflow-y: auto; padding-inline-end: 3px; }
+.tenantSelect {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 12px minmax(0,1fr) auto;
+  gap: 10px;
+  align-items: center;
+  text-align: start;
+  padding: 11px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: #07131f;
+  color: #c9d7e4;
+}
+.tenantSelect:hover { background: #0a1a2a; border-color: #1b3953; }
+.tenantSelect.active { background: linear-gradient(90deg, rgba(29,126,194,.18), rgba(76,80,203,.10)); border-color: #275779; }
+.tenantSelect > div:nth-child(2) { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.tenantSelect strong { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tenantSelect div span { color: #69849a; font-size: 9px; }
+.tenantBrandDot { width: 11px; height: 30px; border-radius: 99px; box-shadow: 0 0 15px rgba(70,170,255,.12); }
+.tenantInspector { min-height: 620px; }
+.tenantMetricGrid { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 9px; margin: 4px 0 22px; }
+.miniMetric { border: 1px solid #173149; background: #071521; border-radius: 11px; padding: 11px; display: flex; flex-direction: column; gap: 6px; }
+.miniMetric span { color: #6f899f; font-size: 9px; }
+.miniMetric strong { color: #eaf4ff; font-size: 13px; }
+.platformTenantForm label,
+.integrationEditor label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #8ca4b8;
+  font-size: 10px;
+  margin: 8px 0;
+}
+.platformTenantForm input,
+.platformTenantForm select,
+.integrationEditor input,
+.integrationEditor select,
+.integrationEditor textarea,
+.platformCreateModal select,
+.platformCreateModal textarea {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid #1c3953;
+  border-radius: 10px;
+  background: #06101c;
+  color: #edf7ff;
+  padding: 9px 10px;
+  outline: none;
+}
+.platformTenantForm input:focus,
+.platformTenantForm select:focus,
+.integrationEditor input:focus,
+.integrationEditor select:focus,
+.integrationEditor textarea:focus {
+  border-color: #279ceb;
+  box-shadow: 0 0 0 3px rgba(39,156,235,.1);
+}
+.platformTenantForm .formGrid { margin-bottom: 5px; }
+.checkLabel { flex-direction: row !important; align-items: center; gap: 8px !important; cursor: pointer; }
+.checkLabel input[type="checkbox"] { width: 17px !important; min-height: 17px !important; height: 17px !important; flex: 0 0 auto; accent-color: #2d9de5; }
+.planDefaults { margin: 10px 0 16px !important; }
+.integrationsGrid { grid-template-columns: minmax(330px,.8fr) minmax(0,1.2fr); }
+.integrationEditor textarea { resize: vertical; min-height: 100px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 10px; }
+.platformHint { color: #728ba0; font-size: 10px; line-height: 1.7; margin: 0 0 10px; }
+.integrationList { min-height: 390px; }
+.integrationRow {
+  display: grid;
+  grid-template-columns: 42px minmax(0,1fr) auto;
+  gap: 11px;
+  align-items: center;
+  padding: 12px 0;
+  border-top: 1px solid #15283b;
+}
+.integrationIcon { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; background: #0d2940; color: #69c9ff; border: 1px solid #184766; }
+.integrationRow > div:nth-child(2) { display: flex; flex-direction: column; gap: 4px; }
+.integrationRow strong { font-size: 12px; }
+.integrationRow div span { color: #6e879c; font-size: 9px; }
+.platformCreateModal { width: min(720px, 100%); max-height: 90vh; overflow-y: auto; }
+.platformCreateModal .checkLabel { color: #8ea5b9; font-size: 11px; margin: 12px 0; }
+.status-trial { color: #ab9aff; border-color: rgba(148,118,255,.25); background: rgba(113,85,212,.08); }
+.status-suspended { color: #ff9ca6; border-color: rgba(240,90,105,.22); background: rgba(190,55,70,.08); }
+
+@media (max-width: 1280px) {
+  .platformStats { grid-template-columns: repeat(3, 1fr); }
+  .tenantMetricGrid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 980px) {
+  .platformShell, [dir="rtl"].platformShell { display: block; }
+  .platformSidebar { display: none; }
+  .platformMain, [dir="rtl"].platformShell .platformMain { display: block; }
+  .platformHeader { padding: 12px 16px; flex-wrap: wrap; }
+  .platformHeaderActions { width: 100%; }
+  .platformHeaderActions .primaryButton { margin-inline-start: auto; }
+  .platformContent { padding: 18px 14px 60px; }
+  .platformGrid, .integrationsGrid { grid-template-columns: 1fr; }
+  .tenantDirectory { position: static; max-height: 360px; }
+  .tenantMetricGrid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 620px) {
+  .platformStats { grid-template-columns: repeat(2, 1fr); }
+  .platformStat { min-height: 112px; padding: 13px; }
+  .platformLoginActions { top: 12px; left: 12px; right: 12px; }
+  .platformLoginActions .iconButton span { display: none; }
+  .platformHeader h1 { font-size: 20px; }
+  .platformHeaderActions { overflow-x: auto; }
+  .tenantMetricGrid { grid-template-columns: 1fr 1fr; }
+  .tenantSelect { grid-template-columns: 10px minmax(0,1fr); }
+  .tenantSelect > .statusBadge { grid-column: 2; justify-self: start; }
+}
