@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-root = Path(SPECPATH).parent.parent
+root = Path(SPECPATH).parent
 
 datas = [
     (str(root / "apps" / "web" / "dist"), "web"),
