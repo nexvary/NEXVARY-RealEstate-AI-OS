@@ -4,8 +4,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from .api import router
 from .config import get_settings
 from .db import Base, engine
+from .security import validate_production_secrets
 
 settings = get_settings()
+validate_production_secrets()
 app = FastAPI(
     title=settings.app_name,
     version="0.2.0",
