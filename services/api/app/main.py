@@ -10,6 +10,7 @@ from .config import get_settings
 from .db import Base, engine
 from .security import validate_production_secrets
 from .setup_api import router as setup_router
+from .finance_api import router as finance_router
 from .workspace_api import router as workspace_router
 
 settings = get_settings()
@@ -44,6 +45,7 @@ def health() -> dict[str, str]:
 app.include_router(setup_router)
 app.include_router(router)
 app.include_router(workspace_router)
+app.include_router(finance_router)
 
 static_dir = os.getenv("NEXVARY_STATIC_DIR")
 if static_dir:
