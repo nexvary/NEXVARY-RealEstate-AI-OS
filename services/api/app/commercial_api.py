@@ -110,7 +110,7 @@ class SubscriptionUpsert(BaseModel):
     billing_cycle: BillingCycle = BillingCycle.monthly
     amount: Decimal = Field(default=0, ge=0)
     currency: str = Field(default="USD", min_length=3, max_length=8)
-    provider: str = Field(default="manual", min_length=2, max_length=60)
+    provider: str = Field(default="bank_transfer", min_length=2, max_length=60)
     external_subscription_id: str | None = Field(default=None, max_length=180)
     cancel_at_period_end: bool = False
     apply_plan_limits: bool = True
