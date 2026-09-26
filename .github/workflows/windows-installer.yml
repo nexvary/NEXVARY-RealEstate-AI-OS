@@ -1,4 +1,4 @@
-name: Windows v1.1.0 Platform Admin Installer
+name: Windows v1.2.0 Platform Admin Installer
 
 on:
   push:
@@ -112,21 +112,21 @@ jobs:
           if (!(Test-Path $iscc)) { throw "Inno Setup compiler not found" }
           & $iscc "desktop\installer.iss"
           if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed with exit code $LASTEXITCODE" }
-          if (!(Test-Path "installer/NEXVARY-RealEstate-AI-OS-v1.1.0-Setup.exe")) { throw "Installer output is missing" }
+          if (!(Test-Path "installer/NEXVARY-RealEstate-AI-OS-WhiteLabel-v1.2.0-Setup.exe")) { throw "Installer output is missing" }
 
       - name: Generate SHA256
         shell: pwsh
         run: |
-          $hash = Get-FileHash "installer/NEXVARY-RealEstate-AI-OS-v1.1.0-Setup.exe" -Algorithm SHA256
-          "$($hash.Hash)  NEXVARY-RealEstate-AI-OS-v1.1.0-Setup.exe" | Out-File -FilePath "installer/SHA256.txt" -Encoding ascii
-          Get-Item "installer/NEXVARY-RealEstate-AI-OS-v1.1.0-Setup.exe" | Select-Object Name, Length, LastWriteTime
+          $hash = Get-FileHash "installer/NEXVARY-RealEstate-AI-OS-WhiteLabel-v1.2.0-Setup.exe" -Algorithm SHA256
+          "$($hash.Hash)  NEXVARY-RealEstate-AI-OS-WhiteLabel-v1.2.0-Setup.exe" | Out-File -FilePath "installer/SHA256.txt" -Encoding ascii
+          Get-Item "installer/NEXVARY-RealEstate-AI-OS-WhiteLabel-v1.2.0-Setup.exe" | Select-Object Name, Length, LastWriteTime
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
         with:
-          name: NEXVARY-RealEstate-AI-OS-v1.1.0-Windows
+          name: NEXVARY-RealEstate-AI-OS-WhiteLabel-v1.2.0-Windows
           path: |
-            installer/NEXVARY-RealEstate-AI-OS-v1.1.0-Setup.exe
+            installer/NEXVARY-RealEstate-AI-OS-WhiteLabel-v1.2.0-Setup.exe
             installer/SHA256.txt
           if-no-files-found: error
           compression-level: 0
