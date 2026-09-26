@@ -1,3 +1,4 @@
+import CommercialAdmin from "./CommercialAdmin";
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
 import {
   Activity,
@@ -539,6 +540,14 @@ function PlatformConsole({
               </section>
             )}
           </div>
+
+          <CommercialAdmin
+            token={session.access_token}
+            locale={locale}
+            tenantId={selected?.id}
+            tenantName={selected?.brand_name || selected?.name}
+            onProvisioned={() => void load()}
+          />
 
           {selected && (
             <div className="platformGrid integrationsGrid">
