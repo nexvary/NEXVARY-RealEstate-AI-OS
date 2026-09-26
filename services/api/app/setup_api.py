@@ -9,6 +9,8 @@ from typing import Annotated
 from .config import get_settings
 from .db import get_db
 from .models import AuditEvent, Tenant, User, UserRole
+from .quota import PLAN_DEFAULTS
+from .saas_models import PlatformAdmin, TenantLifecycle, TenantPlan, TenantSaaSProfile
 from .security import create_access_token, hash_password
 
 router = APIRouter(prefix="/api/v1")
@@ -78,6 +80,21 @@ def bootstrap_first_owner(payload: BootstrapRequest, db: Session = Depends(get_d
         )
         db.add(owner)
         db.flush()
+        db.add(
+            PlatformAdmin(
+                email=owner.email,
+                display_name=owner.display_name,
+                password_hash=hash_password(payload.owner_password),
+            )
+        )
+        db.add(
+            TenantSaaSProfile(
+                tenant_id=tenant.id,
+                plan=TenantPlan.professional,
+                lifecycle=TenantLifecycle.active,
+                **PLAN_DEFAULTS[TenantPlan.professional],
+            )
+        )
         db.add(
             AuditEvent(
                 tenant_id=tenant.id,
