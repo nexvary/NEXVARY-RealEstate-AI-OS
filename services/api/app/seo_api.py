@@ -125,6 +125,7 @@ class SnapshotSummary(BaseModel):
     score: int | None
     grade: str | None
     created_at: datetime
+    model_config = ConfigDict(from_attributes=True)
 
 
 def _project(db: Session, project_id: str, tenant_id: str) -> SEOProject:
