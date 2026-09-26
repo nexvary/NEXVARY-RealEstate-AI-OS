@@ -13,6 +13,7 @@ from .ai_api import router as ai_router
 from .config import get_settings
 from .db import Base, engine
 from .security import validate_production_secrets
+from .seo_api import router as seo_router
 from .setup_api import router as setup_router
 from .finance_api import router as finance_router
 from .platform_api import router as platform_router
@@ -56,6 +57,7 @@ app.include_router(ai_router)
 app.include_router(admin_router)
 app.include_router(platform_router)
 app.include_router(branding_router)
+app.include_router(seo_router)
 
 static_dir = os.getenv("NEXVARY_STATIC_DIR")
 if static_dir:
