@@ -1,5 +1,5 @@
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
-import { FinanceOps, InventoryOps, InboxOps, KnowledgeOps, TasksOps, TeamOps } from "./Operations";
+import { AICopilotOps, FinanceOps, InventoryOps, InboxOps, KnowledgeOps, TasksOps, TeamOps } from "./Operations";
 
 import {
   ArrowLeft,
@@ -740,19 +740,7 @@ function ControlCenter({
             </section>
           )}
 
-          {view === "ai" && (
-            <section className="panel aiWorkspace">
-              <div className="aiIcon"><Bot/></div>
-              <span className="eyebrow">AI CONTROL PLANE</span>
-              <h2>{t.aiTitle}</h2>
-              <p>{t.aiText}</p>
-              <div className="architectureCards">
-                <ArchitectureCard title="Transactional Tools" text={locale === "ar" ? "بحث الوحدات والأسعار والتوافر والحجوزات عبر API مقيدة بالشركة." : "Tenant-scoped API tools for units, pricing, availability and reservations."} />
-                <ArchitectureCard title="RAG Knowledge" text={locale === "ar" ? "سيخصص للبروشورات والعقود والسياسات، وليس لحالة المخزون." : "Reserved for brochures, contracts and policies — never inventory state."} />
-                <ArchitectureCard title="Human Handoff" text={locale === "ar" ? "القرارات المالية والتعاقدية الحساسة تمر عبر صلاحيات واعتماد بشري." : "Sensitive financial and contractual actions remain permission-gated."} />
-              </div>
-            </section>
-          )}
+          {view === "ai" && <AICopilotOps token={session.access_token} locale={locale} />}
 
           {view === "about" && (
             <section className="panel aboutPanel">
