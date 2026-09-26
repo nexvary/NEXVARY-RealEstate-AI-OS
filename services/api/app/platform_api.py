@@ -162,6 +162,15 @@ class IntegrationRead(BaseModel):
     updated_at: datetime
 
 
+def _normalized_domain(value: str | None) -> str | None:
+    if value in (None, ""):
+        return None
+    normalized = value.strip().lower().rstrip(".")
+    if "://" in normalized or "/" in normalized or " " in normalized or "." not in normalized:
+        raise HTTPException(status_code=422, detail="Custom domain must be a hostname such as crm.company.com")
+    return normalized
+
+
 def _validated_logo(value: str | None) -> str | None:
     if value in (None, ""):
         return None
@@ -335,7 +344,7 @@ def create_tenant(
             tenant_id=tenant.id,
             plan=payload.plan,
             lifecycle=payload.lifecycle,
-            custom_domain=(payload.custom_domain or None),
+            custom_domain=_normalized_domain(payload.custom_domain),
             powered_by_nexvary=1 if payload.powered_by_nexvary else 0,
             logo_data_url=_validated_logo(payload.logo_data_url),
             contact_email=payload.contact_email,
@@ -391,6 +400,8 @@ def update_tenant(
         profile.powered_by_nexvary = 1 if values.pop("powered_by_nexvary") else 0
     if "logo_data_url" in values:
         profile.logo_data_url = _validated_logo(values.pop("logo_data_url"))
+    if "custom_domain" in values:
+        profile.custom_domain = _normalized_domain(values.pop("custom_domain"))
 
     for key, value in values.items():
         setattr(profile, key, value)
