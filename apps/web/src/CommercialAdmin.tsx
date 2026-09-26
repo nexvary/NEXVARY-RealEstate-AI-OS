@@ -1,3 +1,4 @@
+import BankTransferAdmin from "./BankTransferAdmin";
 import { FormEvent, useEffect, useState } from "react";
 import { Building2, CheckCircle2, CircleDollarSign, FileText, Layers3, Plus, RefreshCw, Sparkles } from "lucide-react";
 
@@ -330,5 +331,7 @@ export default function CommercialAdmin({
       <div className="panelHead"><div><h2>{ar ? "القوالب الجاهزة" : "Tenant templates"}</h2><span>{templates.length}</span></div><button className="secondaryButton" onClick={() => void seedDefaults()} disabled={busy==="seed"}>{busy==="seed" ? <RefreshCw size={15} className="spin"/> : <Sparkles size={15}/>} {ar ? "القوالب الافتراضية" : "Default templates"}</button></div>
       <div className="templateCards">{templates.map(t=><article key={t.id}><span className="templateColor" style={{background:t.primary_color}}/><div><strong>{t.name}</strong><span>{t.plan} · {t.max_users} users · {t.max_units.toLocaleString()} units</span><small>{t.integration_providers.join(" · ") || "No integrations"}</small></div><b>{Number(t.subscription_amount).toLocaleString()} {t.subscription_currency}/{t.billing_cycle}</b></article>)}</div>
     </section>
+
+    <BankTransferAdmin token={token} locale={locale} />
   </section>;
 }
