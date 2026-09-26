@@ -67,6 +67,32 @@ def decode_access_token(token: str) -> dict[str, Any]:
     return payload
 
 
+
+def create_platform_token(*, admin_id: str) -> str:
+    settings = get_settings()
+    now = datetime.now(timezone.utc)
+    payload: dict[str, Any] = {
+        "sub": admin_id,
+        "type": "platform_access",
+        "iat": now,
+        "exp": now + timedelta(minutes=settings.jwt_ttl_minutes),
+    }
+    return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+
+
+def decode_platform_token(token: str) -> dict[str, Any]:
+    settings = get_settings()
+    try:
+        payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
+    except jwt.ExpiredSignatureError as exc:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Platform token expired") from exc
+    except jwt.PyJWTError as exc:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid platform token") from exc
+
+    if payload.get("type") != "platform_access" or not payload.get("sub"):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid platform token")
+    return payload
+
 def validate_production_secrets() -> None:
     settings = get_settings()
     if settings.app_env != "production":
