@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from .db import get_db
 from .models import Project, Unit, UnitStatus
 from .policy import RequestContext, get_request_context
+from .quota import consume_ai_request
 from .workspace_models import KnowledgeChunk, KnowledgeDocument
 
 router = APIRouter(prefix="/api/v1")
@@ -63,6 +64,7 @@ def sales_assist(
     ctx: RequestContext = Depends(get_request_context),
     db: Session = Depends(get_db),
 ) -> SalesAssistResponse:
+    consume_ai_request(db, ctx.tenant_id)
     unit_query = (
         select(Unit)
         .join(Project, Unit.project_id == Project.id)
