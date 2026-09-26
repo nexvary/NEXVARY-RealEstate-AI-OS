@@ -1,5 +1,5 @@
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
-import { InventoryOps, InboxOps, KnowledgeOps, TasksOps, TeamOps } from "./Operations";
+import { FinanceOps, InventoryOps, InboxOps, KnowledgeOps, TasksOps, TeamOps } from "./Operations";
 
 import {
   ArrowLeft,
@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 
 type Locale = "ar" | "en";
-type View = "dashboard" | "leads" | "inventory" | "manage" | "appointments" | "inbox" | "knowledge" | "tasks" | "team" | "ai" | "about";
+type View = "dashboard" | "leads" | "inventory" | "manage" | "appointments" | "finance" | "inbox" | "knowledge" | "tasks" | "team" | "ai" | "about";
 
 type User = {
   id: string;
@@ -126,6 +126,7 @@ const copy = {
     inventory: "الوحدات والمخزون",
     manage: "إدارة المخزون",
     appointments: "المعاينات",
+    finance: "العقود والمالية",
     inbox: "المحادثات",
     knowledge: "قاعدة المعرفة",
     tasks: "المهام والمتابعة",
@@ -186,6 +187,7 @@ const copy = {
     inventory: "Inventory",
     manage: "Inventory Management",
     appointments: "Viewings",
+    finance: "Contracts & Finance",
     inbox: "Inbox",
     knowledge: "Knowledge Base",
     tasks: "Tasks",
@@ -246,6 +248,7 @@ const navItems = [
   { id: "inventory" as View, icon: Building2, key: "inventory" as const },
   { id: "manage" as View, icon: ClipboardCheck, key: "manage" as const },
   { id: "appointments" as View, icon: CalendarDays, key: "appointments" as const },
+  { id: "finance" as View, icon: CircleDollarSign, key: "finance" as const },
   { id: "inbox" as View, icon: MessageSquare, key: "inbox" as const },
   { id: "knowledge" as View, icon: BookOpen, key: "knowledge" as const },
   { id: "tasks" as View, icon: ClipboardCheck, key: "tasks" as const },
@@ -715,6 +718,7 @@ function ControlCenter({
           )}
 
           {view === "manage" && <InventoryOps token={session.access_token} locale={locale} />}
+          {view === "finance" && <FinanceOps token={session.access_token} locale={locale} />}
           {view === "inbox" && <InboxOps token={session.access_token} locale={locale} />}
           {view === "knowledge" && <KnowledgeOps token={session.access_token} locale={locale} />}
           {view === "tasks" && <TasksOps token={session.access_token} locale={locale} />}
