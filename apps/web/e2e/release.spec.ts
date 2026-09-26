@@ -1,6 +1,6 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
-async function bootstrap(page) {
+async function bootstrap(page: Page) {
   await page.goto("/");
   await expect(page.getByText("إعداد الشركة لأول مرة")).toBeVisible();
 
@@ -50,7 +50,7 @@ test("mobile layout exposes navigation and does not overflow core controls", asy
   if (!isMobile) test.skip();
 
   await page.goto("/");
-  await expect(page.getByText("إعداد الشركة لأول مرة")).toBeVisible();
+  await expect(page.locator(".loginCard")).toBeVisible();
 
   const viewport = page.viewportSize();
   expect(viewport).not.toBeNull();
