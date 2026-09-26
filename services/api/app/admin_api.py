@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from decimal import Decimal
 from typing import Any
 
@@ -162,7 +162,7 @@ def export_backup(
     data: dict[str, Any] = {
         "format": "NEXVARY-RealEstate-AI-OS-backup",
         "version": "1.0.0-stage170",
-        "exported_at": datetime.utcnow().isoformat() + "Z",
+        "exported_at": datetime.now(timezone.utc).isoformat(),
         "tenant": row_dict(tenant),
         "tables": {},
     }
