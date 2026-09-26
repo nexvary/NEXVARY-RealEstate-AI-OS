@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from .db import get_db
 from .models import User, UserRole
+from .quota import assert_tenant_active
 from .security import decode_access_token
 
 
@@ -43,6 +44,8 @@ def get_request_context(
     )
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User is inactive or unavailable")
+
+    assert_tenant_active(db, user.tenant_id)
 
     return RequestContext(
         tenant_id=user.tenant_id,
