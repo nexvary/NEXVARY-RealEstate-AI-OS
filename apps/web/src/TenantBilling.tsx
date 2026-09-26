@@ -126,7 +126,8 @@ export default function TenantBilling({ token, locale }: { token: string; locale
   async function submitTransfer(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!selectedInvoice) return;
-    const data = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const data = new FormData(form);
     setError("");
     setNotice("");
     setBusy(true);
@@ -148,7 +149,7 @@ export default function TenantBilling({ token, locale }: { token: string; locale
       setNotice(ar
         ? "تم إرسال بيانات التحويل للمراجعة. لن تُعتبر الفاتورة مدفوعة إلا بعد اعتماد التحويل."
         : "Transfer submitted for verification. The invoice remains unpaid until the transfer is approved.");
-      (event.currentTarget as HTMLFormElement).reset();
+      form.reset();
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Transfer submission failed");
