@@ -491,3 +491,118 @@ export function AICopilotOps({ token, locale }: { token: string; locale: Locale 
     </div>
   </div>;
 }
+
+
+type TenantSettings = {
+  id: string;
+  name: string;
+  slug: string;
+  brand_name?: string | null;
+  primary_color: string;
+};
+type AuditEntry = {
+  id: string;
+  actor: string;
+  action: string;
+  entity_type: string;
+  entity_id?: string | null;
+  details?: string | null;
+  created_at: string;
+};
+
+export function SettingsOps({
+  token,
+  locale,
+  onSaved,
+}: {
+  token: string;
+  locale: Locale;
+  onSaved?: () => void;
+}) {
+  const ar = locale === "ar";
+  const [settings, setSettings] = useState<TenantSettings | null>(null);
+  const [audit, setAudit] = useState<AuditEntry[]>([]);
+  const [error, setError] = useState("");
+  const [saved, setSaved] = useState("");
+
+  async function load() {
+    try {
+      const [s, a] = await Promise.all([
+        callApi<TenantSettings>("/api/v1/tenant/settings", token),
+        callApi<AuditEntry[]>("/api/v1/audit?limit=80", token),
+      ]);
+      setSettings(s);
+      setAudit(a);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Load failed");
+    }
+  }
+
+  useEffect(() => { void load(); }, [token]);
+
+  async function save(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    setError("");
+    setSaved("");
+    try {
+      const updated = await callApi<TenantSettings>("/api/v1/tenant/settings", token, {
+        method: "PATCH",
+        body: JSON.stringify({
+          brand_name: String(data.get("brand_name") || "").trim(),
+          primary_color: String(data.get("primary_color") || "#0B1F33"),
+        }),
+      });
+      setSettings(updated);
+      setSaved(ar ? "تم حفظ الهوية." : "Brand settings saved.");
+      onSaved?.();
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Save failed");
+    }
+  }
+
+  async function backup() {
+    setError("");
+    try {
+      const response = await fetch(`${API_URL}/api/v1/backup/export`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body?.detail || "Backup failed");
+      const blob = new Blob([JSON.stringify(body, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      const date = new Date().toISOString().slice(0, 10);
+      anchor.href = url;
+      anchor.download = `NEXVARY-RealEstate-Backup-${date}.json`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Backup failed");
+    }
+  }
+
+  return <div className="opsPage">
+    <div className="opsHeading"><div><span className="eyebrow">WHITE LABEL & AUDIT</span><h2>{ar ? "إعدادات الشركة والسجل" : "Company settings & audit"}</h2></div></div>
+    {error && <div className="systemError">{error}</div>}
+    {saved && <div className="successNotice">{saved}</div>}
+    <div className="settingsGrid">
+      <form className="panel opsForm" onSubmit={save}>
+        <div className="opsTitle"><Building2 size={19}/><strong>{ar ? "هوية الشركة" : "Company identity"}</strong></div>
+        <label>{ar ? "اسم الشركة المسجل" : "Registered company"}<input value={settings?.name || ""} disabled /></label>
+        <label>{ar ? "معرّف الشركة" : "Company identifier"}<input value={settings?.slug || ""} disabled /></label>
+        <label>{ar ? "الاسم التجاري الظاهر" : "Displayed brand"}<input name="brand_name" defaultValue={settings?.brand_name || settings?.name || ""} key={settings?.brand_name || settings?.name}/></label>
+        <label>{ar ? "لون الهوية" : "Brand color"}<input name="primary_color" type="color" defaultValue={settings?.primary_color || "#0B1F33"} key={settings?.primary_color}/></label>
+        <button className="primaryButton" type="submit">{ar ? "حفظ الهوية" : "Save branding"}</button>
+        <button className="secondaryButton" type="button" onClick={() => void backup()}>{ar ? "تصدير نسخة احتياطية JSON" : "Export JSON backup"}</button>
+      </form>
+      <section className="panel opsList">
+        <div className="panelHead"><h2>{ar ? "سجل العمليات" : "Audit log"}</h2><span>{audit.length}</span></div>
+        <div className="auditList">{audit.map(item=><div className="auditRow" key={item.id}><div><strong>{item.action}</strong><span>{item.actor} · {item.entity_type}</span></div><span>{new Date(item.created_at).toLocaleString(ar?"ar-EG":"en-US")}</span></div>)}</div>
+      </section>
+    </div>
+  </div>;
+}
