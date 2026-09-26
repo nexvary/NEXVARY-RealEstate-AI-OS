@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import {
   BookOpen,
+  Bot,
   Building2,
   CheckCircle2,
   ClipboardCheck,
@@ -394,5 +395,99 @@ export function FinanceOps({ token, locale }: { token: string; locale: Locale })
       <div className="panelHead"><h2>{ar ? "العمولات" : "Commissions"}</h2><span>{commissions.length}</span></div>
       <div className="financeRows">{commissions.map(item=><div className="financeRow" key={item.id}><strong>{item.broker_name}</strong><span>{Number(item.rate_percent)}%</span><span>{money(Number(item.amount), selected?.currency || "EGP", locale)}</span><span className={`statusBadge status-${item.status}`}>{item.status}</span>{item.status==="pending"&&<button className="secondaryButton" onClick={()=>void payCommission(item.id)}>{ar?"تسجيل السداد":"Mark paid"}</button>}</div>)}</div>
     </section>
+  </div>;
+}
+
+
+type CopilotResult = {
+  answer: string;
+  units: Array<{
+    id: string;
+    code: string;
+    project_id: string;
+    unit_type: string;
+    bedrooms?: number | null;
+    area_sqm: number;
+    price: number;
+    currency: string;
+  }>;
+  evidence: Array<{
+    document_title: string;
+    source_name?: string | null;
+    chunk_position: number;
+    text: string;
+    score: number;
+  }>;
+  grounding: string[];
+  mode: string;
+};
+
+export function AICopilotOps({ token, locale }: { token: string; locale: Locale }) {
+  const ar = locale === "ar";
+  const [result, setResult] = useState<CopilotResult | null>(null);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function ask(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    setBusy(true);
+    setError("");
+    try {
+      const response = await callApi<CopilotResult>("/api/v1/ai/sales/assist", token, {
+        method: "POST",
+        body: JSON.stringify({
+          question: String(data.get("question") || ""),
+          city: String(data.get("city") || "") || null,
+          max_price: data.get("max_price") ? Number(data.get("max_price")) : null,
+          bedrooms: data.get("bedrooms") ? Number(data.get("bedrooms")) : null,
+          unit_type: String(data.get("unit_type") || "") || null,
+          limit: 8,
+        }),
+      });
+      setResult(response);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "AI query failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return <div className="opsPage">
+    <div className="opsHeading">
+      <div><span className="eyebrow">GROUNDED AI SALES COPILOT</span><h2>{ar ? "مساعد المبيعات الذكي" : "AI Sales Copilot"}</h2></div>
+    </div>
+    {error && <div className="systemError">{error}</div>}
+    <div className="aiOpsGrid">
+      <form className="panel opsForm" onSubmit={ask}>
+        <div className="opsTitle"><Bot size={20}/><strong>{ar ? "اسأل عن الوحدات أو المشروع" : "Ask about inventory or a project"}</strong></div>
+        <label>{ar ? "السؤال" : "Question"}<textarea name="question" required rows={6} placeholder={ar ? "مثال: أريد شقة 3 غرف في القاهرة الجديدة..." : "Example: I need a 3-bedroom apartment in New Cairo..."}/></label>
+        <div className="formGrid">
+          <label>{ar ? "المدينة" : "City"}<input name="city"/></label>
+          <label>{ar ? "أقصى سعر" : "Max price"}<input name="max_price" type="number" min="0"/></label>
+          <label>{ar ? "غرف النوم" : "Bedrooms"}<input name="bedrooms" type="number" min="0" max="30"/></label>
+          <label>{ar ? "نوع الوحدة" : "Unit type"}<input name="unit_type"/></label>
+        </div>
+        <button className="primaryButton" type="submit" disabled={busy}>
+          {busy ? <RefreshCw size={17} className="spin"/> : <Bot size={17}/>}
+          {ar ? "تحليل البيانات" : "Analyze live data"}
+        </button>
+        <div className="truthRules"><span>DB → Price</span><span>DB → Availability</span><span>Knowledge → Evidence</span></div>
+      </form>
+
+      <section className="panel copilotResult">
+        {!result && <div className="emptyAi"><Bot size={30}/><p>{ar ? "سيعرض المساعد النتائج المؤكدة هنا بدون اختراع أسعار أو وحدات." : "Grounded results appear here without invented pricing or inventory."}</p></div>}
+        {result && <>
+          <span className="eyebrow">{result.mode}</span>
+          <h3>{ar ? "النتيجة" : "Result"}</h3>
+          <p className="copilotAnswer">{result.answer}</p>
+          <div className="groundingRow">{result.grounding.map(item=><span key={item}>{item}</span>)}</div>
+          <h3>{ar ? "الوحدات المطابقة" : "Matching units"}</h3>
+          <div className="copilotUnits">{result.units.map(unit=><article key={unit.id}><strong>{unit.code}</strong><span>{unit.unit_type} · {unit.bedrooms ?? "—"} BR · {Number(unit.area_sqm).toLocaleString()} m²</span><b>{money(Number(unit.price), unit.currency, locale)}</b></article>)}</div>
+          <h3>{ar ? "المصادر" : "Sources"}</h3>
+          <div className="hitList">{result.evidence.map((hit,index)=><article key={hit.document_title+"-"+hit.chunk_position}><span className="eyebrow">#{index+1} · score {hit.score}</span><strong>{hit.document_title}</strong><p>{hit.text}</p><small>{hit.source_name || "internal"}</small></article>)}</div>
+        </>}
+      </section>
+    </div>
   </div>;
 }
