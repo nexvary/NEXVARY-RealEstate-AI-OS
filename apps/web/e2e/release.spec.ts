@@ -133,7 +133,7 @@ test("commercial platform creates a reusable tenant template and provisions a co
   await expect(page.getByText("تم حفظ قالب الشركة.")).toBeVisible();
 
   const provisionForm = page.locator("form").filter({ hasText: "إنشاء شركة بضغطة واحدة" });
-  await provisionForm.getByLabel("القالب").selectOption({ label: /E2E Commercial Pro/ });
+  await provisionForm.getByLabel("القالب").selectOption({ label: "E2E Commercial Pro · professional" });
   await provisionForm.getByLabel("اسم الشركة").fill("Commercial E2E Realty");
   await provisionForm.getByLabel("المعرّف").fill("commercial-e2e");
   await provisionForm.getByLabel("الاسم التجاري").fill("COMMERCIAL E2E");
