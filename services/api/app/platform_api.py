@@ -15,7 +15,7 @@ from .db import get_db
 from .integration_crypto import decrypt_secret_map, encrypt_secret_map
 from .models import AuditEvent, Lead, Project, Tenant, Unit, User, UserRole
 from .platform_policy import PlatformContext, get_platform_context
-from .quota import PLAN_DEFAULTS, ensure_profile
+from .quota import PLAN_DEFAULTS, current_period, ensure_profile
 from .saas_models import (
     PlatformAdmin,
     TenantIntegration,
@@ -82,6 +82,14 @@ class TenantCreate(BaseModel):
     lifecycle: TenantLifecycle = TenantLifecycle.active
     custom_domain: str | None = Field(default=None, max_length=255)
     powered_by_nexvary: bool = True
+    logo_data_url: str | None = Field(default=None, max_length=1500000)
+    contact_email: str | None = Field(default=None, max_length=255)
+    website_url: str | None = Field(default=None, max_length=500)
+    facebook_url: str | None = Field(default=None, max_length=500)
+    linkedin_url: str | None = Field(default=None, max_length=500)
+    youtube_url: str | None = Field(default=None, max_length=500)
+    x_url: str | None = Field(default=None, max_length=500)
+    tiktok_url: str | None = Field(default=None, max_length=500)
 
 
 class TenantPlatformUpdate(BaseModel):
@@ -91,6 +99,14 @@ class TenantPlatformUpdate(BaseModel):
     lifecycle: TenantLifecycle | None = None
     custom_domain: str | None = Field(default=None, max_length=255)
     powered_by_nexvary: bool | None = None
+    logo_data_url: str | None = Field(default=None, max_length=1500000)
+    contact_email: str | None = Field(default=None, max_length=255)
+    website_url: str | None = Field(default=None, max_length=500)
+    facebook_url: str | None = Field(default=None, max_length=500)
+    linkedin_url: str | None = Field(default=None, max_length=500)
+    youtube_url: str | None = Field(default=None, max_length=500)
+    x_url: str | None = Field(default=None, max_length=500)
+    tiktok_url: str | None = Field(default=None, max_length=500)
     max_users: int | None = Field(default=None, ge=1, le=10000)
     max_projects: int | None = Field(default=None, ge=1, le=100000)
     max_units: int | None = Field(default=None, ge=1, le=10000000)
@@ -109,6 +125,14 @@ class TenantPlatformRead(BaseModel):
     lifecycle: TenantLifecycle
     custom_domain: str | None
     powered_by_nexvary: bool
+    logo_data_url: str | None
+    contact_email: str | None
+    website_url: str | None
+    facebook_url: str | None
+    linkedin_url: str | None
+    youtube_url: str | None
+    x_url: str | None
+    tiktok_url: str | None
     max_users: int
     max_projects: int
     max_units: int
@@ -138,13 +162,24 @@ class IntegrationRead(BaseModel):
     updated_at: datetime
 
 
+def _validated_logo(value: str | None) -> str | None:
+    if value in (None, ""):
+        return None
+    allowed = ("data:image/png;base64,", "data:image/jpeg;base64,", "data:image/webp;base64,")
+    if not value.startswith(allowed):
+        raise HTTPException(status_code=422, detail="Logo must be PNG, JPEG or WEBP data URL")
+    if len(value) > 1_500_000:
+        raise HTTPException(status_code=413, detail="Logo is too large")
+    return value
+
+
 def _tenant_read(db: Session, tenant: Tenant) -> TenantPlatformRead:
     profile = ensure_profile(db, tenant.id)
     usage = db.scalar(
-        select(TenantUsage)
-        .where(TenantUsage.tenant_id == tenant.id)
-        .order_by(TenantUsage.period.desc())
-        .limit(1)
+        select(TenantUsage).where(
+            TenantUsage.tenant_id == tenant.id,
+            TenantUsage.period == current_period(),
+        )
     )
     return TenantPlatformRead(
         id=tenant.id,
@@ -157,6 +192,14 @@ def _tenant_read(db: Session, tenant: Tenant) -> TenantPlatformRead:
         lifecycle=profile.lifecycle,
         custom_domain=profile.custom_domain,
         powered_by_nexvary=bool(profile.powered_by_nexvary),
+        logo_data_url=profile.logo_data_url,
+        contact_email=profile.contact_email,
+        website_url=profile.website_url,
+        facebook_url=profile.facebook_url,
+        linkedin_url=profile.linkedin_url,
+        youtube_url=profile.youtube_url,
+        x_url=profile.x_url,
+        tiktok_url=profile.tiktok_url,
         max_users=profile.max_users,
         max_projects=profile.max_projects,
         max_units=profile.max_units,
@@ -246,7 +289,13 @@ def platform_overview(
         users_total=int(db.scalar(select(func.count()).select_from(User)) or 0),
         projects_total=int(db.scalar(select(func.count()).select_from(Project)) or 0),
         units_total=int(db.scalar(select(func.count()).select_from(Unit)) or 0),
-        ai_requests_current_month=int(db.scalar(select(func.coalesce(func.sum(TenantUsage.ai_requests), 0))) or 0),
+        ai_requests_current_month=int(
+            db.scalar(
+                select(func.coalesce(func.sum(TenantUsage.ai_requests), 0))
+                .where(TenantUsage.period == current_period())
+            )
+            or 0
+        ),
     )
 
 
@@ -288,6 +337,14 @@ def create_tenant(
             lifecycle=payload.lifecycle,
             custom_domain=(payload.custom_domain or None),
             powered_by_nexvary=1 if payload.powered_by_nexvary else 0,
+            logo_data_url=_validated_logo(payload.logo_data_url),
+            contact_email=payload.contact_email,
+            website_url=payload.website_url,
+            facebook_url=payload.facebook_url,
+            linkedin_url=payload.linkedin_url,
+            youtube_url=payload.youtube_url,
+            x_url=payload.x_url,
+            tiktok_url=payload.tiktok_url,
             **defaults,
         )
         db.add_all([owner, profile])
@@ -332,6 +389,8 @@ def update_tenant(
 
     if "powered_by_nexvary" in values:
         profile.powered_by_nexvary = 1 if values.pop("powered_by_nexvary") else 0
+    if "logo_data_url" in values:
+        profile.logo_data_url = _validated_logo(values.pop("logo_data_url"))
 
     for key, value in values.items():
         setattr(profile, key, value)
