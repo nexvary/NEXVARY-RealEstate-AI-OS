@@ -17,7 +17,7 @@ router = APIRouter(prefix="/api/v1")
 
 
 def terms(value: str) -> set[str]:
-    return {item for item in re.findall(r"[\w\u0600-\u06FF]+", value.lower()) if len(item) > 2}
+    return {item for item in re.findall(r"[A-Za-z0-9]+|[\u0621-\u063A\u0641-\u064A]+", value.casefold()) if len(item) > 2}
 
 
 class SalesAssistRequest(BaseModel):
