@@ -308,3 +308,18 @@ button:disabled { opacity: .6; cursor: wait; }
   .taskRow { grid-template-columns: minmax(0,1fr) auto; }
   .taskRow .secondaryButton { grid-column: 1 / -1; width: 100%; }
 }
+
+
+.financeGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.financeSummary { border: 1px solid #1d3b55; background: #081827; border-radius: 12px; padding: 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.financeSummary strong { color: #eef7ff; margin-inline-end: auto; }
+.financeSummary > span:not(.statusBadge) { color: #75cfff; font-weight: 700; }
+.financeRows { display: flex; flex-direction: column; overflow-x: auto; }
+.financeRow { min-width: 670px; display: grid; grid-template-columns: minmax(95px,1fr) 110px minmax(130px,1fr) 95px 115px; gap: 10px; align-items: center; padding: 11px 0; border-top: 1px solid #15283b; color: #849bb0; font-size: 11px; }
+.financeRow strong { color: #edf6ff; }
+.status-paid, .status-completed { color: #72e0b7; border-color: rgba(61,213,157,.22); background: rgba(38,170,121,.08); }
+.status-due, .status-pending { color: #ffc875; border-color: rgba(255,190,80,.23); background: rgba(190,128,32,.08); }
+
+@media (max-width: 820px) {
+  .financeGrid { grid-template-columns: 1fr; }
+}
