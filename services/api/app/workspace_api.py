@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field
@@ -265,7 +265,7 @@ def create_message(
         conversation_id=conversation.id,
         **payload.model_dump(),
     )
-    conversation.last_message_at = datetime.utcnow()
+    conversation.last_message_at = datetime.now(timezone.utc)
     db.add(message)
     db.commit()
     db.refresh(message)
