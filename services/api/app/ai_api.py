@@ -89,7 +89,10 @@ def sales_assist(
     ).all()
     evidence: list[KnowledgeEvidence] = []
     for chunk, document in evidence_rows:
-        score = len(query_terms & terms(chunk.text)) * 10
+        haystack = " ".join(
+            [document.title, document.source_name or "", chunk.text]
+        ).casefold()
+        score = sum(10 for term in query_terms if term.casefold() in haystack)
         if score > 0:
             evidence.append(
                 KnowledgeEvidence(
