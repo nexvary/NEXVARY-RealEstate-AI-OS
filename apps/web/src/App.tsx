@@ -1,6 +1,7 @@
 import { CSSProperties, FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
 import { AICopilotOps, FinanceOps, InventoryOps, InboxOps, KnowledgeOps, SettingsOps, TasksOps, TeamOps } from "./Operations";
 import PlatformAdminCenter from "./PlatformAdmin";
+import SEOAutopilot from "./SEOAutopilot";
 
 import {
   ArrowLeft,
@@ -33,7 +34,7 @@ import {
 } from "lucide-react";
 
 type Locale = "ar" | "en";
-type View = "dashboard" | "leads" | "inventory" | "manage" | "appointments" | "finance" | "inbox" | "knowledge" | "tasks" | "team" | "settings" | "ai" | "about";
+type View = "dashboard" | "leads" | "inventory" | "manage" | "appointments" | "finance" | "inbox" | "knowledge" | "tasks" | "team" | "settings" | "ai" | "seo" | "about";
 
 type User = {
   id: string;
@@ -165,6 +166,7 @@ const copy = {
     team: "الفريق والصلاحيات",
     settings: "إعدادات الشركة",
     ai: "مساعد الذكاء الاصطناعي",
+    seo: "SEO Autopilot",
     about: "عن المنصة",
     search: "ابحث داخل الصفحة الحالية...",
     addLead: "إضافة عميل",
@@ -227,6 +229,7 @@ const copy = {
     team: "Team & Roles",
     settings: "Company Settings",
     ai: "AI Assistant",
+    seo: "SEO Autopilot",
     about: "About",
     search: "Search the current view...",
     addLead: "Add lead",
@@ -289,6 +292,7 @@ const navItems = [
   { id: "team" as View, icon: ShieldCheck, key: "team" as const },
   { id: "settings" as View, icon: Settings2, key: "settings" as const },
   { id: "ai" as View, icon: Bot, key: "ai" as const },
+  { id: "seo" as View, icon: Search, key: "seo" as const },
   { id: "about" as View, icon: Info, key: "about" as const },
 ];
 
@@ -815,6 +819,7 @@ function ControlCenter({
           )}
 
           {view === "ai" && <AICopilotOps token={session.access_token} locale={locale} />}
+          {view === "seo" && <SEOAutopilot token={session.access_token} locale={locale} />}
 
           {view === "about" && (
             <section className="panel aboutPanel">

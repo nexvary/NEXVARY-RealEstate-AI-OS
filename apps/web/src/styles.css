@@ -656,3 +656,187 @@ button:disabled { opacity: .6; cursor: wait; }
   font-size: 11px;
   margin: 12px 0;
 }
+
+
+/* White-label SEO Autopilot */
+.seoWorkspace { display: flex; flex-direction: column; gap: 14px; }
+.seoHero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  background:
+    radial-gradient(circle at 88% 15%, color-mix(in srgb, var(--tenant-primary, #128fe7) 18%, transparent), transparent 35%),
+    linear-gradient(145deg, rgba(11,28,46,.98), rgba(6,16,28,.98));
+}
+.seoHero h2 { margin: 5px 0 7px; font-size: clamp(24px,3vw,34px); letter-spacing: -.035em; }
+.seoHero p { margin: 0; max-width: 760px; color: #8199ad; line-height: 1.75; font-size: 12px; }
+.seoSafety {
+  max-width: 330px;
+  min-width: 240px;
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  border: 1px solid rgba(83,206,161,.22);
+  background: rgba(37,158,113,.07);
+  color: #7eddb9;
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 10px;
+  line-height: 1.6;
+}
+.seoTopGrid { display: grid; grid-template-columns: minmax(310px,.7fr) minmax(0,1.3fr); gap: 14px; }
+.seoProjectPanel, .seoCurrentProject { min-height: 245px; }
+.seoProjectList { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow: auto; }
+.seoProject {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 28px minmax(0,1fr);
+  gap: 9px;
+  align-items: center;
+  text-align: start;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: #07131f;
+  color: #c7d7e4;
+  padding: 10px;
+}
+.seoProject:hover { border-color: #1d3a54; background: #0a1a29; }
+.seoProject.active { border-color: color-mix(in srgb, var(--tenant-primary, #128fe7) 65%, #20334a); background: color-mix(in srgb, var(--tenant-primary, #128fe7) 12%, #07131f); }
+.seoProject svg { color: #68caff; }
+.seoProject > div { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.seoProject strong { font-size: 11px; }
+.seoProject span { color: #6f899e; font-size: 9px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.seoAddProject { margin-top: 10px; display: grid; grid-template-columns: .7fr 1.2fr auto; gap: 7px; }
+.seoAddProject input, .seoForm input, .seoForm select, .seoForm textarea {
+  width: 100%;
+  border: 1px solid #1d3a54;
+  border-radius: 10px;
+  background: #06101c;
+  color: #edf7ff;
+  padding: 10px 11px;
+  outline: none;
+}
+.seoAddProject input:focus, .seoForm input:focus, .seoForm select:focus, .seoForm textarea:focus {
+  border-color: color-mix(in srgb, var(--tenant-primary, #128fe7) 80%, white);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--tenant-primary, #128fe7) 12%, transparent);
+}
+.seoMetricRow { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 9px; margin-top: 24px; }
+.seoMetric { border: 1px solid #183149; background: #071522; border-radius: 11px; padding: 11px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.seoMetric span { color: #6f879d; font-size: 9px; text-transform: capitalize; }
+.seoMetric strong { color: #eef6ff; font-size: 12px; overflow-wrap: anywhere; }
+.seoTabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 6px;
+  border: 1px solid #183149;
+  border-radius: 13px;
+  background: #07131f;
+}
+.seoTabs button {
+  flex: 0 0 auto;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  min-height: 39px;
+  padding: 0 11px;
+  background: transparent;
+  color: #7892a8;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+.seoTabs button:hover { background: #0c1e2e; }
+.seoTabs button.active {
+  color: #e7f5ff;
+  border-color: color-mix(in srgb, var(--tenant-primary, #128fe7) 55%, #1b344b);
+  background: color-mix(in srgb, var(--tenant-primary, #128fe7) 15%, #081725);
+}
+.seoSplit { display: grid; grid-template-columns: minmax(300px,.68fr) minmax(0,1.32fr); gap: 14px; align-items: start; }
+.seoForm { display: flex; flex-direction: column; gap: 10px; }
+.seoForm label { display: flex; flex-direction: column; gap: 6px; color: #8da4b8; font-size: 10px; }
+.seoForm textarea { resize: vertical; min-height: 85px; font-family: inherit; }
+.seoForm textarea[name="before"], .seoForm textarea[name="after"], .seoForm textarea[name="visible_data"] {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 10px;
+}
+.seoHint { color: #728a9f; font-size: 10px; line-height: 1.75; margin: 0; }
+.seoResult { min-height: 420px; max-height: 740px; overflow: auto; }
+.seoScore { display: flex; align-items: baseline; gap: 7px; margin-bottom: 16px; }
+.seoScore strong { font-size: 46px; line-height: 1; letter-spacing: -.06em; color: #eff8ff; }
+.seoScore span { color: #70cfff; font-size: 12px; }
+.seoCheckList { display: flex; flex-direction: column; gap: 7px; }
+.seoCheckList article {
+  display: grid;
+  grid-template-columns: 24px minmax(0,1fr);
+  gap: 8px;
+  border: 1px solid #173047;
+  background: #071522;
+  border-radius: 11px;
+  padding: 10px;
+}
+.seoCheckList article.passed svg { color: #64dbae; }
+.seoCheckList article.failed svg { color: #ff9aa4; }
+.seoCheckList article > div { display: flex; flex-direction: column; gap: 4px; }
+.seoCheckList strong { font-size: 11px; color: #e9f4ff; }
+.seoCheckList span { font-size: 10px; color: #849daf; line-height: 1.55; }
+.seoCheckList small { font-size: 9px; color: #f0c278; line-height: 1.55; }
+.crawlTotals { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 8px; margin-bottom: 14px; }
+.seoIssueList, .seoOpportunityList, .seoPlanList { display: flex; flex-direction: column; gap: 7px; }
+.seoIssueList article { display: grid; grid-template-columns: 90px minmax(0,1fr); gap: 10px; align-items: start; padding: 10px 0; border-top: 1px solid #15283b; }
+.seoIssueList strong { font-size: 11px; }
+.seoIssueList p { margin: 4px 0 0; color: #7892a7; font-size: 10px; line-height: 1.6; }
+.seoOpportunityList article {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 72px;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid #183149;
+  background: #071522;
+  border-radius: 11px;
+  padding: 11px;
+}
+.seoOpportunityList article > div { display: flex; flex-direction: column; gap: 4px; }
+.seoOpportunityList strong { font-size: 11px; color: #eef7ff; }
+.seoOpportunityList p { margin: 0; color: #8199ad; font-size: 10px; line-height: 1.55; }
+.seoOpportunityList small { color: #70a7c6; font-size: 9px; line-height: 1.5; }
+.seoOpportunityList b { color: #69d1ff; font-size: 17px; text-align: center; }
+.codeResult pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  direction: ltr;
+  text-align: left;
+  color: #b9dff5;
+  font-size: 10px;
+  line-height: 1.65;
+  background: #04101a;
+  border: 1px solid #17324a;
+  border-radius: 11px;
+  padding: 13px;
+}
+.seoPlanList article { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 10px; align-items: center; border-top: 1px solid #15283b; padding: 11px 0; }
+.seoPlanList article > div { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.seoPlanList strong { font-size: 11px; }
+.seoPlanList div span { color: #728a9e; font-size: 9px; overflow-wrap: anywhere; }
+.seoOverviewGrid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }
+.seoOverviewGrid article { border: 1px solid #183149; background: #071522; border-radius: 13px; padding: 16px; min-height: 155px; }
+.seoOverviewGrid svg { color: #65caff; margin-bottom: 16px; }
+.seoOverviewGrid strong { display: block; font-size: 12px; margin-bottom: 7px; }
+.seoOverviewGrid p { color: #7891a6; font-size: 10px; line-height: 1.7; margin: 0; }
+.seoEmpty { min-height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; color: #657f95; }
+.seoEmpty p { margin: 0; font-size: 10px; }
+
+@media (max-width: 1100px) {
+  .seoTopGrid, .seoSplit { grid-template-columns: 1fr; }
+  .seoMetricRow { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .seoOverviewGrid { grid-template-columns: 1fr; }
+}
+@media (max-width: 680px) {
+  .seoHero { align-items: flex-start; flex-direction: column; }
+  .seoSafety { min-width: 0; max-width: none; width: 100%; }
+  .seoAddProject { grid-template-columns: 1fr; }
+  .seoMetricRow, .crawlTotals { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .seoIssueList article { grid-template-columns: 78px minmax(0,1fr); }
+}

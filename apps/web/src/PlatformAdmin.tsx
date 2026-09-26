@@ -544,9 +544,9 @@ function PlatformConsole({
             <div className="platformGrid integrationsGrid">
               <form className="panel integrationEditor" onSubmit={saveIntegration}>
                 <div className="opsTitle"><KeyRound size={19}/><strong>{ar ? "تكاملات الشركة" : "Tenant integrations"}</strong></div>
-                <p className="platformHint">{ar ? "يمكن حفظ مفاتيح WhatsApp أو OpenAI أو Telegram وغيرها. الأسرار تشفر في قاعدة البيانات ولا تعاد للواجهة." : "Store WhatsApp, OpenAI, Telegram or other credentials. Secrets are encrypted at rest and are never returned to the UI."}</p>
+                <p className="platformHint">{ar ? "يمكن حفظ مفاتيح WhatsApp أو Google Search Console أو SEO CMS Bridge أو OpenAI أو Telegram وغيرها. الأسرار تشفر في قاعدة البيانات ولا تعاد للواجهة." : "Store WhatsApp, Search Console, SEO CMS Bridge, OpenAI, Telegram or other credentials. Secrets are encrypted at rest and are never returned to the UI."}</p>
                 <div className="formGrid">
-                  <label>Provider<select name="provider" defaultValue="whatsapp"><option value="whatsapp">WhatsApp</option><option value="openai">OpenAI</option><option value="telegram">Telegram</option><option value="instagram">Instagram</option><option value="messenger">Messenger</option><option value="custom">Custom</option></select></label>
+                  <label>Provider<select name="provider" defaultValue="whatsapp"><option value="whatsapp">WhatsApp</option><option value="openai">OpenAI</option><option value="google-search-console">Google Search Console</option><option value="seo-cms-bridge">SEO CMS Bridge</option><option value="telegram">Telegram</option><option value="instagram">Instagram</option><option value="messenger">Messenger</option><option value="custom">Custom</option></select></label>
                   <label>{ar ? "الاسم الظاهر" : "Display name"}<input name="display_name" defaultValue="WhatsApp Business" required/></label>
                 </div>
                 <label>{ar ? "إعدادات عامة JSON" : "Public config JSON"}<textarea name="public_config" rows={5} defaultValue={'{"phone_number_id":""}'}/></label>

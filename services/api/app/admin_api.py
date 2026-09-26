@@ -26,6 +26,7 @@ from .models import (
 from .policy import RequestContext, get_request_context, manage_users
 from .quota import ensure_profile
 from .saas_models import TenantIntegration, TenantSaaSProfile
+from .seo_models import SEOChangeDraft, SEOProject, SEOSnapshot
 from .workspace_models import FollowUpTask, InboxConversation, InboxMessage, KnowledgeDocument
 
 router = APIRouter(prefix="/api/v1")
@@ -215,6 +216,9 @@ def export_backup(
         "followup_tasks": (FollowUpTask, set()),
         "tenant_saas_profiles": (TenantSaaSProfile, set()),
         "tenant_integrations": (TenantIntegration, {"encrypted_secret_json"}),
+        "seo_projects": (SEOProject, set()),
+        "seo_snapshots": (SEOSnapshot, set()),
+        "seo_change_drafts": (SEOChangeDraft, set()),
         "audit_events": (AuditEvent, set()),
     }
 
