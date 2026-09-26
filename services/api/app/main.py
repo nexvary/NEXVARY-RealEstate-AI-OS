@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from .api import router
+from .ai_api import router as ai_router
 from .config import get_settings
 from .db import Base, engine
 from .security import validate_production_secrets
@@ -46,6 +47,7 @@ app.include_router(setup_router)
 app.include_router(router)
 app.include_router(workspace_router)
 app.include_router(finance_router)
+app.include_router(ai_router)
 
 static_dir = os.getenv("NEXVARY_STATIC_DIR")
 if static_dir:
