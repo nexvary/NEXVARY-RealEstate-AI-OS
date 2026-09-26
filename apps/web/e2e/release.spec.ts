@@ -116,6 +116,86 @@ test("white-label SEO workspace creates site, schema and guarded dry-run plan", 
   await expect(page.getByText("review_required")).toBeVisible();
 });
 
+test("commercial platform creates a reusable tenant template and provisions a company", async ({ page, isMobile }) => {
+  if (isMobile) test.skip();
+
+  await page.goto("/");
+  await page.getByRole("button", { name: "إدارة منصة NEXVARY والشركات" }).click();
+  await page.getByLabel("البريد الإلكتروني").fill("owner@nexvary.test");
+  await page.getByLabel("كلمة المرور").fill("ReleaseGate123!");
+  await page.getByRole("button", { name: "دخول إدارة المنصة" }).click();
+  await expect(page.getByText("الاشتراكات والفواتير وقوالب الشركات")).toBeVisible();
+
+  const templateForm = page.locator("form").filter({ hasText: "إنشاء قالب شركة" });
+  await templateForm.getByLabel("اسم القالب").fill("E2E Commercial Pro");
+  await templateForm.getByLabel("الاشتراك").fill("249");
+  await templateForm.getByRole("button", { name: "حفظ القالب" }).click();
+  await expect(page.getByText("تم حفظ قالب الشركة.")).toBeVisible();
+
+  const provisionForm = page.locator("form").filter({ hasText: "إنشاء شركة بضغطة واحدة" });
+  await provisionForm.getByLabel("القالب").selectOption({ label: /E2E Commercial Pro/ });
+  await provisionForm.getByLabel("اسم الشركة").fill("Commercial E2E Realty");
+  await provisionForm.getByLabel("المعرّف").fill("commercial-e2e");
+  await provisionForm.getByLabel("الاسم التجاري").fill("COMMERCIAL E2E");
+  await provisionForm.getByLabel("اسم المالك").fill("Commercial Owner");
+  await provisionForm.getByLabel("بريد المالك").fill("owner@commercial-e2e.test");
+  await provisionForm.getByLabel("كلمة المرور").fill("CommercialRelease123!");
+  await provisionForm.getByRole("button", { name: "إنشاء الشركة كاملة" }).click();
+
+  await expect(page.getByText(/تم إنشاء الشركة commercial-e2e بالكامل/)).toBeVisible();
+  await expect(page.getByRole("button", { name: /COMMERCIAL E2E/ })).toBeVisible();
+});
+
+test("tenant WhatsApp channel configuration is usable without exposing secrets", async ({ page, isMobile }) => {
+  if (isMobile) test.skip();
+
+  await page.goto("/");
+  await page.getByLabel("معرّف الشركة").fill("nexvary-test");
+  await page.getByLabel("البريد الإلكتروني").fill("owner@nexvary.test");
+  await page.getByLabel("كلمة المرور").fill("ReleaseGate123!");
+  await page.getByRole("button", { name: "تسجيل الدخول" }).click();
+
+  await page.getByRole("button", { name: "قنوات WhatsApp" }).click();
+  await expect(page.getByText("قنوات WhatsApp الخاصة بالشركة")).toBeVisible();
+
+  const form = page.locator("form").filter({ hasText: "إضافة قناة" });
+  await form.getByLabel("الاسم الظاهر").fill("E2E Sales WhatsApp");
+  await form.getByLabel("Phone Number ID").fill("e2e-phone-123");
+  await form.getByLabel("WABA ID").fill("e2e-waba-456");
+  await form.getByLabel("رقم النشاط").fill("+201111111111");
+  await form.getByLabel("Access Token").fill("e2e-secret-token");
+  await form.getByLabel("App Secret").fill("e2e-app-secret");
+  await form.getByRole("button", { name: "حفظ القناة" }).click();
+
+  await expect(page.getByText("تم حفظ قناة WhatsApp ومفاتيحها بصورة مشفرة.")).toBeVisible();
+  await expect(page.getByText("E2E Sales WhatsApp")).toBeVisible();
+  await expect(page.getByText("e2e-secret-token")).toHaveCount(0);
+  await page.getByRole("button", { name: "فحص الجاهزية" }).click();
+  await expect(page.getByText(/القناة جاهزة للاستخدام/)).toBeVisible();
+});
+
+test("SEO Autopilot synchronizes real-estate project pages from live inventory data", async ({ page, isMobile }) => {
+  if (isMobile) test.skip();
+
+  await page.goto("/");
+  await page.getByLabel("معرّف الشركة").fill("nexvary-test");
+  await page.getByLabel("البريد الإلكتروني").fill("owner@nexvary.test");
+  await page.getByLabel("كلمة المرور").fill("ReleaseGate123!");
+  await page.getByRole("button", { name: "تسجيل الدخول" }).click();
+
+  await page.getByRole("button", { name: "SEO Autopilot" }).click();
+  await page.getByRole("button", { name: "SEO E2E Site" }).click();
+  await page.getByRole("button", { name: "صفحات العقارات" }).click();
+
+  await expect(page.getByText("صفحات المشروعات والوحدات العقارية")).toBeVisible();
+  await page.getByLabel("المشروع العقاري").selectOption({ label: /بوابة القاهرة/ });
+  await page.getByRole("button", { name: "مزامنة المشروع وكل وحداته" }).click();
+
+  await expect(page.getByText(/حقول مختلقة: 0/)).toBeVisible();
+  await expect(page.getByText("SEO ready")).toBeVisible();
+  await expect(page.getByText(/بوابة القاهرة — New Cairo/)).toBeVisible();
+});
+
 test("mobile layout exposes navigation and does not overflow core controls", async ({ page, isMobile }) => {
   if (!isMobile) test.skip();
 
