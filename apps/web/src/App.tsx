@@ -1,5 +1,6 @@
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
 import { AICopilotOps, FinanceOps, InventoryOps, InboxOps, KnowledgeOps, SettingsOps, TasksOps, TeamOps } from "./Operations";
+import PlatformAdminCenter from "./PlatformAdmin";
 
 import {
   ArrowLeft,
@@ -298,6 +299,7 @@ export default function App() {
   const [locale, setLocale] = useState<Locale>("ar");
   const [session, setSession] = useState<AuthSession | null>(() => readSession());
   const [setup, setSetup] = useState<SetupStatus | null>(null);
+  const [platformMode, setPlatformMode] = useState(false);
 
   useEffect(() => {
     fetch(`${API_URL}/api/v1/setup/status`)
@@ -312,12 +314,16 @@ export default function App() {
     setSetup((current) => current ? { ...current, needs_setup: false, tenant_count: Math.max(1, current.tenant_count) } : current);
   }
 
+  if (platformMode) {
+    return <PlatformAdminCenter locale={locale} setLocale={setLocale} onBack={() => setPlatformMode(false)} />;
+  }
+
   if (!session && setup?.needs_setup) {
     return <FirstRunSetup locale={locale} setLocale={setLocale} onAuthenticated={acceptSession} />;
   }
 
   if (!session) {
-    return <Login locale={locale} setLocale={setLocale} onAuthenticated={acceptSession} />;
+    return <Login locale={locale} setLocale={setLocale} onAuthenticated={acceptSession} onPlatformAdmin={() => setPlatformMode(true)} />;
   }
 
   return <ControlCenter locale={locale} setLocale={setLocale} session={session} onSignOut={() => {
@@ -419,10 +425,12 @@ function Login({
   locale,
   setLocale,
   onAuthenticated,
+  onPlatformAdmin,
 }: {
   locale: Locale;
   setLocale: (locale: Locale) => void;
   onAuthenticated: (session: AuthSession) => void;
+  onPlatformAdmin: () => void;
 }) {
   const t = copy[locale];
   const dir = locale === "ar" ? "rtl" : "ltr";
@@ -485,6 +493,10 @@ function Login({
             {busy ? t.loginBusy : t.login}
           </button>
         </form>
+        <button className="platformEntryButton" type="button" onClick={onPlatformAdmin}>
+          <ShieldCheck size={17}/>
+          {locale === "ar" ? "إدارة منصة NEXVARY والشركات" : "NEXVARY Platform Admin"}
+        </button>
         <div className="secureNote"><span className="statusDot" />{t.secure}</div>
       </section>
     </div>
