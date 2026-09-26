@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
 import {
   Activity,
   ArrowLeft,
@@ -596,7 +596,7 @@ function PlatformConsole({
   );
 }
 
-function PlatformStat({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
+function PlatformStat({ icon, label, value }: { icon: ReactNode; label: string; value: number }) {
   return <div className="platformStat"><div>{icon}</div><strong>{value.toLocaleString()}</strong><span>{label}</span></div>;
 }
 
