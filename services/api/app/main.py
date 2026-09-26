@@ -19,6 +19,11 @@ from .setup_api import router as setup_router
 from .finance_api import router as finance_router
 from .platform_api import router as platform_router
 from .workspace_api import router as workspace_router
+from .production_api import (
+    platform_router as production_platform_router,
+    public_router as production_public_router,
+    tenant_router as production_tenant_router,
+)
 
 settings = get_settings()
 validate_production_secrets()
@@ -61,6 +66,9 @@ app.include_router(branding_router)
 app.include_router(seo_router)
 app.include_router(commercial_platform_router)
 app.include_router(commercial_tenant_router)
+app.include_router(production_platform_router)
+app.include_router(production_tenant_router)
+app.include_router(production_public_router)
 
 static_dir = os.getenv("NEXVARY_STATIC_DIR")
 if static_dir:
