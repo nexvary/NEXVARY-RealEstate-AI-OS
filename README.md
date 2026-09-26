@@ -4,7 +4,7 @@ AI-first, multi-tenant, white-label operating system for real-estate companies.
 
 ## Current release line
 
-**v1.1.0 — Platform Admin**
+**v1.2.0 — Platform Admin + White-Label SEO Autopilot**
 
 The product now has two isolated workspaces:
 
@@ -53,6 +53,8 @@ The platform separates exact transactional data from probabilistic AI:
 - Arabic RTL + English.
 - Responsive desktop/mobile web UI.
 - Company logo, social links and custom white-label identity.
+- Integrated White-Label SEO Autopilot workspace copied from the preserved original SEO project.
+- Technical audits, bounded crawling, Search Console read-only analytics, opportunities, schema, performance and guarded dry-run SEO planning.
 
 ## Security boundaries
 
@@ -110,3 +112,4 @@ docker compose up -d postgres redis n8n
 - [Roadmap](docs/ROADMAP.md)
 - [Stage 170 release](docs/STAGE_170_RELEASE.md)
 - [Platform Admin & White Label](docs/PLATFORM_ADMIN.md)
+- [White-Label SEO Autopilot integration](docs/SEO_AUTOPILOT_INTEGRATION.md)
