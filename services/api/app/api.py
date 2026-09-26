@@ -26,7 +26,8 @@ from .models import (
     UserRole,
 )
 from .policy import RequestContext, get_request_context, manage_inventory, manage_users, write_sales
-from .quota import enforce_entity_limit
+from .quota import PLAN_DEFAULTS, enforce_entity_limit
+from .saas_models import TenantLifecycle, TenantPlan, TenantSaaSProfile
 from .schemas import (
     AppointmentCreate,
     AppointmentRead,
@@ -121,6 +122,14 @@ def provision_company(
         )
         db.add(owner)
         db.flush()
+        db.add(
+            TenantSaaSProfile(
+                tenant_id=tenant.id,
+                plan=TenantPlan.professional,
+                lifecycle=TenantLifecycle.active,
+                **PLAN_DEFAULTS[TenantPlan.professional],
+            )
+        )
         db.add(
             AuditEvent(
                 tenant_id=tenant.id,
