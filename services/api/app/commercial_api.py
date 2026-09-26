@@ -460,6 +460,72 @@ def void_invoice(
     return row
 
 
+def _seed_default_templates(db: Session) -> list[TenantTemplate]:
+    presets = [
+        {
+            "name": "Real Estate Starter",
+            "description": "Starter white-label workspace with CRM, WhatsApp and SEO.",
+            "plan": TenantPlan.starter,
+            "primary_color": "#0B1F33",
+            "providers": ["whatsapp", "google-search-console"],
+            "features": {"seo": True, "whatsapp": True, "ai_sales": True},
+        },
+        {
+            "name": "Real Estate Professional",
+            "description": "Professional sales, AI, SEO and omnichannel workspace.",
+            "plan": TenantPlan.professional,
+            "primary_color": "#0B1F33",
+            "providers": ["whatsapp", "google-search-console", "openai"],
+            "features": {"seo": True, "whatsapp": True, "ai_sales": True, "finance": True},
+        },
+        {
+            "name": "Real Estate Enterprise",
+            "description": "High-capacity enterprise white-label tenant with full commercial modules.",
+            "plan": TenantPlan.enterprise,
+            "primary_color": "#0B1F33",
+            "providers": ["whatsapp", "google-search-console", "openai", "seo-cms-bridge"],
+            "features": {"seo": True, "whatsapp": True, "ai_sales": True, "finance": True, "custom_domain": True},
+        },
+    ]
+    created: list[TenantTemplate] = []
+    for preset in presets:
+        existing = db.scalar(select(TenantTemplate).where(TenantTemplate.name == preset["name"]))
+        if existing:
+            created.append(existing)
+            continue
+        defaults = PLAN_DEFAULTS[preset["plan"]]
+        row = TenantTemplate(
+            name=preset["name"],
+            description=preset["description"],
+            plan=preset["plan"].value,
+            primary_color=preset["primary_color"],
+            powered_by_nexvary=1,
+            max_users=defaults["max_users"],
+            max_projects=defaults["max_projects"],
+            max_units=defaults["max_units"],
+            max_monthly_ai_requests=defaults["max_monthly_ai_requests"],
+            feature_flags_json=json.dumps(preset["features"], ensure_ascii=False),
+            integration_providers_json=json.dumps(preset["providers"], ensure_ascii=False),
+            subscription_amount=0,
+            subscription_currency="USD",
+            billing_cycle=BillingCycle.monthly,
+        )
+        db.add(row)
+        created.append(row)
+    db.commit()
+    for row in created:
+        db.refresh(row)
+    return created
+
+
+@platform_router.post("/templates/seed-defaults", response_model=list[TemplateRead])
+def seed_default_templates(
+    _: PlatformContext = Depends(get_platform_context),
+    db: Session = Depends(get_db),
+) -> list[TemplateRead]:
+    return [template_read(row) for row in _seed_default_templates(db)]
+
+
 @platform_router.get("/templates", response_model=list[TemplateRead])
 def list_templates(
     _: PlatformContext = Depends(get_platform_context),
