@@ -37,7 +37,7 @@ test("desktop first-run, navigation, lead flow and back button", async ({ page, 
   await projectForm.locator('input[name="name"]').fill("بوابة القاهرة");
   await projectForm.locator('input[name="city"]').fill("New Cairo");
   await projectForm.getByRole("button", { name: "إضافة المشروع" }).click();
-  await expect(page.getByText("بوابة القاهرة")).toBeVisible();
+  await expect(page.locator('select[name="project_id"]').first()).toContainText("بوابة القاهرة");
 
   await page.getByRole("button", { name: "رجوع" }).click();
   await expect(page.getByText("مركز قيادة المبيعات")).toBeVisible();
