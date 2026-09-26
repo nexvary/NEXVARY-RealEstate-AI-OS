@@ -46,6 +46,40 @@ test("desktop first-run, navigation, lead flow and back button", async ({ page, 
   await expect(page.getByText("Sales Command Center")).toBeVisible();
 });
 
+test("platform admin creates and manages a second white-label company", async ({ page, isMobile }) => {
+  if (isMobile) test.skip();
+
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: "إدارة منصة NEXVARY والشركات" })).toBeVisible();
+  await page.getByRole("button", { name: "إدارة منصة NEXVARY والشركات" }).click();
+
+  await expect(page.getByText("إدارة جميع شركات العقارات")).toBeVisible();
+  await page.getByLabel("البريد الإلكتروني").fill("owner@nexvary.test");
+  await page.getByLabel("كلمة المرور").fill("ReleaseGate123!");
+  await page.getByRole("button", { name: "دخول إدارة المنصة" }).click();
+
+  await expect(page.getByText("إدارة شركات العقارات")).toBeVisible();
+  await page.getByRole("button", { name: "شركة جديدة" }).click();
+
+  const modal = page.locator(".platformCreateModal");
+  await modal.getByLabel("اسم الشركة").fill("Atlas E2E Realty");
+  await modal.getByLabel("معرّف الشركة").fill("atlas-e2e");
+  await modal.getByLabel("الاسم التجاري").fill("ATLAS E2E");
+  await modal.getByLabel("اسم المالك").fill("Atlas Owner");
+  await modal.getByLabel("بريد المالك").fill("owner@atlas-e2e.test");
+  await modal.getByLabel("كلمة مرور المالك").fill("AtlasRelease123!");
+  await modal.getByLabel("الخطة").selectOption("starter");
+  await modal.getByRole("button", { name: "إنشاء الشركة" }).click();
+
+  await expect(page.getByText("تم إنشاء الشركة ومساحة العمل وحساب المالك.")).toBeVisible();
+  await expect(page.getByRole("button", { name: /ATLAS E2E/ })).toBeVisible();
+
+  await page.getByLabel("الحالة").selectOption("suspended");
+  await page.getByRole("button", { name: "حفظ إعدادات الشركة" }).click();
+  await expect(page.getByText("تم تحديث إعدادات الشركة.")).toBeVisible();
+  await expect(page.locator(".tenantInspector .status-suspended")).toBeVisible();
+});
+
 test("mobile layout exposes navigation and does not overflow core controls", async ({ page, isMobile }) => {
   if (!isMobile) test.skip();
 
