@@ -192,7 +192,7 @@ test("bank-transfer billing requires platform verification before payment", asyn
   await transferForm.getByRole("button", { name: "إرسال للتحقق" }).click();
 
   await expect(page.getByText("تم إرسال بيانات التحويل للمراجعة. لن تُعتبر الفاتورة مدفوعة إلا بعد اعتماد التحويل.")).toBeVisible();
-  await expect(page.getByText("التحويل قيد المراجعة")).toBeVisible();
+  await expect(page.locator(".billingInvoice").filter({ hasText: "E2E bank transfer invoice" }).locator(".status-pending_verification")).toBeVisible();
 
   await page.getByRole("button", { name: "تسجيل الخروج" }).click();
   await page.getByRole("button", { name: "إدارة منصة NEXVARY والشركات" }).click();
