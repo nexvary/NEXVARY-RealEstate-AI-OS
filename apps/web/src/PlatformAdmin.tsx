@@ -67,6 +67,14 @@ type Tenant = {
   lifecycle: TenantLifecycle;
   custom_domain?: string | null;
   powered_by_nexvary: boolean;
+  logo_data_url?: string | null;
+  contact_email?: string | null;
+  website_url?: string | null;
+  facebook_url?: string | null;
+  linkedin_url?: string | null;
+  youtube_url?: string | null;
+  x_url?: string | null;
+  tiktok_url?: string | null;
   max_users: number;
   max_projects: number;
   max_units: number;
@@ -275,6 +283,7 @@ function PlatformConsole({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [tenantLogoData, setTenantLogoData] = useState<string | null>(null);
 
   const selected = useMemo(() => tenants.find((item) => item.id === selectedId) || null, [tenants, selectedId]);
 
@@ -312,6 +321,7 @@ function PlatformConsole({
 
   useEffect(() => { void load(); }, [session.access_token]);
   useEffect(() => { void loadIntegrations(selectedId); }, [selectedId]);
+  useEffect(() => { setTenantLogoData(selected?.logo_data_url || null); }, [selectedId, selected?.logo_data_url]);
 
   async function createTenant(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -362,6 +372,14 @@ function PlatformConsole({
           lifecycle: String(data.get("lifecycle") || selected.lifecycle),
           custom_domain: String(data.get("custom_domain") || "").trim() || null,
           powered_by_nexvary: data.get("powered_by_nexvary") === "on",
+          logo_data_url: tenantLogoData,
+          contact_email: String(data.get("contact_email") || "").trim() || null,
+          website_url: String(data.get("website_url") || "").trim() || null,
+          facebook_url: String(data.get("facebook_url") || "").trim() || null,
+          linkedin_url: String(data.get("linkedin_url") || "").trim() || null,
+          youtube_url: String(data.get("youtube_url") || "").trim() || null,
+          x_url: String(data.get("x_url") || "").trim() || null,
+          tiktok_url: String(data.get("tiktok_url") || "").trim() || null,
           max_users: Number(data.get("max_users") || selected.max_users),
           max_projects: Number(data.get("max_projects") || selected.max_projects),
           max_units: Number(data.get("max_units") || selected.max_units),
@@ -483,10 +501,37 @@ function PlatformConsole({
                     <label>{ar ? "الحالة" : "Lifecycle"}<select name="lifecycle" defaultValue={selected.lifecycle}><option value="active">Active</option><option value="trial">Trial</option><option value="suspended">Suspended</option></select></label>
                     <label>{ar ? "النطاق المخصص" : "Custom domain"}<input name="custom_domain" defaultValue={selected.custom_domain || ""} placeholder="crm.company.com"/></label>
                     <label className="checkLabel"><input name="powered_by_nexvary" type="checkbox" defaultChecked={selected.powered_by_nexvary}/><span>{ar ? "إظهار Powered by NEXVARY" : "Show Powered by NEXVARY"}</span></label>
+                    <label>{ar ? "بريد التواصل" : "Contact email"}<input name="contact_email" type="email" defaultValue={selected.contact_email || ""}/></label>
+                    <label>{ar ? "الموقع الإلكتروني" : "Website"}<input name="website_url" defaultValue={selected.website_url || ""}/></label>
+                    <label>Facebook<input name="facebook_url" defaultValue={selected.facebook_url || ""}/></label>
+                    <label>LinkedIn<input name="linkedin_url" defaultValue={selected.linkedin_url || ""}/></label>
+                    <label>YouTube<input name="youtube_url" defaultValue={selected.youtube_url || ""}/></label>
+                    <label>X<input name="x_url" defaultValue={selected.x_url || ""}/></label>
+                    <label>TikTok<input name="tiktok_url" defaultValue={selected.tiktok_url || ""}/></label>
                     <label>{ar ? "حد المستخدمين" : "User limit"}<input name="max_users" type="number" min="1" defaultValue={selected.max_users}/></label>
                     <label>{ar ? "حد المشروعات" : "Project limit"}<input name="max_projects" type="number" min="1" defaultValue={selected.max_projects}/></label>
                     <label>{ar ? "حد الوحدات" : "Unit limit"}<input name="max_units" type="number" min="1" defaultValue={selected.max_units}/></label>
                     <label>{ar ? "طلبات AI شهريًا" : "Monthly AI requests"}<input name="max_monthly_ai_requests" type="number" min="0" defaultValue={selected.max_monthly_ai_requests}/></label>
+                  </div>
+                  <div className="platformBrandAsset">
+                    <div className="brandLogoPreview">
+                      {tenantLogoData ? <img src={tenantLogoData} alt={selected.brand_name || selected.name}/> : <Building2 size={28}/>}
+                    </div>
+                    <label>{ar ? "شعار الشركة PNG/JPG/WEBP" : "Company logo PNG/JPG/WEBP"}
+                      <input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => {
+                        const file = event.target.files?.[0];
+                        if (!file) return;
+                        if (file.size > 1_000_000) {
+                          setError(ar ? "حجم الشعار يجب ألا يتجاوز 1 ميجابايت." : "Logo must be 1 MB or smaller.");
+                          event.target.value = "";
+                          return;
+                        }
+                        const reader = new FileReader();
+                        reader.onload = () => setTenantLogoData(typeof reader.result === "string" ? reader.result : null);
+                        reader.readAsDataURL(file);
+                      }}/>
+                    </label>
+                    {tenantLogoData && <button type="button" className="secondaryButton" onClick={() => setTenantLogoData(null)}>{ar ? "إزالة الشعار" : "Remove logo"}</button>}
                   </div>
                   <label className="checkLabel planDefaults"><input name="apply_plan_defaults" type="checkbox"/><span>{ar ? "تطبيق الحدود الافتراضية للخطة المختارة" : "Apply selected plan defaults"}</span></label>
                   <button className="primaryButton" type="submit"><Save size={17}/>{ar ? "حفظ إعدادات الشركة" : "Save company settings"}</button>
