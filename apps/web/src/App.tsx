@@ -1,4 +1,4 @@
-import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
+import { CSSProperties, FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
 import { AICopilotOps, FinanceOps, InventoryOps, InboxOps, KnowledgeOps, SettingsOps, TasksOps, TeamOps } from "./Operations";
 import PlatformAdminCenter from "./PlatformAdmin";
 
@@ -122,6 +122,18 @@ type TenantSettings = {
   slug: string;
   brand_name?: string | null;
   primary_color: string;
+  logo_data_url?: string | null;
+  contact_email?: string | null;
+  website_url?: string | null;
+  facebook_url?: string | null;
+  linkedin_url?: string | null;
+  youtube_url?: string | null;
+  x_url?: string | null;
+  tiktok_url?: string | null;
+  custom_domain?: string | null;
+  powered_by_nexvary: boolean;
+  plan: string;
+  lifecycle: string;
 };
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://localhost:8000" : window.location.origin);
@@ -608,10 +620,16 @@ function ControlCenter({
       .some((value) => value.toLowerCase().includes(normalizedSearch))
   );
 
+  const tenantStyle = tenantSettings
+    ? ({ "--tenant-primary": tenantSettings.primary_color } as CSSProperties)
+    : undefined;
+
   return (
-    <div className="app" dir={dir}>
+    <div className="app" dir={dir} style={tenantStyle}>
       <aside className="sidebar">
-        <div className="logoMark">N</div>
+        <div className={tenantSettings?.logo_data_url ? "logoMark tenantLogoMark" : "logoMark"}>
+          {tenantSettings?.logo_data_url ? <img src={tenantSettings.logo_data_url} alt={tenantSettings.brand_name || tenantSettings.name}/> : "N"}
+        </div>
         <div className="brandBlock">
           <strong>{tenantSettings?.brand_name || t.brand}</strong>
           <span>{t.subtitle}</span>
@@ -638,7 +656,9 @@ function ControlCenter({
 
       <main className="main">
         <header>
-          <div className="mobileBrand">N</div>
+          <div className={tenantSettings?.logo_data_url ? "mobileBrand tenantLogoMark" : "mobileBrand"}>
+            {tenantSettings?.logo_data_url ? <img src={tenantSettings.logo_data_url} alt={tenantSettings.brand_name || tenantSettings.name}/> : "N"}
+          </div>
           {view !== "dashboard" && (
             <button className="iconButton backButton" onClick={() => setView("dashboard")} title={t.back}>
               {locale === "ar" ? <ArrowRight size={19}/> : <ArrowLeft size={19}/>}
@@ -772,17 +792,29 @@ function ControlCenter({
 
           {view === "about" && (
             <section className="panel aboutPanel">
-              <div className="logoMark">N</div>
-              <span className="eyebrow">NEXVARY</span>
-              <h2>NEXVARY RealEstate AI OS</h2>
-              <p>{locale === "ar" ? "منصة White-Label متعددة الشركات لإدارة المبيعات والمخزون العقاري والأتمتة والوكلاء الذكيين." : "A multi-tenant white-label operating system for real-estate sales, inventory, automation and AI agents."}</p>
-              <div className="aboutLinks">
-                <a href="https://nexvary.com/" target="_blank" rel="noreferrer">Website</a>
-                <a href="https://www.facebook.com/share/14p9krEn5ij/" target="_blank" rel="noreferrer">Facebook</a>
-                <a href="mailto:info@nexvary.com">Email</a>
-                <a href="https://www.youtube.com/@NexvaryInc" target="_blank" rel="noreferrer">YouTube</a>
-                <a href="https://x.com/Nexvary" target="_blank" rel="noreferrer">X</a>
+              <div className={tenantSettings?.logo_data_url ? "logoMark tenantLogoMark" : "logoMark"}>
+                {tenantSettings?.logo_data_url ? <img src={tenantSettings.logo_data_url} alt={tenantSettings.brand_name || tenantSettings.name}/> : "N"}
               </div>
+              <span className="eyebrow">{tenantSettings?.brand_name || tenantSettings?.name || t.brand}</span>
+              <h2>{tenantSettings?.brand_name || tenantSettings?.name || t.brand}</h2>
+              <p>{locale === "ar" ? "منصة تشغيل عقاري لإدارة المبيعات والمخزون والعملاء والأتمتة والذكاء الاصطناعي." : "Real-estate operating workspace for sales, inventory, customers, automation and AI."}</p>
+              <div className="aboutLinks">
+                {tenantSettings?.website_url && <a href={tenantSettings.website_url} target="_blank" rel="noreferrer">Website</a>}
+                {tenantSettings?.facebook_url && <a href={tenantSettings.facebook_url} target="_blank" rel="noreferrer">Facebook</a>}
+                {tenantSettings?.linkedin_url && <a href={tenantSettings.linkedin_url} target="_blank" rel="noreferrer">LinkedIn</a>}
+                {tenantSettings?.youtube_url && <a href={tenantSettings.youtube_url} target="_blank" rel="noreferrer">YouTube</a>}
+                {tenantSettings?.x_url && <a href={tenantSettings.x_url} target="_blank" rel="noreferrer">X</a>}
+                {tenantSettings?.tiktok_url && <a href={tenantSettings.tiktok_url} target="_blank" rel="noreferrer">TikTok</a>}
+                {tenantSettings?.contact_email && <a href={`mailto:${tenantSettings.contact_email}`}>Email</a>}
+              </div>
+              {tenantSettings?.powered_by_nexvary && (
+                <div className="poweredByBlock">
+                  <span>Powered by</span><strong>NEXVARY RealEstate AI OS</strong>
+                  <div className="aboutLinks">
+                    <a href="https://nexvary.com/" target="_blank" rel="noreferrer">NEXVARY</a>
+                  </div>
+                </div>
+              )}
             </section>
           )}
         </section>
