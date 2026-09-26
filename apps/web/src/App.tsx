@@ -1,5 +1,5 @@
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
-import { AICopilotOps, FinanceOps, InventoryOps, InboxOps, KnowledgeOps, TasksOps, TeamOps } from "./Operations";
+import { AICopilotOps, FinanceOps, InventoryOps, InboxOps, KnowledgeOps, SettingsOps, TasksOps, TeamOps } from "./Operations";
 
 import {
   ArrowLeft,
@@ -24,13 +24,14 @@ import {
   RefreshCw,
   Ruler,
   Search,
+  Settings2,
   ShieldCheck,
   Sparkles,
   Users,
 } from "lucide-react";
 
 type Locale = "ar" | "en";
-type View = "dashboard" | "leads" | "inventory" | "manage" | "appointments" | "finance" | "inbox" | "knowledge" | "tasks" | "team" | "ai" | "about";
+type View = "dashboard" | "leads" | "inventory" | "manage" | "appointments" | "finance" | "inbox" | "knowledge" | "tasks" | "team" | "settings" | "ai" | "about";
 
 type User = {
   id: string;
@@ -114,6 +115,14 @@ type Appointment = {
   status: string;
 };
 
+type TenantSettings = {
+  id: string;
+  name: string;
+  slug: string;
+  brand_name?: string | null;
+  primary_color: string;
+};
+
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://localhost:8000" : window.location.origin);
 const SESSION_KEY = "nexvary-realestate-session";
 
@@ -131,6 +140,7 @@ const copy = {
     knowledge: "قاعدة المعرفة",
     tasks: "المهام والمتابعة",
     team: "الفريق والصلاحيات",
+    settings: "إعدادات الشركة",
     ai: "مساعد الذكاء الاصطناعي",
     about: "عن المنصة",
     search: "ابحث داخل الصفحة الحالية...",
@@ -192,6 +202,7 @@ const copy = {
     knowledge: "Knowledge Base",
     tasks: "Tasks",
     team: "Team & Roles",
+    settings: "Company Settings",
     ai: "AI Assistant",
     about: "About",
     search: "Search the current view...",
@@ -253,6 +264,7 @@ const navItems = [
   { id: "knowledge" as View, icon: BookOpen, key: "knowledge" as const },
   { id: "tasks" as View, icon: ClipboardCheck, key: "tasks" as const },
   { id: "team" as View, icon: ShieldCheck, key: "team" as const },
+  { id: "settings" as View, icon: Settings2, key: "settings" as const },
   { id: "ai" as View, icon: Bot, key: "ai" as const },
   { id: "about" as View, icon: Info, key: "about" as const },
 ];
@@ -498,6 +510,7 @@ function ControlCenter({
   const [leads, setLeads] = useState<Lead[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [tenantSettings, setTenantSettings] = useState<TenantSettings | null>(null);
   const [busy, setBusy] = useState(true);
   const [systemError, setSystemError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -511,18 +524,20 @@ function ControlCenter({
     setBusy(true);
     setSystemError("");
     try {
-      const [overviewData, pipelineData, leadData, unitData, appointmentData] = await Promise.all([
+      const [overviewData, pipelineData, leadData, unitData, appointmentData, settingsData] = await Promise.all([
         api<Overview>("/api/v1/overview", session.access_token),
         api<Pipeline>("/api/v1/pipeline", session.access_token),
         api<Lead[]>("/api/v1/leads", session.access_token),
         api<Unit[]>("/api/v1/units", session.access_token),
         api<Appointment[]>("/api/v1/appointments", session.access_token),
+        api<TenantSettings>("/api/v1/tenant/settings", session.access_token),
       ]);
       setOverview(overviewData);
       setPipeline(pipelineData);
       setLeads(leadData);
       setUnits(unitData);
       setAppointments(appointmentData);
+      setTenantSettings(settingsData);
     } catch (error) {
       const typed = error as Error & { status?: number };
       if (typed.status === 401) {
@@ -586,7 +601,7 @@ function ControlCenter({
       <aside className="sidebar">
         <div className="logoMark">N</div>
         <div className="brandBlock">
-          <strong>{t.brand}</strong>
+          <strong>{tenantSettings?.brand_name || t.brand}</strong>
           <span>{t.subtitle}</span>
         </div>
         <nav>
@@ -723,6 +738,7 @@ function ControlCenter({
           {view === "knowledge" && <KnowledgeOps token={session.access_token} locale={locale} />}
           {view === "tasks" && <TasksOps token={session.access_token} locale={locale} />}
           {view === "team" && <TeamOps token={session.access_token} locale={locale} />}
+          {view === "settings" && <SettingsOps token={session.access_token} locale={locale} onSaved={() => void loadData()} />}
 
           {view === "appointments" && (
             <section className="panel appointmentsPanel">
