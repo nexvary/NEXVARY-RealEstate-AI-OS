@@ -9,7 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from .commercial_models import BillingInvoice, SaaSSubscription, SEOEntityPage, TenantTemplate, WhatsAppChannel
+from .commercial_models import BankTransferSubmission, BillingInvoice, SaaSSubscription, SEOEntityPage, TenantTemplate, WhatsAppChannel
 from .db import get_db
 from .finance_models import BrokerCommission, Contract, Installment
 from .models import (
@@ -219,6 +219,7 @@ def export_backup(
         "tenant_integrations": (TenantIntegration, {"encrypted_secret_json"}),
         "saas_subscriptions": (SaaSSubscription, set()),
         "billing_invoices": (BillingInvoice, set()),
+        "bank_transfer_submissions": (BankTransferSubmission, set()),
         "whatsapp_channels": (WhatsAppChannel, set()),
         "seo_entity_pages": (SEOEntityPage, set()),
         "seo_projects": (SEOProject, set()),
