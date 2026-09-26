@@ -9,7 +9,7 @@ def test_health() -> None:
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
-    assert response.json()["version"] == "1.0.0-stage170"
+    assert response.json()["version"] == "1.1.0-platform-admin"
 
 
 def test_business_routes_require_bearer_token() -> None:
