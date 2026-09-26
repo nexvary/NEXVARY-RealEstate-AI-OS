@@ -2,6 +2,7 @@ import { CSSProperties, FormEvent, ReactNode, useEffect, useMemo, useState } fro
 import { AICopilotOps, FinanceOps, InventoryOps, InboxOps, KnowledgeOps, SettingsOps, TasksOps, TeamOps } from "./Operations";
 import PlatformAdminCenter from "./PlatformAdmin";
 import SEOAutopilot from "./SEOAutopilot";
+import WhatsAppOps from "./CommercialOps";
 
 import {
   ArrowLeft,
@@ -34,7 +35,7 @@ import {
 } from "lucide-react";
 
 type Locale = "ar" | "en";
-type View = "dashboard" | "leads" | "inventory" | "manage" | "appointments" | "finance" | "inbox" | "knowledge" | "tasks" | "team" | "settings" | "ai" | "seo" | "about";
+type View = "dashboard" | "leads" | "inventory" | "manage" | "appointments" | "finance" | "inbox" | "whatsapp" | "knowledge" | "tasks" | "team" | "settings" | "ai" | "seo" | "about";
 
 type User = {
   id: string;
@@ -161,6 +162,7 @@ const copy = {
     appointments: "المعاينات",
     finance: "العقود والمالية",
     inbox: "المحادثات",
+    whatsapp: "قنوات WhatsApp",
     knowledge: "قاعدة المعرفة",
     tasks: "المهام والمتابعة",
     team: "الفريق والصلاحيات",
@@ -224,6 +226,7 @@ const copy = {
     appointments: "Viewings",
     finance: "Contracts & Finance",
     inbox: "Inbox",
+    whatsapp: "WhatsApp Channels",
     knowledge: "Knowledge Base",
     tasks: "Tasks",
     team: "Team & Roles",
@@ -287,6 +290,7 @@ const navItems = [
   { id: "appointments" as View, icon: CalendarDays, key: "appointments" as const },
   { id: "finance" as View, icon: CircleDollarSign, key: "finance" as const },
   { id: "inbox" as View, icon: MessageSquare, key: "inbox" as const },
+  { id: "whatsapp" as View, icon: MessageSquare, key: "whatsapp" as const },
   { id: "knowledge" as View, icon: BookOpen, key: "knowledge" as const },
   { id: "tasks" as View, icon: ClipboardCheck, key: "tasks" as const },
   { id: "team" as View, icon: ShieldCheck, key: "team" as const },
@@ -797,6 +801,7 @@ function ControlCenter({
           {view === "manage" && <InventoryOps token={session.access_token} locale={locale} />}
           {view === "finance" && <FinanceOps token={session.access_token} locale={locale} />}
           {view === "inbox" && <InboxOps token={session.access_token} locale={locale} />}
+          {view === "whatsapp" && <WhatsAppOps token={session.access_token} locale={locale} />}
           {view === "knowledge" && <KnowledgeOps token={session.access_token} locale={locale} />}
           {view === "tasks" && <TasksOps token={session.access_token} locale={locale} />}
           {view === "team" && <TeamOps token={session.access_token} locale={locale} />}

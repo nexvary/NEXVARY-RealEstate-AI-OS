@@ -1,7 +1,9 @@
+import RealEstateSEO from "./RealEstateSEO";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   BarChart3,
   Bot,
+  Building2,
   CheckCircle2,
   Code2,
   Globe2,
@@ -15,7 +17,7 @@ import {
 } from "lucide-react";
 
 type Locale = "ar" | "en";
-type Tab = "overview" | "audit" | "crawl" | "search" | "schema" | "performance" | "autopilot";
+type Tab = "overview" | "realestate" | "audit" | "crawl" | "search" | "schema" | "performance" | "autopilot";
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://localhost:8000" : window.location.origin);
 
@@ -330,6 +332,7 @@ export default function SEOAutopilot({
 
   const tabs: Array<{ id: Tab; labelAr: string; labelEn: string; icon: typeof Search }> = [
     { id: "overview", labelAr: "نظرة عامة", labelEn: "Overview", icon: BarChart3 },
+    { id: "realestate", labelAr: "صفحات العقارات", labelEn: "Real Estate Pages", icon: Building2 },
     { id: "audit", labelAr: "فحص SEO", labelEn: "Audit", icon: Search },
     { id: "crawl", labelAr: "الزاحف", labelEn: "Crawler", icon: Radar },
     { id: "search", labelAr: "Search Console", labelEn: "Search Console", icon: Globe2 },
@@ -392,6 +395,8 @@ export default function SEOAutopilot({
           <article><Bot/><strong>{ar ? "Autopilot محمي" : "Guarded Autopilot"}</strong><p>{ar ? "إنشاء خطط وتصنيف مخاطر بدون زر كتابة حي على الموقع في هذه المرحلة." : "Creates plans and risk classifications without exposing a live-write button in this stage."}</p></article>
         </div>
       </section>}
+
+      {tab === "realestate" && <RealEstateSEO token={token} locale={locale} seoProjectId={selected.id} />}
 
       {tab === "audit" && <div className="seoSplit">
         <form className="panel seoForm" onSubmit={runAudit}>

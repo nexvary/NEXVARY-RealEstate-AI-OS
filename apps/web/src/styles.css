@@ -840,3 +840,97 @@ button:disabled { opacity: .6; cursor: wait; }
   .seoMetricRow, .crawlTotals { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .seoIssueList article { grid-template-columns: 78px minmax(0,1fr); }
 }
+
+
+/* Commercial v1.3 */
+.commercialAdmin { display:flex; flex-direction:column; gap:14px; margin-top:18px; }
+.commercialHeading { display:flex; align-items:center; justify-content:space-between; gap:14px; }
+.commercialHeading h2 { margin:4px 0 0; font-size:20px; }
+.commercialGrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+.commercialForm { display:flex; flex-direction:column; gap:10px; }
+.commercialForm label { display:flex; flex-direction:column; gap:6px; color:#8da5ba; font-size:10px; }
+.commercialForm input, .commercialForm select, .commercialForm textarea {
+  width:100%; border:1px solid #1d3a54; border-radius:10px; background:#06101c; color:#edf7ff; padding:10px 11px; outline:none;
+}
+.commercialForm input:focus, .commercialForm select:focus, .commercialForm textarea:focus {
+  border-color:#279ceb; box-shadow:0 0 0 3px rgba(39,156,235,.1);
+}
+.templateFlags { display:flex; flex-wrap:wrap; gap:8px 16px; margin:4px 0; }
+.invoicePanel { overflow:hidden; }
+.invoiceRows { display:flex; flex-direction:column; overflow-x:auto; }
+.invoiceRows article {
+  min-width:760px; display:grid; grid-template-columns:minmax(230px,1fr) 130px 90px 170px; gap:12px; align-items:center; padding:11px 0; border-top:1px solid #15283b;
+}
+.invoiceRows article > div:first-child { display:flex; flex-direction:column; gap:4px; }
+.invoiceRows strong { font-size:11px; color:#eaf5ff; }
+.invoiceRows span { color:#728ba1; font-size:9px; }
+.invoiceRows b { color:#70ceff; font-size:11px; }
+.invoiceActions { display:flex; gap:6px; justify-content:flex-end; }
+.invoiceActions .secondaryButton { min-height:32px; padding:0 9px; }
+.templateShelf { overflow:hidden; }
+.templateCards { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
+.templateCards article {
+  display:grid; grid-template-columns:10px minmax(0,1fr) auto; gap:10px; align-items:center; border:1px solid #183149; border-radius:11px; background:#071522; padding:11px;
+}
+.templateColor { width:10px; height:46px; border-radius:99px; }
+.templateCards article > div { display:flex; flex-direction:column; gap:4px; min-width:0; }
+.templateCards strong { font-size:11px; }
+.templateCards span, .templateCards small { color:#718a9f; font-size:9px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.templateCards b { color:#72cfff; font-size:10px; white-space:nowrap; }
+
+.whatsappGrid { display:grid; grid-template-columns:minmax(340px,.78fr) minmax(0,1.22fr); gap:14px; }
+.secretBox {
+  display:flex; gap:10px; align-items:flex-start; border:1px solid rgba(86,196,255,.18); background:rgba(31,125,184,.06); border-radius:11px; padding:11px; color:#73cffb;
+}
+.secretBox > div { display:flex; flex-direction:column; gap:4px; }
+.secretBox strong { font-size:10px; }
+.secretBox span { color:#718b9f; font-size:9px; line-height:1.55; }
+.whatsappList { min-height:450px; }
+.whatsappChannelCard {
+  display:grid; grid-template-columns:44px minmax(0,1fr) auto auto auto; gap:10px; align-items:center; padding:12px 0; border-top:1px solid #15283b;
+}
+.channelIcon { width:38px; height:38px; border-radius:11px; display:grid; place-items:center; background:#0b2b2b; color:#72e6c3; border:1px solid rgba(77,219,175,.18); }
+.channelMain { display:flex; flex-direction:column; gap:4px; min-width:0; }
+.channelMain strong { font-size:11px; color:#edf7ff; }
+.channelMain span, .channelMain small { color:#708b9f; font-size:9px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.defaultBadge { border:1px solid rgba(107,167,255,.22); background:rgba(65,116,200,.08); color:#91bdff; border-radius:999px; padding:5px 8px; font-size:9px; }
+.channelPolicyNote { display:flex; gap:8px; align-items:flex-start; border-top:1px solid #15283b; margin-top:14px; padding-top:12px; color:#7290a5; font-size:9px; line-height:1.65; }
+.channelPolicyNote svg { color:#63d6ad; flex:0 0 auto; }
+
+.realEstateSeo { display:flex; flex-direction:column; gap:12px; }
+.realEstateSeoControls { display:grid; grid-template-columns:minmax(260px,1fr) auto auto; gap:9px; align-items:end; }
+.realEstateSeoControls label { display:flex; flex-direction:column; gap:6px; color:#8aa2b6; font-size:10px; }
+.realEstateSeoControls select { width:100%; border:1px solid #1d3a54; border-radius:10px; background:#06101c; color:#edf7ff; padding:10px; }
+.generatedProjectCard { display:flex; flex-direction:column; gap:12px; }
+.generatedEntityHead { display:grid; grid-template-columns:42px minmax(0,1fr) auto; gap:10px; align-items:center; }
+.entityIcon { width:38px; height:38px; border:1px solid #1a405b; border-radius:10px; background:#0b2233; color:#70cfff; display:grid; place-items:center; }
+.generatedEntityHead > div:nth-child(2) { display:flex; flex-direction:column; gap:4px; }
+.generatedEntityHead strong { font-size:12px; }
+.generatedEntityHead span { color:#708a9e; font-size:9px; }
+.generatedSeoMeta { border-top:1px solid #15283b; padding-top:11px; }
+.generatedSeoMeta strong { display:block; font-size:12px; }
+.generatedSeoMeta p { color:#829aad; font-size:10px; line-height:1.65; margin:6px 0; }
+.generatedSeoMeta a { color:#6bc9ff; font-size:9px; overflow-wrap:anywhere; }
+.generatedUnitsPanel { overflow:hidden; }
+.generatedUnitRows { display:flex; flex-direction:column; overflow-x:auto; }
+.generatedUnitRows article {
+  min-width:760px; display:grid; grid-template-columns:42px minmax(0,1fr) 105px 105px; gap:10px; align-items:center; padding:11px 0; border-top:1px solid #15283b;
+}
+.generatedUnitRows article > div:nth-child(2) { display:flex; flex-direction:column; gap:4px; min-width:0; }
+.generatedUnitRows strong { font-size:11px; color:#ecf6ff; }
+.generatedUnitRows span, .generatedUnitRows small { color:#718a9f; font-size:9px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+.status-open { color:#ffc875; border-color:rgba(255,190,80,.23); background:rgba(190,128,32,.08); }
+.status-void, .status-cancelled, .status-disabled, .status-error { color:#ff9ca6; border-color:rgba(240,90,105,.22); background:rgba(190,55,70,.08); }
+.status-ready { color:#75dfb7; border-color:rgba(65,211,158,.22); background:rgba(34,159,113,.08); }
+.status-draft { color:#a8b6c4; border-color:#294052; background:#0b1722; }
+
+@media (max-width:1100px) {
+  .commercialGrid, .whatsappGrid { grid-template-columns:1fr; }
+  .templateCards { grid-template-columns:1fr; }
+}
+@media (max-width:760px) {
+  .realEstateSeoControls { grid-template-columns:1fr; }
+  .whatsappChannelCard { grid-template-columns:42px minmax(0,1fr) auto; }
+  .whatsappChannelCard .defaultBadge, .whatsappChannelCard .secondaryButton { grid-column:2 / -1; justify-self:start; }
+}
