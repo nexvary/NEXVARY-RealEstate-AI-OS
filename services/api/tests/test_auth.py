@@ -2,7 +2,6 @@ from fastapi.testclient import TestClient
 
 from app.config import get_settings
 from app.main import app
-from app.tests_placeholder import noop if False else None
 
 client = TestClient(app)
 
