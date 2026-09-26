@@ -1,11 +1,15 @@
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
+import { AICopilotOps, FinanceOps, InventoryOps, InboxOps, KnowledgeOps, SettingsOps, TasksOps, TeamOps } from "./Operations";
+
 import {
   ArrowLeft,
   ArrowRight,
   BedDouble,
   Bot,
+  BookOpen,
   Building2,
   CalendarDays,
+  ClipboardCheck,
   ChevronLeft,
   CircleDollarSign,
   Home,
@@ -15,16 +19,19 @@ import {
   LayoutDashboard,
   LogOut,
   MapPin,
+  MessageSquare,
   Plus,
   RefreshCw,
   Ruler,
   Search,
+  Settings2,
+  ShieldCheck,
   Sparkles,
   Users,
 } from "lucide-react";
 
 type Locale = "ar" | "en";
-type View = "dashboard" | "leads" | "inventory" | "appointments" | "ai" | "about";
+type View = "dashboard" | "leads" | "inventory" | "manage" | "appointments" | "finance" | "inbox" | "knowledge" | "tasks" | "team" | "settings" | "ai" | "about";
 
 type User = {
   id: string;
@@ -40,6 +47,24 @@ type AuthSession = {
   token_type: string;
   expires_in_minutes: number;
   user: User;
+};
+
+type SetupStatus = {
+  needs_setup: boolean;
+  tenant_count: number;
+  desktop_mode: boolean;
+};
+
+type BootstrapResponse = {
+  access_token: string;
+  token_type: string;
+  expires_in_minutes: number;
+  tenant_id: string;
+  tenant_slug: string;
+  user_id: string;
+  user_email: string;
+  user_name: string;
+  role: string;
 };
 
 type Overview = {
@@ -90,7 +115,15 @@ type Appointment = {
   status: string;
 };
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+type TenantSettings = {
+  id: string;
+  name: string;
+  slug: string;
+  brand_name?: string | null;
+  primary_color: string;
+};
+
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://localhost:8000" : window.location.origin);
 const SESSION_KEY = "nexvary-realestate-session";
 
 const copy = {
@@ -100,7 +133,14 @@ const copy = {
     dashboard: "لوحة التحكم",
     leads: "العملاء المحتملون",
     inventory: "الوحدات والمخزون",
+    manage: "إدارة المخزون",
     appointments: "المعاينات",
+    finance: "العقود والمالية",
+    inbox: "المحادثات",
+    knowledge: "قاعدة المعرفة",
+    tasks: "المهام والمتابعة",
+    team: "الفريق والصلاحيات",
+    settings: "إعدادات الشركة",
     ai: "مساعد الذكاء الاصطناعي",
     about: "عن المنصة",
     search: "ابحث داخل الصفحة الحالية...",
@@ -155,7 +195,14 @@ const copy = {
     dashboard: "Dashboard",
     leads: "Leads",
     inventory: "Inventory",
+    manage: "Inventory Management",
     appointments: "Viewings",
+    finance: "Contracts & Finance",
+    inbox: "Inbox",
+    knowledge: "Knowledge Base",
+    tasks: "Tasks",
+    team: "Team & Roles",
+    settings: "Company Settings",
     ai: "AI Assistant",
     about: "About",
     search: "Search the current view...",
@@ -210,7 +257,14 @@ const navItems = [
   { id: "dashboard" as View, icon: LayoutDashboard, key: "dashboard" as const },
   { id: "leads" as View, icon: Users, key: "leads" as const },
   { id: "inventory" as View, icon: Building2, key: "inventory" as const },
+  { id: "manage" as View, icon: ClipboardCheck, key: "manage" as const },
   { id: "appointments" as View, icon: CalendarDays, key: "appointments" as const },
+  { id: "finance" as View, icon: CircleDollarSign, key: "finance" as const },
+  { id: "inbox" as View, icon: MessageSquare, key: "inbox" as const },
+  { id: "knowledge" as View, icon: BookOpen, key: "knowledge" as const },
+  { id: "tasks" as View, icon: ClipboardCheck, key: "tasks" as const },
+  { id: "team" as View, icon: ShieldCheck, key: "team" as const },
+  { id: "settings" as View, icon: Settings2, key: "settings" as const },
   { id: "ai" as View, icon: Bot, key: "ai" as const },
   { id: "about" as View, icon: Info, key: "about" as const },
 ];
@@ -243,15 +297,122 @@ async function api<T>(path: string, token: string, init?: RequestInit): Promise<
 export default function App() {
   const [locale, setLocale] = useState<Locale>("ar");
   const [session, setSession] = useState<AuthSession | null>(() => readSession());
+  const [setup, setSetup] = useState<SetupStatus | null>(null);
+
+  useEffect(() => {
+    fetch(`${API_URL}/api/v1/setup/status`)
+      .then((response) => response.json())
+      .then((data: SetupStatus) => setSetup(data))
+      .catch(() => setSetup({ needs_setup: false, tenant_count: 0, desktop_mode: false }));
+  }, []);
+
+  function acceptSession(auth: AuthSession) {
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(auth));
+    setSession(auth);
+    setSetup((current) => current ? { ...current, needs_setup: false, tenant_count: Math.max(1, current.tenant_count) } : current);
+  }
+
+  if (!session && setup?.needs_setup) {
+    return <FirstRunSetup locale={locale} setLocale={setLocale} onAuthenticated={acceptSession} />;
+  }
 
   if (!session) {
-    return <Login locale={locale} setLocale={setLocale} onAuthenticated={setSession} />;
+    return <Login locale={locale} setLocale={setLocale} onAuthenticated={acceptSession} />;
   }
 
   return <ControlCenter locale={locale} setLocale={setLocale} session={session} onSignOut={() => {
     sessionStorage.removeItem(SESSION_KEY);
     setSession(null);
   }} />;
+}
+
+function FirstRunSetup({
+  locale,
+  setLocale,
+  onAuthenticated,
+}: {
+  locale: Locale;
+  setLocale: (locale: Locale) => void;
+  onAuthenticated: (session: AuthSession) => void;
+}) {
+  const t = copy[locale];
+  const dir = locale === "ar" ? "rtl" : "ltr";
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    setError("");
+    const data = new FormData(event.currentTarget);
+    try {
+      const response = await fetch(`${API_URL}/api/v1/auth/bootstrap`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          company_name: String(data.get("company_name") || "").trim(),
+          company_slug: String(data.get("company_slug") || "").trim().toLowerCase(),
+          brand_name: String(data.get("brand_name") || "").trim() || null,
+          owner_name: String(data.get("owner_name") || "").trim(),
+          owner_email: String(data.get("owner_email") || "").trim(),
+          owner_password: String(data.get("owner_password") || ""),
+        }),
+      });
+      const body = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(body?.detail || "setup failed");
+      const result = body as BootstrapResponse;
+      onAuthenticated({
+        access_token: result.access_token,
+        token_type: result.token_type,
+        expires_in_minutes: result.expires_in_minutes,
+        user: {
+          id: result.user_id,
+          tenant_id: result.tenant_id,
+          email: result.user_email,
+          display_name: result.user_name,
+          role: result.role,
+          is_active: 1,
+        },
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t.systemError);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="loginPage" dir={dir}>
+      <button className="loginLanguage" onClick={() => setLocale(locale === "ar" ? "en" : "ar")}>
+        <Languages size={18} /> {locale === "ar" ? "EN" : "AR"}
+      </button>
+      <div className="loginGlow" />
+      <section className="loginCard setupCard">
+        <div className="loginBrand">
+          <div className="logoMark">N</div>
+          <div><strong>{t.brand}</strong><span>{t.subtitle}</span></div>
+        </div>
+        <span className="eyebrow">FIRST OWNER SETUP</span>
+        <h1>{locale === "ar" ? "إعداد الشركة لأول مرة" : "Set up your company"}</h1>
+        <p>{locale === "ar" ? "أنشئ مساحة الشركة وحساب المالك الأول. بعد ذلك سيطلب البرنامج تسجيل الدخول بشكل طبيعي." : "Create the company workspace and first owner account. Later launches will use normal sign-in."}</p>
+        <form onSubmit={submit}>
+          <div className="formGrid">
+            <label>{locale === "ar" ? "اسم الشركة" : "Company name"}<input name="company_name" required autoFocus /></label>
+            <label>{locale === "ar" ? "معرّف الشركة" : "Company identifier"}<input name="company_slug" required pattern="[a-z0-9][a-z0-9-]{1,98}[a-z0-9]" placeholder="company-name" /></label>
+            <label>{locale === "ar" ? "الاسم التجاري" : "Brand name"}<input name="brand_name" /></label>
+            <label>{locale === "ar" ? "اسم المالك" : "Owner name"}<input name="owner_name" required /></label>
+            <label>{t.email}<input name="owner_email" type="email" required /></label>
+            <label>{t.password}<input name="owner_password" type="password" required minLength={10} /></label>
+          </div>
+          {error && <div className="formError">{error}</div>}
+          <button className="primaryButton loginSubmit" type="submit" disabled={busy}>
+            {busy ? <RefreshCw size={18} className="spin" /> : <KeyRound size={18} />}
+            {locale === "ar" ? "إنشاء الشركة والدخول" : "Create company and enter"}
+          </button>
+        </form>
+      </section>
+    </div>
+  );
 }
 
 function Login({
@@ -349,6 +510,7 @@ function ControlCenter({
   const [leads, setLeads] = useState<Lead[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [tenantSettings, setTenantSettings] = useState<TenantSettings | null>(null);
   const [busy, setBusy] = useState(true);
   const [systemError, setSystemError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -362,18 +524,20 @@ function ControlCenter({
     setBusy(true);
     setSystemError("");
     try {
-      const [overviewData, pipelineData, leadData, unitData, appointmentData] = await Promise.all([
+      const [overviewData, pipelineData, leadData, unitData, appointmentData, settingsData] = await Promise.all([
         api<Overview>("/api/v1/overview", session.access_token),
         api<Pipeline>("/api/v1/pipeline", session.access_token),
         api<Lead[]>("/api/v1/leads", session.access_token),
         api<Unit[]>("/api/v1/units", session.access_token),
         api<Appointment[]>("/api/v1/appointments", session.access_token),
+        api<TenantSettings>("/api/v1/tenant/settings", session.access_token),
       ]);
       setOverview(overviewData);
       setPipeline(pipelineData);
       setLeads(leadData);
       setUnits(unitData);
       setAppointments(appointmentData);
+      setTenantSettings(settingsData);
     } catch (error) {
       const typed = error as Error & { status?: number };
       if (typed.status === 401) {
@@ -437,7 +601,7 @@ function ControlCenter({
       <aside className="sidebar">
         <div className="logoMark">N</div>
         <div className="brandBlock">
-          <strong>{t.brand}</strong>
+          <strong>{tenantSettings?.brand_name || t.brand}</strong>
           <span>{t.subtitle}</span>
         </div>
         <nav>
@@ -568,6 +732,14 @@ function ControlCenter({
             </div>
           )}
 
+          {view === "manage" && <InventoryOps token={session.access_token} locale={locale} />}
+          {view === "finance" && <FinanceOps token={session.access_token} locale={locale} />}
+          {view === "inbox" && <InboxOps token={session.access_token} locale={locale} />}
+          {view === "knowledge" && <KnowledgeOps token={session.access_token} locale={locale} />}
+          {view === "tasks" && <TasksOps token={session.access_token} locale={locale} />}
+          {view === "team" && <TeamOps token={session.access_token} locale={locale} />}
+          {view === "settings" && <SettingsOps token={session.access_token} locale={locale} onSaved={() => void loadData()} />}
+
           {view === "appointments" && (
             <section className="panel appointmentsPanel">
               <div className="panelHead"><h2>{t.appointments}</h2><span>{appointments.length}</span></div>
@@ -584,19 +756,7 @@ function ControlCenter({
             </section>
           )}
 
-          {view === "ai" && (
-            <section className="panel aiWorkspace">
-              <div className="aiIcon"><Bot/></div>
-              <span className="eyebrow">AI CONTROL PLANE</span>
-              <h2>{t.aiTitle}</h2>
-              <p>{t.aiText}</p>
-              <div className="architectureCards">
-                <ArchitectureCard title="Transactional Tools" text={locale === "ar" ? "بحث الوحدات والأسعار والتوافر والحجوزات عبر API مقيدة بالشركة." : "Tenant-scoped API tools for units, pricing, availability and reservations."} />
-                <ArchitectureCard title="RAG Knowledge" text={locale === "ar" ? "سيخصص للبروشورات والعقود والسياسات، وليس لحالة المخزون." : "Reserved for brochures, contracts and policies — never inventory state."} />
-                <ArchitectureCard title="Human Handoff" text={locale === "ar" ? "القرارات المالية والتعاقدية الحساسة تمر عبر صلاحيات واعتماد بشري." : "Sensitive financial and contractual actions remain permission-gated."} />
-              </div>
-            </section>
-          )}
+          {view === "ai" && <AICopilotOps token={session.access_token} locale={locale} />}
 
           {view === "about" && (
             <section className="panel aboutPanel">
@@ -617,7 +777,7 @@ function ControlCenter({
       </main>
 
       <div className="mobileNav">
-        {navItems.slice(0, 5).map(({ id, icon: Icon, key }) => (
+        {navItems.filter((item) => item.id !== "about").map(({ id, icon: Icon, key }) => (
           <button key={id} className={view === id ? "active" : ""} onClick={() => setView(id)} aria-label={t[key]}>
             <Icon size={20}/>
           </button>

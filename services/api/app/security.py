@@ -71,7 +71,7 @@ def validate_production_secrets() -> None:
     settings = get_settings()
     if settings.app_env != "production":
         return
-    if settings.jwt_secret == "dev-jwt-secret-change-me":
+    if settings.jwt_secret == "dev-jwt-secret-change-me-please-use-production-secret":
         raise RuntimeError("JWT_SECRET must be configured in production")
     if settings.platform_admin_key == "dev-platform-key-change-me":
         raise RuntimeError("PLATFORM_ADMIN_KEY must be configured in production")
