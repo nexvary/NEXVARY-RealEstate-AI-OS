@@ -101,3 +101,5 @@ def validate_production_secrets() -> None:
         raise RuntimeError("JWT_SECRET must be configured in production")
     if settings.platform_admin_key == "dev-platform-key-change-me":
         raise RuntimeError("PLATFORM_ADMIN_KEY must be configured in production")
+    if settings.integration_master_secret == "dev-integration-secret-change-me-use-production":
+        raise RuntimeError("INTEGRATION_MASTER_SECRET must be configured in production")
