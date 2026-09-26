@@ -188,7 +188,7 @@ test("SEO Autopilot synchronizes real-estate project pages from live inventory d
   await page.getByRole("button", { name: "صفحات العقارات" }).click();
 
   await expect(page.getByText("صفحات المشروعات والوحدات العقارية")).toBeVisible();
-  await page.getByLabel("المشروع العقاري").selectOption({ label: /بوابة القاهرة/ });
+  await page.getByLabel("المشروع العقاري").selectOption({ label: "بوابة القاهرة · New Cairo" });
   await page.getByRole("button", { name: "مزامنة المشروع وكل وحداته" }).click();
 
   await expect(page.getByText(/حقول مختلقة: 0/)).toBeVisible();
