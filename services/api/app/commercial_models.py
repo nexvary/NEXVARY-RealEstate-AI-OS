@@ -70,7 +70,7 @@ class SaaSSubscription(Base):
     current_period_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     current_period_end: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     cancel_at_period_end: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    provider: Mapped[str] = mapped_column(String(60), default="manual", nullable=False)
+    provider: Mapped[str] = mapped_column(String(60), default="bank_transfer", nullable=False)
     external_subscription_id: Mapped[str | None] = mapped_column(String(180))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
