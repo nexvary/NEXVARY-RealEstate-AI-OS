@@ -367,16 +367,6 @@ function FirstRunSetup({
   const dir = locale === "ar" ? "rtl" : "ltr";
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [domainBrand, setDomainBrand] = useState<BrandingResolve | null>(null);
-
-  useEffect(() => {
-    const host = window.location.hostname.toLowerCase();
-    if (!host || host === "localhost" || host === "127.0.0.1") return;
-    fetch(`${API_URL}/api/v1/branding/resolve?host=${encodeURIComponent(host)}`)
-      .then((response) => response.ok ? response.json() : null)
-      .then((data: BrandingResolve | null) => setDomainBrand(data))
-      .catch(() => undefined);
-  }, []);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -468,6 +458,16 @@ function Login({
   const dir = locale === "ar" ? "rtl" : "ltr";
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [domainBrand, setDomainBrand] = useState<BrandingResolve | null>(null);
+
+  useEffect(() => {
+    const host = window.location.hostname.toLowerCase();
+    if (!host || host === "localhost" || host === "127.0.0.1") return;
+    fetch(`${API_URL}/api/v1/branding/resolve?host=${encodeURIComponent(host)}`)
+      .then((response) => response.ok ? response.json() : null)
+      .then((data: BrandingResolve | null) => setDomainBrand(data))
+      .catch(() => undefined);
+  }, []);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
