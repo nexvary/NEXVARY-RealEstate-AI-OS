@@ -641,3 +641,18 @@ button:disabled { opacity: .6; cursor: wait; }
   .brandLogoEditor, .platformBrandAsset { grid-template-columns: 64px minmax(0,1fr); }
   .brandLogoPreview { width: 58px; height: 58px; }
 }
+
+
+.resolvedDomainBadge {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(52, 185, 242, .24);
+  background: rgba(25, 128, 185, .08);
+  border-radius: 10px;
+  padding: 0 11px;
+  color: #8ad8ff;
+  font-size: 11px;
+  margin: 12px 0;
+}
