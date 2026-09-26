@@ -10,6 +10,11 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
     default_locale: str = "ar"
 
+    jwt_secret: str = "dev-jwt-secret-change-me"
+    jwt_algorithm: str = "HS256"
+    jwt_ttl_minutes: int = 480
+    platform_admin_key: str = "dev-platform-key-change-me"
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 

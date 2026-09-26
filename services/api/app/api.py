@@ -1,10 +1,13 @@
 from decimal import Decimal
+import hmac
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from .config import get_settings
 from .db import get_db
 from .models import (
     Appointment,
@@ -16,6 +19,7 @@ from .models import (
     Project,
     Reservation,
     ReservationStatus,
+    Tenant,
     Unit,
     UnitStatus,
     User,
@@ -30,18 +34,23 @@ from .schemas import (
     LeadCreate,
     LeadRead,
     LeadUpdate,
+    LoginRequest,
     Overview,
     PaymentPlanCreate,
     PaymentPlanRead,
     ProjectCreate,
     ProjectRead,
+    ProvisionRequest,
+    ProvisionResponse,
     ReservationCreate,
     ReservationRead,
     UnitCreate,
+    TokenResponse,
     UnitRead,
     UserCreate,
     UserRead,
 )
+from .security import create_access_token, hash_password, verify_password
 from .services.lead_scoring import score_lead
 
 router = APIRouter(prefix="/api/v1")
@@ -83,9 +92,93 @@ def commit_or_conflict(db: Session, detail: str) -> None:
         raise HTTPException(status_code=409, detail=detail) from exc
 
 
+@router.post("/auth/provision", response_model=ProvisionResponse, status_code=201)
+def provision_company(
+    payload: ProvisionRequest,
+    x_platform_key: Annotated[str, Header(alias="X-Platform-Key")],
+    db: Session = Depends(get_db),
+) -> ProvisionResponse:
+    settings = get_settings()
+    if not hmac.compare_digest(x_platform_key, settings.platform_admin_key):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid platform provisioning key")
+
+    tenant = Tenant(
+        name=payload.company_name,
+        slug=payload.company_slug.lower(),
+        brand_name=payload.brand_name or payload.company_name,
+        primary_color=payload.primary_color,
+    )
+    db.add(tenant)
+    try:
+        db.flush()
+        owner = User(
+            tenant_id=tenant.id,
+            email=payload.owner_email.lower(),
+            display_name=payload.owner_name,
+            role=UserRole.owner,
+            password_hash=hash_password(payload.owner_password),
+        )
+        db.add(owner)
+        db.flush()
+        db.add(
+            AuditEvent(
+                tenant_id=tenant.id,
+                actor=owner.email,
+                action="tenant.provision",
+                entity_type="tenant",
+                entity_id=tenant.id,
+                details=tenant.slug,
+            )
+        )
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Company slug or owner account already exists") from exc
+
+    db.refresh(tenant)
+    db.refresh(owner)
+    token = create_access_token(user_id=owner.id, tenant_id=tenant.id, role=owner.role.value)
+    return ProvisionResponse(
+        tenant=tenant,
+        user=owner,
+        access_token=token,
+        expires_in_minutes=settings.jwt_ttl_minutes,
+    )
+
+
+@router.post("/auth/login", response_model=TokenResponse)
+def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
+    tenant = db.scalar(select(Tenant).where(Tenant.slug == payload.tenant_slug.lower()))
+    if tenant is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+
+    user = db.scalar(
+        select(User).where(
+            User.tenant_id == tenant.id,
+            func.lower(User.email) == payload.email.lower(),
+            User.is_active == 1,
+        )
+    )
+    if user is None or not verify_password(payload.password, user.password_hash):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+
+    settings = get_settings()
+    token = create_access_token(user_id=user.id, tenant_id=user.tenant_id, role=user.role.value)
+    return TokenResponse(
+        access_token=token,
+        expires_in_minutes=settings.jwt_ttl_minutes,
+        user=user,
+    )
+
+
 @router.get("/me/context")
 def request_context(ctx: RequestContext = Depends(get_request_context)) -> dict[str, str]:
-    return {"tenant_id": ctx.tenant_id, "actor": ctx.actor, "role": ctx.role.value}
+    return {
+        "tenant_id": ctx.tenant_id,
+        "user_id": ctx.user_id,
+        "actor": ctx.actor,
+        "role": ctx.role.value,
+    }
 
 
 @router.post("/users", response_model=UserRead, status_code=201)
@@ -94,7 +187,13 @@ def create_user(
     ctx: RequestContext = Depends(manage_users),
     db: Session = Depends(get_db),
 ) -> User:
-    user = User(tenant_id=ctx.tenant_id, **payload.model_dump())
+    user = User(
+        tenant_id=ctx.tenant_id,
+        email=payload.email.lower(),
+        display_name=payload.display_name,
+        role=payload.role,
+        password_hash=hash_password(payload.password),
+    )
     db.add(user)
     add_audit(db, ctx, action="user.create", entity_type="user", entity_id=user.id, details=payload.email)
     commit_or_conflict(db, "A user with this email already exists in this company")

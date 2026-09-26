@@ -21,14 +21,49 @@ class TenantRead(TenantCreate):
 class UserCreate(BaseModel):
     email: str = Field(min_length=5, max_length=255)
     display_name: str = Field(min_length=2, max_length=160)
+    password: str = Field(min_length=10, max_length=200)
     role: UserRole = UserRole.sales_agent
 
 
-class UserRead(UserCreate):
+class UserRead(BaseModel):
     id: str
     tenant_id: str
+    email: str
+    display_name: str
+    role: UserRole
     is_active: int
     model_config = ConfigDict(from_attributes=True)
+
+
+class LoginRequest(BaseModel):
+    tenant_slug: str = Field(min_length=3, max_length=100)
+    email: str = Field(min_length=5, max_length=255)
+    password: str = Field(min_length=10, max_length=200)
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    expires_in_minutes: int
+    user: UserRead
+
+
+class ProvisionRequest(BaseModel):
+    company_name: str = Field(min_length=2, max_length=160)
+    company_slug: str = Field(pattern=r"^[a-z0-9][a-z0-9-]{1,98}[a-z0-9]$")
+    brand_name: str | None = None
+    primary_color: str = "#0B1F33"
+    owner_name: str = Field(min_length=2, max_length=160)
+    owner_email: str = Field(min_length=5, max_length=255)
+    owner_password: str = Field(min_length=10, max_length=200)
+
+
+class ProvisionResponse(BaseModel):
+    tenant: TenantRead
+    user: UserRead
+    access_token: str
+    token_type: str = "bearer"
+    expires_in_minutes: int
 
 
 class ProjectCreate(BaseModel):

@@ -1,24 +1,55 @@
 from dataclasses import dataclass
 from typing import Annotated
 
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
-from .models import UserRole
+from .db import get_db
+from .models import User, UserRole
+from .security import decode_access_token
+
+
+bearer = HTTPBearer(auto_error=False)
 
 
 @dataclass(frozen=True)
 class RequestContext:
     tenant_id: str
+    user_id: str
     actor: str
     role: UserRole
 
 
 def get_request_context(
-    x_tenant_id: Annotated[str, Header(alias="X-Tenant-ID")],
-    x_actor: Annotated[str, Header(alias="X-Actor")] = "api",
-    x_role: Annotated[UserRole, Header(alias="X-Role")] = UserRole.viewer,
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)],
+    db: Session = Depends(get_db),
 ) -> RequestContext:
-    return RequestContext(tenant_id=x_tenant_id, actor=x_actor, role=x_role)
+    if credentials is None or credentials.scheme.lower() != "bearer":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Bearer access token required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    payload = decode_access_token(credentials.credentials)
+    user = db.scalar(
+        select(User).where(
+            User.id == str(payload["sub"]),
+            User.tenant_id == str(payload["tenant_id"]),
+            User.is_active == 1,
+        )
+    )
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User is inactive or unavailable")
+
+    return RequestContext(
+        tenant_id=user.tenant_id,
+        user_id=user.id,
+        actor=user.email,
+        role=user.role,
+    )
 
 
 def require_roles(*allowed: UserRole):

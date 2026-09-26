@@ -4,11 +4,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from .api import router
 from .config import get_settings
 from .db import Base, engine
+from .security import validate_production_secrets
 
 settings = get_settings()
+validate_production_secrets()
 app = FastAPI(
     title=settings.app_name,
-    version="0.2.0",
+    version="0.3.0",
     description="Transactional real-estate core with AI/RAG orchestration boundaries.",
 )
 
@@ -29,7 +31,7 @@ def create_dev_schema() -> None:
 
 @app.get("/health")
 def health() -> dict[str, str]:
-    return {"status": "ok", "service": "nexvary-realestate-api", "version": "0.2.0"}
+    return {"status": "ok", "service": "nexvary-realestate-api", "version": "0.3.0"}
 
 
 app.include_router(router)

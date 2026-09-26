@@ -59,12 +59,10 @@ def create_inventory(admin_headers):
     return project.json(), plan.json(), unit.json()
 
 
-def test_role_policy_rejects_viewer_for_inventory(admin_headers):
-    headers = dict(admin_headers)
-    headers["X-Role"] = "viewer"
+def test_role_policy_rejects_viewer_for_inventory(viewer_headers):
     response = client.post(
         "/api/v1/projects",
-        headers=headers,
+        headers=viewer_headers,
         json={"name": "Forbidden Project", "city": "Cairo"},
     )
     assert response.status_code == 403
@@ -177,19 +175,19 @@ def test_reservation_locks_unit_and_cancel_releases_it(admin_headers, sales_head
     assert any(item["id"] == unit["id"] for item in available_after_cancel.json())
 
 
-def test_cross_tenant_references_are_rejected(admin_headers, sales_headers, other_tenant_headers):
+def test_cross_tenant_references_are_rejected(admin_headers, other_tenant_headers):
     _, _, unit = create_inventory(admin_headers)
 
     other_lead = client.post(
         "/api/v1/leads",
-        headers={**other_tenant_headers, "X-Role": "sales_agent"},
+        headers=other_tenant_headers,
         json={"full_name": "Other Tenant", "phone": "01222222222"},
     )
     assert other_lead.status_code == 201
 
     response = client.post(
         "/api/v1/reservations",
-        headers={**other_tenant_headers, "X-Role": "sales_agent"},
+        headers=other_tenant_headers,
         json={
             "lead_id": other_lead.json()["id"],
             "unit_id": unit["id"],
