@@ -1,29 +1,97 @@
-import { useMemo, useState } from "react";
+import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
 import {
+  ArrowLeft,
+  ArrowRight,
+  BedDouble,
   Bot,
   Building2,
   CalendarDays,
   ChevronLeft,
   CircleDollarSign,
   Home,
+  Info,
+  KeyRound,
   Languages,
   LayoutDashboard,
+  LogOut,
+  MapPin,
   Plus,
+  RefreshCw,
+  Ruler,
   Search,
   Sparkles,
   Users,
 } from "lucide-react";
 
 type Locale = "ar" | "en";
-type View = "dashboard" | "leads" | "inventory" | "appointments" | "ai";
+type View = "dashboard" | "leads" | "inventory" | "appointments" | "ai" | "about";
+
+type User = {
+  id: string;
+  tenant_id: string;
+  email: string;
+  display_name: string;
+  role: string;
+  is_active: number;
+};
+
+type AuthSession = {
+  access_token: string;
+  token_type: string;
+  expires_in_minutes: number;
+  user: User;
+};
+
+type Overview = {
+  leads_total: number;
+  leads_hot: number;
+  units_available: number;
+  appointments_total: number;
+  active_reservations: number;
+};
+
+type Pipeline = Record<"new" | "qualified" | "viewing" | "negotiation" | "won" | "lost", number>;
 
 type Lead = {
-  name: string;
+  id: string;
+  full_name: string;
   phone: string;
-  budget: string;
+  email?: string | null;
   source: string;
+  preferred_city?: string | null;
+  budget?: number | null;
+  bedrooms?: number | null;
+  status: keyof Pipeline;
   score: number;
+  created_at: string;
 };
+
+type Unit = {
+  id: string;
+  project_id: string;
+  building_id?: string | null;
+  payment_plan_id?: string | null;
+  code: string;
+  unit_type: string;
+  bedrooms?: number | null;
+  area_sqm: number;
+  price: number;
+  currency: string;
+  status: "available" | "reserved" | "sold" | "blocked";
+};
+
+type Appointment = {
+  id: string;
+  lead_id: string;
+  project_id?: string | null;
+  assigned_user_id?: string | null;
+  starts_at: string;
+  notes?: string | null;
+  status: string;
+};
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const SESSION_KEY = "nexvary-realestate-session";
 
 const copy = {
   ar: {
@@ -34,24 +102,52 @@ const copy = {
     inventory: "الوحدات والمخزون",
     appointments: "المعاينات",
     ai: "مساعد الذكاء الاصطناعي",
-    search: "ابحث عن عميل، وحدة أو مشروع...",
+    about: "عن المنصة",
+    search: "ابحث داخل الصفحة الحالية...",
     addLead: "إضافة عميل",
-    welcome: "مساء الخير",
-    overview: "نظرة فورية على حركة المبيعات اليوم",
+    welcome: "مركز قيادة المبيعات",
+    overview: "بيانات حية من قاعدة الشركة — لا توجد أرقام تجريبية في هذه الشاشة",
     totalLeads: "إجمالي العملاء",
     hotLeads: "عملاء جاهزون",
     available: "وحدات متاحة",
-    meetings: "معاينات اليوم",
+    meetings: "إجمالي المعاينات",
+    reservations: "حجوزات نشطة",
     funnel: "مسار المبيعات",
-    live: "مباشر",
+    live: "بيانات حية",
     newLead: "عميل جديد",
     name: "الاسم",
     phone: "الهاتف",
+    email: "البريد الإلكتروني",
     budget: "الميزانية",
+    city: "المدينة المفضلة",
+    bedrooms: "غرف النوم",
+    source: "المصدر",
     save: "حفظ العميل",
     cancel: "إلغاء",
     aiTitle: "AI Sales Copilot",
-    aiText: "يعتمد على قاعدة البيانات للأسعار والتوافر، وعلى RAG للمستندات والبروشورات.",
+    aiText: "السعر والتوافر والحجز تؤخذ من قاعدة البيانات فقط. يستخدم RAG للمستندات والبروشورات عندما يتم تفعيله.",
+    refresh: "تحديث",
+    signOut: "تسجيل الخروج",
+    back: "رجوع",
+    loading: "جارٍ تحميل بيانات الشركة...",
+    noLeads: "لا توجد عملاء مطابقون للبحث.",
+    noUnits: "لا توجد وحدات مطابقة للبحث.",
+    noAppointments: "لا توجد معاينات مسجلة.",
+    role: "الصلاحية",
+    loginTitle: "الدخول إلى مركز القيادة",
+    loginText: "أدخل بيانات شركة العقارات وحسابك للوصول إلى البيانات المعزولة الخاصة بالشركة.",
+    companySlug: "معرّف الشركة",
+    password: "كلمة المرور",
+    login: "تسجيل الدخول",
+    loginBusy: "جارٍ التحقق...",
+    loginError: "تعذر تسجيل الدخول. راجع معرّف الشركة والبريد وكلمة المرور.",
+    systemError: "تعذر تحميل البيانات من الخادم.",
+    status: "الحالة",
+    area: "المساحة",
+    price: "السعر",
+    unit: "الوحدة",
+    appointmentTime: "موعد المعاينة",
+    secure: "جلسة مشفرة ومحمية بصلاحيات المستخدم",
   },
   en: {
     brand: "NEXVARY RealEstate",
@@ -61,24 +157,52 @@ const copy = {
     inventory: "Inventory",
     appointments: "Viewings",
     ai: "AI Assistant",
-    search: "Search customer, unit or project...",
+    about: "About",
+    search: "Search the current view...",
     addLead: "Add lead",
-    welcome: "Good evening",
-    overview: "Live sales activity overview",
+    welcome: "Sales Command Center",
+    overview: "Live company data — no demo counters are used on this screen",
     totalLeads: "Total leads",
     hotLeads: "Hot leads",
     available: "Available units",
-    meetings: "Today's viewings",
+    meetings: "Total viewings",
+    reservations: "Active reservations",
     funnel: "Sales funnel",
-    live: "Live",
+    live: "Live data",
     newLead: "New lead",
     name: "Name",
     phone: "Phone",
+    email: "Email",
     budget: "Budget",
+    city: "Preferred city",
+    bedrooms: "Bedrooms",
+    source: "Source",
     save: "Save lead",
     cancel: "Cancel",
     aiTitle: "AI Sales Copilot",
-    aiText: "Uses structured data for price and availability, and RAG for documents and brochures.",
+    aiText: "Price, availability and reservations come only from transactional data. RAG will be used for documents and brochures.",
+    refresh: "Refresh",
+    signOut: "Sign out",
+    back: "Back",
+    loading: "Loading company data...",
+    noLeads: "No leads match your search.",
+    noUnits: "No units match your search.",
+    noAppointments: "No viewings recorded.",
+    role: "Role",
+    loginTitle: "Enter the command center",
+    loginText: "Use your company identifier and account to access the tenant-isolated workspace.",
+    companySlug: "Company identifier",
+    password: "Password",
+    login: "Sign in",
+    loginBusy: "Verifying...",
+    loginError: "Sign-in failed. Check the company identifier, email and password.",
+    systemError: "The server data could not be loaded.",
+    status: "Status",
+    area: "Area",
+    price: "Price",
+    unit: "Unit",
+    appointmentTime: "Viewing time",
+    secure: "Encrypted session protected by user permissions",
   },
 };
 
@@ -88,30 +212,225 @@ const navItems = [
   { id: "inventory" as View, icon: Building2, key: "inventory" as const },
   { id: "appointments" as View, icon: CalendarDays, key: "appointments" as const },
   { id: "ai" as View, icon: Bot, key: "ai" as const },
+  { id: "about" as View, icon: Info, key: "about" as const },
 ];
+
+function readSession(): AuthSession | null {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    return raw ? (JSON.parse(raw) as AuthSession) : null;
+  } catch {
+    return null;
+  }
+}
+
+async function api<T>(path: string, token: string, init?: RequestInit): Promise<T> {
+  const headers = new Headers(init?.headers);
+  headers.set("Authorization", `Bearer ${token}`);
+  if (init?.body) headers.set("Content-Type", "application/json");
+
+  const response = await fetch(`${API_URL}${path}`, { ...init, headers });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    const message = data?.detail || `HTTP ${response.status}`;
+    const error = new Error(message) as Error & { status?: number };
+    error.status = response.status;
+    throw error;
+  }
+  return data as T;
+}
 
 export default function App() {
   const [locale, setLocale] = useState<Locale>("ar");
+  const [session, setSession] = useState<AuthSession | null>(() => readSession());
+
+  if (!session) {
+    return <Login locale={locale} setLocale={setLocale} onAuthenticated={setSession} />;
+  }
+
+  return <ControlCenter locale={locale} setLocale={setLocale} session={session} onSignOut={() => {
+    sessionStorage.removeItem(SESSION_KEY);
+    setSession(null);
+  }} />;
+}
+
+function Login({
+  locale,
+  setLocale,
+  onAuthenticated,
+}: {
+  locale: Locale;
+  setLocale: (locale: Locale) => void;
+  onAuthenticated: (session: AuthSession) => void;
+}) {
+  const t = copy[locale];
+  const dir = locale === "ar" ? "rtl" : "ltr";
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    setError("");
+    const data = new FormData(event.currentTarget);
+
+    try {
+      const response = await fetch(`${API_URL}/api/v1/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tenant_slug: String(data.get("tenant_slug") || "").trim().toLowerCase(),
+          email: String(data.get("email") || "").trim(),
+          password: String(data.get("password") || ""),
+        }),
+      });
+      const body = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(body?.detail || "login failed");
+      const auth = body as AuthSession;
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(auth));
+      onAuthenticated(auth);
+    } catch {
+      setError(t.loginError);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="loginPage" dir={dir}>
+      <button className="loginLanguage" onClick={() => setLocale(locale === "ar" ? "en" : "ar")}>
+        <Languages size={18} /> {locale === "ar" ? "EN" : "AR"}
+      </button>
+      <div className="loginGlow" />
+      <section className="loginCard">
+        <div className="loginBrand">
+          <div className="logoMark">N</div>
+          <div>
+            <strong>{t.brand}</strong>
+            <span>{t.subtitle}</span>
+          </div>
+        </div>
+        <div className="loginHeroIcon"><KeyRound size={28} /></div>
+        <span className="eyebrow">SECURE WORKSPACE</span>
+        <h1>{t.loginTitle}</h1>
+        <p>{t.loginText}</p>
+        <form onSubmit={submit}>
+          <label>{t.companySlug}<input name="tenant_slug" required autoComplete="organization" placeholder="company-name" /></label>
+          <label>{t.email}<input name="email" type="email" required autoComplete="username" /></label>
+          <label>{t.password}<input name="password" type="password" required minLength={10} autoComplete="current-password" /></label>
+          {error && <div className="formError">{error}</div>}
+          <button className="primaryButton loginSubmit" type="submit" disabled={busy}>
+            {busy ? <RefreshCw size={18} className="spin" /> : <KeyRound size={18} />}
+            {busy ? t.loginBusy : t.login}
+          </button>
+        </form>
+        <div className="secureNote"><span className="statusDot" />{t.secure}</div>
+      </section>
+    </div>
+  );
+}
+
+function ControlCenter({
+  locale,
+  setLocale,
+  session,
+  onSignOut,
+}: {
+  locale: Locale;
+  setLocale: (locale: Locale) => void;
+  session: AuthSession;
+  onSignOut: () => void;
+}) {
   const [view, setView] = useState<View>("dashboard");
   const [modalOpen, setModalOpen] = useState(false);
-  const [leads, setLeads] = useState<Lead[]>([
-    { name: "أحمد محمود", phone: "0100••••421", budget: "5.0M", source: "WhatsApp", score: 88 },
-    { name: "سارة علي", phone: "0112••••903", budget: "3.4M", source: "Website", score: 76 },
-  ]);
+  const [search, setSearch] = useState("");
+  const [overview, setOverview] = useState<Overview | null>(null);
+  const [pipeline, setPipeline] = useState<Pipeline | null>(null);
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [units, setUnits] = useState<Unit[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [busy, setBusy] = useState(true);
+  const [systemError, setSystemError] = useState("");
+  const [saving, setSaving] = useState(false);
+
   const t = copy[locale];
   const dir = locale === "ar" ? "rtl" : "ltr";
   const currentKey = navItems.find((item) => item.id === view)?.key ?? "dashboard";
   const title = useMemo(() => t[currentKey], [currentKey, t]);
 
-  function addLead(form: FormData) {
-    const name = String(form.get("name") || "").trim();
-    const phone = String(form.get("phone") || "").trim();
-    const budget = String(form.get("budget") || "").trim();
-    if (!name || !phone) return;
-    setLeads((current) => [{ name, phone, budget: budget || "—", source: "Manual", score: 35 }, ...current]);
-    setModalOpen(false);
-    setView("leads");
+  async function loadData() {
+    setBusy(true);
+    setSystemError("");
+    try {
+      const [overviewData, pipelineData, leadData, unitData, appointmentData] = await Promise.all([
+        api<Overview>("/api/v1/overview", session.access_token),
+        api<Pipeline>("/api/v1/pipeline", session.access_token),
+        api<Lead[]>("/api/v1/leads", session.access_token),
+        api<Unit[]>("/api/v1/units", session.access_token),
+        api<Appointment[]>("/api/v1/appointments", session.access_token),
+      ]);
+      setOverview(overviewData);
+      setPipeline(pipelineData);
+      setLeads(leadData);
+      setUnits(unitData);
+      setAppointments(appointmentData);
+    } catch (error) {
+      const typed = error as Error & { status?: number };
+      if (typed.status === 401) {
+        onSignOut();
+        return;
+      }
+      setSystemError(t.systemError);
+    } finally {
+      setBusy(false);
+    }
   }
+
+  useEffect(() => {
+    void loadData();
+    // Session token is immutable for the life of this control-center instance.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session.access_token]);
+
+  async function addLead(form: FormData) {
+    setSaving(true);
+    setSystemError("");
+    try {
+      await api<Lead>("/api/v1/leads", session.access_token, {
+        method: "POST",
+        body: JSON.stringify({
+          full_name: String(form.get("name") || "").trim(),
+          phone: String(form.get("phone") || "").trim(),
+          email: String(form.get("email") || "").trim() || null,
+          source: String(form.get("source") || "manual").trim(),
+          preferred_city: String(form.get("city") || "").trim() || null,
+          budget: form.get("budget") ? Number(form.get("budget")) : null,
+          bedrooms: form.get("bedrooms") ? Number(form.get("bedrooms")) : null,
+        }),
+      });
+      setModalOpen(false);
+      setView("leads");
+      await loadData();
+    } catch (error) {
+      const typed = error as Error & { status?: number };
+      if (typed.status === 401) onSignOut();
+      else setSystemError(typed.message || t.systemError);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const normalizedSearch = search.trim().toLowerCase();
+  const visibleLeads = leads.filter((lead) =>
+    !normalizedSearch ||
+    [lead.full_name, lead.phone, lead.email || "", lead.source, lead.preferred_city || "", lead.status]
+      .some((value) => value.toLowerCase().includes(normalizedSearch))
+  );
+  const visibleUnits = units.filter((unit) =>
+    !normalizedSearch ||
+    [unit.code, unit.unit_type, unit.currency, unit.status]
+      .some((value) => value.toLowerCase().includes(normalizedSearch))
+  );
 
   return (
     <div className="app" dir={dir}>
@@ -130,29 +449,38 @@ export default function App() {
             </button>
           ))}
         </nav>
+        <div className="userCard">
+          <div className="avatar">{session.user.display_name.slice(0, 1).toUpperCase()}</div>
+          <div><strong>{session.user.display_name}</strong><span>{t.role}: {session.user.role}</span></div>
+        </div>
+        <button className="navItem signOutButton" onClick={onSignOut}><LogOut size={18}/><span>{t.signOut}</span></button>
         <div className="sidebarFoot">
           <span className="statusDot" />
-          <div>
-            <strong>AI Gateway</strong>
-            <small>Operational</small>
-          </div>
+          <div><strong>API + RBAC</strong><small>Authenticated</small></div>
         </div>
       </aside>
 
       <main className="main">
         <header>
           <div className="mobileBrand">N</div>
+          {view !== "dashboard" && (
+            <button className="iconButton backButton" onClick={() => setView("dashboard")} title={t.back}>
+              {locale === "ar" ? <ArrowRight size={19}/> : <ArrowLeft size={19}/>}
+              <span>{t.back}</span>
+            </button>
+          )}
           <div className="searchBox">
             <Search size={18} />
-            <input aria-label={t.search} placeholder={t.search} />
+            <input aria-label={t.search} placeholder={t.search} value={search} onChange={(event) => setSearch(event.target.value)} />
           </div>
+          <button className="iconButton" onClick={() => void loadData()} title={t.refresh} disabled={busy}>
+            <RefreshCw size={19} className={busy ? "spin" : ""} />
+          </button>
           <button className="iconButton" onClick={() => setLocale(locale === "ar" ? "en" : "ar")} title="Language">
-            <Languages size={19} />
-            <span>{locale.toUpperCase()}</span>
+            <Languages size={19} /><span>{locale.toUpperCase()}</span>
           </button>
           <button className="primaryButton" onClick={() => setModalOpen(true)}>
-            <Plus size={18} />
-            {t.addLead}
+            <Plus size={18} />{t.addLead}
           </button>
         </header>
 
@@ -166,24 +494,26 @@ export default function App() {
             <span className="liveBadge"><span />{t.live}</span>
           </div>
 
-          {view === "dashboard" && (
+          {systemError && <div className="systemError">{systemError}</div>}
+          {busy && !overview ? <LoadingState text={t.loading} /> : null}
+
+          {view === "dashboard" && overview && pipeline && (
             <>
-              <div className="statsGrid">
-                <Stat icon={<Users />} label={t.totalLeads} value={String(248 + leads.length)} delta="+18%" />
-                <Stat icon={<Sparkles />} label={t.hotLeads} value="37" delta="+9%" />
-                <Stat icon={<Home />} label={t.available} value="416" delta="-3%" />
-                <Stat icon={<CalendarDays />} label={t.meetings} value="12" delta="+4" />
+              <div className="statsGrid statsFive">
+                <Stat icon={<Users />} label={t.totalLeads} value={String(overview.leads_total)} />
+                <Stat icon={<Sparkles />} label={t.hotLeads} value={String(overview.leads_hot)} />
+                <Stat icon={<Home />} label={t.available} value={String(overview.units_available)} />
+                <Stat icon={<CalendarDays />} label={t.meetings} value={String(overview.appointments_total)} />
+                <Stat icon={<CircleDollarSign />} label={t.reservations} value={String(overview.active_reservations)} />
               </div>
 
               <div className="dashboardGrid">
                 <section className="panel largePanel">
-                  <div className="panelHead"><div><span>{t.funnel}</span><h2>Q3 Pipeline</h2></div><CircleDollarSign /></div>
+                  <div className="panelHead"><div><span>{t.funnel}</span><h2>Live Pipeline</h2></div><CircleDollarSign /></div>
                   <div className="funnel">
-                    <Funnel label={locale === "ar" ? "عملاء جدد" : "New leads"} value="250" width="100%" />
-                    <Funnel label={locale === "ar" ? "مؤهلون" : "Qualified"} value="142" width="77%" />
-                    <Funnel label={locale === "ar" ? "معاينات" : "Viewings"} value="68" width="52%" />
-                    <Funnel label={locale === "ar" ? "تفاوض" : "Negotiation"} value="31" width="34%" />
-                    <Funnel label={locale === "ar" ? "تم البيع" : "Won"} value="14" width="21%" />
+                    {pipelineRows(pipeline, locale).map((row) => (
+                      <Funnel key={row.key} label={row.label} value={String(row.value)} width={row.width} />
+                    ))}
                   </div>
                 </section>
 
@@ -192,6 +522,9 @@ export default function App() {
                   <span className="eyebrow">NEXVARY AI</span>
                   <h2>{t.aiTitle}</h2>
                   <p>{t.aiText}</p>
+                  <div className="truthRules">
+                    <span>DB → Price</span><span>DB → Availability</span><span>RAG → Documents</span>
+                  </div>
                   <button onClick={() => setView("ai")}>{t.ai}<ChevronLeft size={16}/></button>
                 </section>
               </div>
@@ -200,37 +533,113 @@ export default function App() {
 
           {view === "leads" && (
             <section className="panel tablePanel">
-              <div className="panelHead"><h2>{t.leads}</h2><span>{leads.length} records</span></div>
+              <div className="panelHead"><h2>{t.leads}</h2><span>{visibleLeads.length} / {leads.length}</span></div>
               <div className="leadTable">
-                {leads.map((lead, index) => (
-                  <div className="leadRow" key={lead.phone + index}>
-                    <div className="avatar">{lead.name.slice(0, 1)}</div>
-                    <div className="leadName"><strong>{lead.name}</strong><span>{lead.phone}</span></div>
+                {visibleLeads.map((lead) => (
+                  <div className="leadRow" key={lead.id}>
+                    <div className="avatar">{lead.full_name.slice(0, 1)}</div>
+                    <div className="leadName"><strong>{lead.full_name}</strong><span>{lead.phone}{lead.email ? ` · ${lead.email}` : ""}</span></div>
                     <span>{lead.source}</span>
-                    <span>{lead.budget}</span>
+                    <span>{formatMoney(lead.budget, "EGP", locale)}</span>
+                    <StatusBadge value={lead.status} />
                     <span className={lead.score >= 70 ? "score hot" : "score"}>{lead.score}</span>
                   </div>
                 ))}
+                {!visibleLeads.length && <div className="emptyRow">{t.noLeads}</div>}
               </div>
             </section>
           )}
 
-          {view === "inventory" && <EmptyState icon={<Building2 />} title={t.inventory} text={locale === "ar" ? "ستظهر هنا الوحدات الحقيقية بعد مزامنة قاعدة البيانات." : "Live units will appear here after database sync."} />}
-          {view === "appointments" && <EmptyState icon={<CalendarDays />} title={t.appointments} text={locale === "ar" ? "جدول المعاينات مربوط بالعملاء والمشروعات." : "Viewings are linked to leads and projects."} />}
-          {view === "ai" && <EmptyState icon={<Bot />} title={t.aiTitle} text={t.aiText} />}
+          {view === "inventory" && (
+            <div className="inventoryGrid">
+              {visibleUnits.map((unit) => (
+                <article className="unitCard" key={unit.id}>
+                  <div className="unitHead"><div className="unitIcon"><Building2 size={20}/></div><StatusBadge value={unit.status}/></div>
+                  <span className="eyebrow">{unit.unit_type}</span>
+                  <h2>{unit.code}</h2>
+                  <div className="unitFacts">
+                    <span><BedDouble size={16}/>{unit.bedrooms ?? "—"}</span>
+                    <span><Ruler size={16}/>{Number(unit.area_sqm).toLocaleString(locale === "ar" ? "ar-EG" : "en-US")} m²</span>
+                  </div>
+                  <div className="unitPrice">{formatMoney(unit.price, unit.currency, locale)}</div>
+                </article>
+              ))}
+              {!visibleUnits.length && <section className="panel emptyState"><div className="aiIcon"><Building2/></div><h2>{t.inventory}</h2><p>{t.noUnits}</p></section>}
+            </div>
+          )}
+
+          {view === "appointments" && (
+            <section className="panel appointmentsPanel">
+              <div className="panelHead"><h2>{t.appointments}</h2><span>{appointments.length}</span></div>
+              <div className="appointmentList">
+                {appointments.map((appointment) => (
+                  <div className="appointmentRow" key={appointment.id}>
+                    <div className="appointmentIcon"><CalendarDays size={19}/></div>
+                    <div><strong>{formatDateTime(appointment.starts_at, locale)}</strong><span>{appointment.notes || appointment.status}</span></div>
+                    <StatusBadge value={appointment.status}/>
+                  </div>
+                ))}
+                {!appointments.length && <div className="emptyRow">{t.noAppointments}</div>}
+              </div>
+            </section>
+          )}
+
+          {view === "ai" && (
+            <section className="panel aiWorkspace">
+              <div className="aiIcon"><Bot/></div>
+              <span className="eyebrow">AI CONTROL PLANE</span>
+              <h2>{t.aiTitle}</h2>
+              <p>{t.aiText}</p>
+              <div className="architectureCards">
+                <ArchitectureCard title="Transactional Tools" text={locale === "ar" ? "بحث الوحدات والأسعار والتوافر والحجوزات عبر API مقيدة بالشركة." : "Tenant-scoped API tools for units, pricing, availability and reservations."} />
+                <ArchitectureCard title="RAG Knowledge" text={locale === "ar" ? "سيخصص للبروشورات والعقود والسياسات، وليس لحالة المخزون." : "Reserved for brochures, contracts and policies — never inventory state."} />
+                <ArchitectureCard title="Human Handoff" text={locale === "ar" ? "القرارات المالية والتعاقدية الحساسة تمر عبر صلاحيات واعتماد بشري." : "Sensitive financial and contractual actions remain permission-gated."} />
+              </div>
+            </section>
+          )}
+
+          {view === "about" && (
+            <section className="panel aboutPanel">
+              <div className="logoMark">N</div>
+              <span className="eyebrow">NEXVARY</span>
+              <h2>NEXVARY RealEstate AI OS</h2>
+              <p>{locale === "ar" ? "منصة White-Label متعددة الشركات لإدارة المبيعات والمخزون العقاري والأتمتة والوكلاء الذكيين." : "A multi-tenant white-label operating system for real-estate sales, inventory, automation and AI agents."}</p>
+              <div className="aboutLinks">
+                <a href="https://nexvary.com/" target="_blank" rel="noreferrer">Website</a>
+                <a href="https://www.facebook.com/share/14p9krEn5ij/" target="_blank" rel="noreferrer">Facebook</a>
+                <a href="mailto:info@nexvary.com">Email</a>
+                <a href="https://www.youtube.com/@NexvaryInc" target="_blank" rel="noreferrer">YouTube</a>
+                <a href="https://x.com/Nexvary" target="_blank" rel="noreferrer">X</a>
+              </div>
+            </section>
+          )}
         </section>
       </main>
 
+      <div className="mobileNav">
+        {navItems.slice(0, 5).map(({ id, icon: Icon, key }) => (
+          <button key={id} className={view === id ? "active" : ""} onClick={() => setView(id)} aria-label={t[key]}>
+            <Icon size={20}/>
+          </button>
+        ))}
+      </div>
+
       {modalOpen && (
-        <div className="modalBackdrop" onMouseDown={() => setModalOpen(false)}>
-          <form className="modal" onSubmit={(event) => { event.preventDefault(); addLead(new FormData(event.currentTarget)); }} onMouseDown={(e) => e.stopPropagation()}>
-            <div className="modalHead"><div><span className="eyebrow">CRM</span><h2>{t.newLead}</h2></div><button type="button" className="closeButton" onClick={() => setModalOpen(false)}>×</button></div>
-            <label>{t.name}<input name="name" required autoFocus /></label>
-            <label>{t.phone}<input name="phone" required /></label>
-            <label>{t.budget}<input name="budget" placeholder="5,000,000 EGP" /></label>
+        <div className="modalBackdrop" onMouseDown={() => !saving && setModalOpen(false)}>
+          <form className="modal" onSubmit={(event) => { event.preventDefault(); void addLead(new FormData(event.currentTarget)); }} onMouseDown={(event) => event.stopPropagation()}>
+            <div className="modalHead"><div><span className="eyebrow">CRM</span><h2>{t.newLead}</h2></div><button type="button" className="closeButton" onClick={() => setModalOpen(false)} disabled={saving}>×</button></div>
+            <div className="formGrid">
+              <label>{t.name}<input name="name" required autoFocus /></label>
+              <label>{t.phone}<input name="phone" required /></label>
+              <label>{t.email}<input name="email" type="email" /></label>
+              <label>{t.source}<input name="source" defaultValue="manual" /></label>
+              <label>{t.city}<input name="city" /></label>
+              <label>{t.budget}<input name="budget" type="number" min="0" step="1" /></label>
+              <label>{t.bedrooms}<input name="bedrooms" type="number" min="0" max="20" /></label>
+            </div>
             <div className="modalActions">
-              <button type="button" className="secondaryButton" onClick={() => setModalOpen(false)}>{t.cancel}</button>
-              <button type="submit" className="primaryButton">{t.save}</button>
+              <button type="button" className="secondaryButton" onClick={() => setModalOpen(false)} disabled={saving}>{t.cancel}</button>
+              <button type="submit" className="primaryButton" disabled={saving}>{saving && <RefreshCw size={17} className="spin"/>}{t.save}</button>
             </div>
           </form>
         </div>
@@ -239,14 +648,58 @@ export default function App() {
   );
 }
 
-function Stat({ icon, label, value, delta }: { icon: React.ReactNode; label: string; value: string; delta: string }) {
-  return <div className="statCard"><div className="statTop"><div className="statIcon">{icon}</div><span>{delta}</span></div><strong>{value}</strong><p>{label}</p></div>;
+function pipelineRows(pipeline: Pipeline, locale: Locale) {
+  const labels = locale === "ar"
+    ? { new: "عملاء جدد", qualified: "مؤهلون", viewing: "معاينات", negotiation: "تفاوض", won: "تم البيع", lost: "مفقود" }
+    : { new: "New leads", qualified: "Qualified", viewing: "Viewings", negotiation: "Negotiation", won: "Won", lost: "Lost" };
+  const max = Math.max(...Object.values(pipeline), 1);
+  return (Object.keys(labels) as Array<keyof Pipeline>).map((key) => ({
+    key,
+    label: labels[key],
+    value: pipeline[key] || 0,
+    width: `${Math.max(4, Math.round(((pipeline[key] || 0) / max) * 100))}%`,
+  }));
+}
+
+function formatMoney(value: number | null | undefined, currency: string, locale: Locale) {
+  if (value === null || value === undefined) return "—";
+  try {
+    return new Intl.NumberFormat(locale === "ar" ? "ar-EG" : "en-US", {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 0,
+    }).format(Number(value));
+  } catch {
+    return `${Number(value).toLocaleString()} ${currency}`;
+  }
+}
+
+function formatDateTime(value: string, locale: Locale) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+}
+
+function Stat({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
+  return <div className="statCard"><div className="statTop"><div className="statIcon">{icon}</div><span className="dataTag">LIVE</span></div><strong>{value}</strong><p>{label}</p></div>;
 }
 
 function Funnel({ label, value, width }: { label: string; value: string; width: string }) {
   return <div className="funnelRow"><div className="funnelMeta"><span>{label}</span><strong>{value}</strong></div><div className="funnelTrack"><div className="funnelFill" style={{ width }} /></div></div>;
 }
 
-function EmptyState({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
-  return <section className="panel emptyState"><div className="aiIcon">{icon}</div><h2>{title}</h2><p>{text}</p></section>;
+function StatusBadge({ value }: { value: string }) {
+  const safe = value.toLowerCase().replace(/[^a-z0-9_-]/g, "");
+  return <span className={`statusBadge status-${safe}`}>{value}</span>;
+}
+
+function LoadingState({ text }: { text: string }) {
+  return <section className="panel loadingState"><RefreshCw className="spin"/><span>{text}</span></section>;
+}
+
+function ArchitectureCard({ title, text }: { title: string; text: string }) {
+  return <article><strong>{title}</strong><p>{text}</p></article>;
 }
