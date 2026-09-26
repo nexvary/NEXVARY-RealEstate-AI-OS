@@ -79,12 +79,13 @@ def main() -> None:
 
     import uvicorn
     import webview
+    from app.main import app as fastapi_app
 
     port = free_port()
     url = f"http://127.0.0.1:{port}"
 
     config = uvicorn.Config(
-        "app.main:app",
+        fastapi_app,
         host="127.0.0.1",
         port=port,
         log_level="warning",
