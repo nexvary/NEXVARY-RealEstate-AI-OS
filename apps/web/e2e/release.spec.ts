@@ -91,5 +91,5 @@ test("mobile layout exposes navigation and does not overflow core controls", asy
   const bodyWidth = await page.evaluate(() => document.body.scrollWidth);
   expect(bodyWidth).toBeLessThanOrEqual((viewport?.width || 412) + 2);
 
-  await expect(page.getByRole("button", { name: /EN|AR/ })).toBeVisible();
+  await expect(page.locator("button.loginLanguage")).toBeVisible();
 });
