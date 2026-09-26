@@ -26,6 +26,7 @@ from .models import (
     UserRole,
 )
 from .policy import RequestContext, get_request_context, manage_inventory, manage_users, write_sales
+from .quota import enforce_entity_limit
 from .schemas import (
     AppointmentCreate,
     AppointmentRead,
@@ -187,6 +188,7 @@ def create_user(
     ctx: RequestContext = Depends(manage_users),
     db: Session = Depends(get_db),
 ) -> User:
+    enforce_entity_limit(db, ctx.tenant_id, "users")
     user = User(
         tenant_id=ctx.tenant_id,
         email=payload.email.lower(),
@@ -215,6 +217,7 @@ def create_project(
     ctx: RequestContext = Depends(manage_inventory),
     db: Session = Depends(get_db),
 ) -> Project:
+    enforce_entity_limit(db, ctx.tenant_id, "projects")
     project = Project(tenant_id=ctx.tenant_id, **payload.model_dump())
     db.add(project)
     add_audit(db, ctx, action="project.create", entity_type="project", entity_id=project.id, details=payload.name)
@@ -291,6 +294,7 @@ def create_unit(
     ctx: RequestContext = Depends(manage_inventory),
     db: Session = Depends(get_db),
 ) -> Unit:
+    enforce_entity_limit(db, ctx.tenant_id, "units")
     tenant_entity(db, Project, payload.project_id, ctx.tenant_id)
     if payload.building_id:
         building = tenant_entity(db, Building, payload.building_id, ctx.tenant_id)
