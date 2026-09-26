@@ -14,6 +14,7 @@ from .db import Base, engine
 from .security import validate_production_secrets
 from .setup_api import router as setup_router
 from .finance_api import router as finance_router
+from .platform_api import router as platform_router
 from .workspace_api import router as workspace_router
 
 settings = get_settings()
@@ -28,7 +29,7 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(
     title=settings.app_name,
-    version="1.0.0-stage170",
+    version="1.1.0-platform-admin",
     description="Transactional real-estate core with grounded AI/RAG orchestration boundaries.",
     lifespan=lifespan,
 )
@@ -43,7 +44,7 @@ app.add_middleware(
 
 @app.get("/health")
 def health() -> dict[str, str]:
-    return {"status": "ok", "service": "nexvary-realestate-api", "version": "1.0.0-stage170"}
+    return {"status": "ok", "service": "nexvary-realestate-api", "version": "1.1.0-platform-admin"}
 
 
 app.include_router(setup_router)
@@ -52,6 +53,7 @@ app.include_router(workspace_router)
 app.include_router(finance_router)
 app.include_router(ai_router)
 app.include_router(admin_router)
+app.include_router(platform_router)
 
 static_dir = os.getenv("NEXVARY_STATIC_DIR")
 if static_dir:
