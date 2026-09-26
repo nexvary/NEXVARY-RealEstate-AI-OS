@@ -1,0 +1,96 @@
+name: Windows Stage 170 Installer
+
+on:
+  push:
+    branches: ["release/stage-170-windows"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-installer:
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Build web UI
+        shell: pwsh
+        run: |
+          Set-Location apps/web
+          npm install
+          npm run build
+          Set-Location ../..
+          if (!(Test-Path "apps/web/dist/index.html")) { throw "Frontend build output is missing" }
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r services/api/requirements.txt
+          pip install -r desktop/requirements-desktop.txt
+
+      - name: Run API tests
+        shell: pwsh
+        env:
+          APP_ENV: test
+          DATABASE_URL: sqlite:///./stage170-test.db
+        run: |
+          Set-Location services/api
+          pytest -q
+          Set-Location ../..
+
+      - name: Generate application icon
+        shell: pwsh
+        run: python desktop/build_icon.py
+
+      - name: Build frozen desktop application
+        shell: pwsh
+        run: |
+          pyinstaller --noconfirm --clean desktop/NEXVARY-RealEstate-AI-OS.spec
+          if (!(Test-Path "dist/NEXVARY-RealEstate-AI-OS/NEXVARY-RealEstate-AI-OS.exe")) { throw "Frozen executable is missing" }
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup -y --no-progress
+
+      - name: Compile Windows installer
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (!(Test-Path $iscc)) { throw "Inno Setup compiler not found" }
+          & $iscc "desktop\installer.iss"
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed with exit code $LASTEXITCODE" }
+          if (!(Test-Path "installer/NEXVARY-RealEstate-AI-OS-Stage170-Setup.exe")) { throw "Installer output is missing" }
+
+      - name: Generate SHA256
+        shell: pwsh
+        run: |
+          $hash = Get-FileHash "installer/NEXVARY-RealEstate-AI-OS-Stage170-Setup.exe" -Algorithm SHA256
+          "$($hash.Hash)  NEXVARY-RealEstate-AI-OS-Stage170-Setup.exe" | Out-File -FilePath "installer/SHA256.txt" -Encoding ascii
+          Get-Item "installer/NEXVARY-RealEstate-AI-OS-Stage170-Setup.exe" | Select-Object Name, Length, LastWriteTime
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NEXVARY-RealEstate-AI-OS-Stage170-Windows
+          path: |
+            installer/NEXVARY-RealEstate-AI-OS-Stage170-Setup.exe
+            installer/SHA256.txt
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
