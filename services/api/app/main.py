@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from .api import router
 from .admin_api import router as admin_router
 from .branding_api import router as branding_router
+from .commercial_api import platform_router as commercial_platform_router, tenant_router as commercial_tenant_router
 from .ai_api import router as ai_router
 from .config import get_settings
 from .db import Base, engine
@@ -58,6 +59,8 @@ app.include_router(admin_router)
 app.include_router(platform_router)
 app.include_router(branding_router)
 app.include_router(seo_router)
+app.include_router(commercial_platform_router)
+app.include_router(commercial_tenant_router)
 
 static_dir = os.getenv("NEXVARY_STATIC_DIR")
 if static_dir:
