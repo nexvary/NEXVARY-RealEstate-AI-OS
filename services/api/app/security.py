@@ -21,7 +21,7 @@ def hash_password(password: str) -> str:
     digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, PBKDF2_ITERATIONS)
     salt_b64 = base64.urlsafe_b64encode(salt).decode("ascii")
     digest_b64 = base64.urlsafe_b64encode(digest).decode("ascii")
-    return f"pbkdf2_sha256$${PBKDF2_ITERATIONS}$${salt_b64}$${digest_b64}"
+    return "pbkdf2_sha256$" + str(PBKDF2_ITERATIONS) + "$" + salt_b64 + "$" + digest_b64
 
 
 def verify_password(password: str, encoded: str) -> bool:
