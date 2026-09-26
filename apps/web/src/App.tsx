@@ -1,11 +1,15 @@
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
+import { InventoryOps, InboxOps, KnowledgeOps, TasksOps, TeamOps } from "./Operations";
+
 import {
   ArrowLeft,
   ArrowRight,
   BedDouble,
   Bot,
+  BookOpen,
   Building2,
   CalendarDays,
+  ClipboardCheck,
   ChevronLeft,
   CircleDollarSign,
   Home,
@@ -15,16 +19,18 @@ import {
   LayoutDashboard,
   LogOut,
   MapPin,
+  MessageSquare,
   Plus,
   RefreshCw,
   Ruler,
   Search,
+  ShieldCheck,
   Sparkles,
   Users,
 } from "lucide-react";
 
 type Locale = "ar" | "en";
-type View = "dashboard" | "leads" | "inventory" | "appointments" | "ai" | "about";
+type View = "dashboard" | "leads" | "inventory" | "manage" | "appointments" | "inbox" | "knowledge" | "tasks" | "team" | "ai" | "about";
 
 type User = {
   id: string;
@@ -118,7 +124,12 @@ const copy = {
     dashboard: "لوحة التحكم",
     leads: "العملاء المحتملون",
     inventory: "الوحدات والمخزون",
+    manage: "إدارة المخزون",
     appointments: "المعاينات",
+    inbox: "المحادثات",
+    knowledge: "قاعدة المعرفة",
+    tasks: "المهام والمتابعة",
+    team: "الفريق والصلاحيات",
     ai: "مساعد الذكاء الاصطناعي",
     about: "عن المنصة",
     search: "ابحث داخل الصفحة الحالية...",
@@ -173,7 +184,12 @@ const copy = {
     dashboard: "Dashboard",
     leads: "Leads",
     inventory: "Inventory",
+    manage: "Inventory Management",
     appointments: "Viewings",
+    inbox: "Inbox",
+    knowledge: "Knowledge Base",
+    tasks: "Tasks",
+    team: "Team & Roles",
     ai: "AI Assistant",
     about: "About",
     search: "Search the current view...",
@@ -228,7 +244,12 @@ const navItems = [
   { id: "dashboard" as View, icon: LayoutDashboard, key: "dashboard" as const },
   { id: "leads" as View, icon: Users, key: "leads" as const },
   { id: "inventory" as View, icon: Building2, key: "inventory" as const },
+  { id: "manage" as View, icon: ClipboardCheck, key: "manage" as const },
   { id: "appointments" as View, icon: CalendarDays, key: "appointments" as const },
+  { id: "inbox" as View, icon: MessageSquare, key: "inbox" as const },
+  { id: "knowledge" as View, icon: BookOpen, key: "knowledge" as const },
+  { id: "tasks" as View, icon: ClipboardCheck, key: "tasks" as const },
+  { id: "team" as View, icon: ShieldCheck, key: "team" as const },
   { id: "ai" as View, icon: Bot, key: "ai" as const },
   { id: "about" as View, icon: Info, key: "about" as const },
 ];
@@ -693,6 +714,12 @@ function ControlCenter({
             </div>
           )}
 
+          {view === "manage" && <InventoryOps token={session.access_token} locale={locale} />}
+          {view === "inbox" && <InboxOps token={session.access_token} locale={locale} />}
+          {view === "knowledge" && <KnowledgeOps token={session.access_token} locale={locale} />}
+          {view === "tasks" && <TasksOps token={session.access_token} locale={locale} />}
+          {view === "team" && <TeamOps token={session.access_token} locale={locale} />}
+
           {view === "appointments" && (
             <section className="panel appointmentsPanel">
               <div className="panelHead"><h2>{t.appointments}</h2><span>{appointments.length}</span></div>
@@ -742,7 +769,7 @@ function ControlCenter({
       </main>
 
       <div className="mobileNav">
-        {navItems.slice(0, 5).map(({ id, icon: Icon, key }) => (
+        {navItems.filter((item) => item.id !== "about").map(({ id, icon: Icon, key }) => (
           <button key={id} className={view === id ? "active" : ""} onClick={() => setView(id)} aria-label={t[key]}>
             <Icon size={20}/>
           </button>
