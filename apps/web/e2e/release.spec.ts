@@ -196,9 +196,7 @@ test("bank-transfer billing requires platform verification before payment", asyn
 
   await page.getByRole("button", { name: "تسجيل الخروج" }).click();
   await page.getByRole("button", { name: "إدارة منصة NEXVARY والشركات" }).click();
-  await page.getByLabel("البريد الإلكتروني").fill("owner@nexvary.test");
-  await page.getByLabel("كلمة المرور").fill("ReleaseGate123!");
-  await page.getByRole("button", { name: "دخول إدارة المنصة" }).click();
+  await expect(page.getByText("الحسابات البنكية ومراجعة التحويلات")).toBeVisible();
 
   const transferRow = page.locator(".transferReviewRows article").filter({ hasText: "E2E-BANK-TRANSFER-001" });
   await expect(transferRow).toBeVisible();
