@@ -146,6 +146,66 @@ test("commercial platform creates a reusable tenant template and provisions a co
   await expect(page.getByRole("button", { name: /COMMERCIAL E2E/ })).toBeVisible();
 });
 
+test("bank-transfer billing requires platform verification before payment", async ({ page, isMobile }) => {
+  if (isMobile) test.skip();
+
+  await page.goto("/");
+  await page.getByRole("button", { name: "إدارة منصة NEXVARY والشركات" }).click();
+  await page.getByLabel("البريد الإلكتروني").fill("owner@nexvary.test");
+  await page.getByLabel("كلمة المرور").fill("ReleaseGate123!");
+  await page.getByRole("button", { name: "دخول إدارة المنصة" }).click();
+
+  await page.getByRole("button", { name: /NEXVARY Realty/ }).first().click();
+
+  const bankForm = page.locator("form").filter({ hasText: "إضافة حساب بنكي" });
+  await bankForm.getByLabel("اسم مختصر").fill("NEXVARY E2E EGP");
+  await bankForm.getByLabel("اسم البنك").fill("E2E Bank");
+  await bankForm.getByLabel("اسم صاحب الحساب").fill("NEXVARY");
+  await bankForm.getByLabel("رقم الحساب").fill("001122334455");
+  await bankForm.getByLabel("العملة").fill("EGP");
+  await bankForm.getByRole("button", { name: "حفظ الحساب" }).click();
+  await expect(page.getByText("تم حفظ الحساب البنكي.")).toBeVisible();
+
+  const invoiceForm = page.locator("form").filter({ hasText: "فاتورة جديدة" });
+  await invoiceForm.getByLabel("المبلغ").fill("5000");
+  await invoiceForm.getByLabel("الضريبة").fill("0");
+  await invoiceForm.getByLabel("العملة").fill("EGP");
+  await invoiceForm.getByLabel("الوصف").fill("E2E bank transfer invoice");
+  await invoiceForm.getByRole("button", { name: "إنشاء الفاتورة" }).click();
+  await expect(page.getByText("تم إنشاء الفاتورة.")).toBeVisible();
+
+  await page.goto("/");
+  await page.getByLabel("معرّف الشركة").fill("nexvary-test");
+  await page.getByLabel("البريد الإلكتروني").fill("owner@nexvary.test");
+  await page.getByLabel("كلمة المرور").fill("ReleaseGate123!");
+  await page.getByRole("button", { name: "تسجيل الدخول" }).click();
+
+  await page.getByRole("button", { name: "الاشتراك والتحويل البنكي" }).click();
+  await expect(page.getByText("الدفع يتم بتحويل بنكي فقط. بعد التحويل أرسل رقم العملية هنا، ويعتمد مسؤول المنصة الدفع بعد مراجعته.")).toBeVisible();
+
+  const invoiceButton = page.locator(".billingInvoice").filter({ hasText: "E2E bank transfer invoice" });
+  await invoiceButton.click();
+  const transferForm = page.locator("form").filter({ hasText: "تسجيل تحويل بنكي" });
+  await transferForm.getByLabel("اسم المحول").fill("NEXVARY Test Realty");
+  await transferForm.getByLabel("بنك المحول").fill("Sender Bank");
+  await transferForm.getByLabel("رقم العملية/مرجع التحويل").fill("E2E-BANK-TRANSFER-001");
+  await transferForm.getByRole("button", { name: "إرسال للتحقق" }).click();
+
+  await expect(page.getByText("تم إرسال بيانات التحويل للمراجعة. لن تُعتبر الفاتورة مدفوعة إلا بعد اعتماد التحويل.")).toBeVisible();
+  await expect(page.getByText("التحويل قيد المراجعة")).toBeVisible();
+
+  await page.getByRole("button", { name: "تسجيل الخروج" }).click();
+  await page.getByRole("button", { name: "إدارة منصة NEXVARY والشركات" }).click();
+  await page.getByLabel("البريد الإلكتروني").fill("owner@nexvary.test");
+  await page.getByLabel("كلمة المرور").fill("ReleaseGate123!");
+  await page.getByRole("button", { name: "دخول إدارة المنصة" }).click();
+
+  const transferRow = page.locator(".transferReviewRows article").filter({ hasText: "E2E-BANK-TRANSFER-001" });
+  await expect(transferRow).toBeVisible();
+  await transferRow.getByRole("button", { name: "اعتماد" }).click();
+  await expect(page.getByText("تم اعتماد التحويل وتسجيل الفاتورة مدفوعة.")).toBeVisible();
+});
+
 test("tenant WhatsApp channel configuration is usable without exposing secrets", async ({ page, isMobile }) => {
   if (isMobile) test.skip();
 
