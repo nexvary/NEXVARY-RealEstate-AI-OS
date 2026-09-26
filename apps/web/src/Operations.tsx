@@ -192,3 +192,207 @@ export function TeamOps({ token, locale }: { token: string; locale: Locale }) {
   async function add(event:FormEvent<HTMLFormElement>){event.preventDefault();const form=event.currentTarget;const d=new FormData(form);try{await callApi("/api/v1/users",token,{method:"POST",body:JSON.stringify({email:String(d.get("email")||""),display_name:String(d.get("display_name")||""),password:String(d.get("password")||""),role:String(d.get("role")||"sales_agent")})});form.reset();await load();}catch(e){setError(e instanceof Error?e.message:"Save failed");}}
   return <div className="opsPage"><div className="opsHeading"><div><span className="eyebrow">RBAC</span><h2>{ar?"الفريق والصلاحيات":"Team & permissions"}</h2></div></div>{error&&<div className="systemError">{error}</div>}<div className="tasksLayout"><form className="panel opsForm" onSubmit={add}><div className="opsTitle"><UserPlus size={19}/><strong>{ar?"مستخدم جديد":"New user"}</strong></div><label>{ar?"الاسم":"Name"}<input name="display_name" required/></label><label>Email<input name="email" type="email" required/></label><label>{ar?"كلمة المرور":"Password"}<input name="password" type="password" minLength={10} required/></label><label>{ar?"الصلاحية":"Role"}<select name="role"><option value="sales_agent">Sales Agent</option><option value="sales_manager">Sales Manager</option><option value="finance">Finance</option><option value="viewer">Viewer</option><option value="admin">Admin</option></select></label><button className="primaryButton" type="submit"><UserPlus size={16}/>{ar?"إضافة المستخدم":"Add user"}</button></form><section className="panel opsList"><div className="panelHead"><h2>{ar?"المستخدمون":"Users"}</h2><span>{users.length}</span></div>{users.map(user=><div className="teamRow" key={user.id}><div className="avatar">{user.display_name.slice(0,1)}</div><div><strong>{user.display_name}</strong><span>{user.email}</span></div><span className="statusBadge">{user.role}</span></div>)}</section></div></div>;
 }
+
+
+type Reservation = {
+  id: string;
+  lead_id: string;
+  unit_id: string;
+  reservation_amount: number;
+  status: string;
+  created_at: string;
+};
+type Contract = {
+  id: string;
+  reservation_id: string;
+  lead_id: string;
+  unit_id: string;
+  contract_number: string;
+  total_price: number;
+  currency: string;
+  status: string;
+  signed_at: string;
+};
+type Installment = {
+  id: string;
+  contract_id: string;
+  sequence: number;
+  due_at: string;
+  amount: number;
+  status: string;
+  paid_at?: string | null;
+};
+type Commission = {
+  id: string;
+  contract_id: string;
+  broker_name: string;
+  rate_percent: number;
+  amount: number;
+  status: string;
+};
+
+export function FinanceOps({ token, locale }: { token: string; locale: Locale }) {
+  const ar = locale === "ar";
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [contracts, setContracts] = useState<Contract[]>([]);
+  const [commissions, setCommissions] = useState<Commission[]>([]);
+  const [selectedContract, setSelectedContract] = useState("");
+  const [installments, setInstallments] = useState<Installment[]>([]);
+  const [error, setError] = useState("");
+
+  async function load() {
+    setError("");
+    try {
+      const [r, c, cm] = await Promise.all([
+        callApi<Reservation[]>("/api/v1/reservations", token),
+        callApi<Contract[]>("/api/v1/contracts", token),
+        callApi<Commission[]>("/api/v1/commissions", token),
+      ]);
+      setReservations(r);
+      setContracts(c);
+      setCommissions(cm);
+      if (!selectedContract && c[0]) setSelectedContract(c[0].id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Load failed");
+    }
+  }
+
+  async function loadInstallments(contractId: string) {
+    if (!contractId) { setInstallments([]); return; }
+    try {
+      setInstallments(await callApi<Installment[]>(`/api/v1/contracts/${contractId}/installments`, token));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Load failed");
+    }
+  }
+
+  useEffect(() => { void load(); }, [token]);
+  useEffect(() => { void loadInstallments(selectedContract); }, [selectedContract]);
+
+  async function createContract(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const reservationId = String(data.get("reservation_id") || "");
+    try {
+      const created = await callApi<Contract>(`/api/v1/contracts/from-reservation/${reservationId}`, token, {
+        method: "POST",
+        body: JSON.stringify({ contract_number: String(data.get("contract_number") || "") }),
+      });
+      form.reset();
+      await load();
+      setSelectedContract(created.id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Contract failed");
+    }
+  }
+
+  async function createSchedule(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedContract) return;
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    try {
+      await callApi(`/api/v1/contracts/${selectedContract}/schedule`, token, {
+        method: "POST",
+        body: JSON.stringify({
+          first_due_at: new Date(String(data.get("first_due_at") || "")).toISOString(),
+          installment_count: Number(data.get("installment_count") || 1),
+          frequency_months: Number(data.get("frequency_months") || 1),
+        }),
+      });
+      await loadInstallments(selectedContract);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Schedule failed");
+    }
+  }
+
+  async function payInstallment(id: string) {
+    try {
+      await callApi(`/api/v1/installments/${id}/pay`, token, { method: "POST" });
+      await loadInstallments(selectedContract);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Payment failed");
+    }
+  }
+
+  async function createCommission(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedContract) return;
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    try {
+      await callApi(`/api/v1/contracts/${selectedContract}/commissions`, token, {
+        method: "POST",
+        body: JSON.stringify({
+          broker_name: String(data.get("broker_name") || ""),
+          rate_percent: Number(data.get("rate_percent") || 0),
+        }),
+      });
+      form.reset();
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Commission failed");
+    }
+  }
+
+  async function payCommission(id: string) {
+    try {
+      await callApi(`/api/v1/commissions/${id}/pay`, token, { method: "POST" });
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Payment failed");
+    }
+  }
+
+  const activeReservations = reservations.filter((item) => item.status === "active");
+  const selected = contracts.find((item) => item.id === selectedContract);
+
+  return <div className="opsPage">
+    <div className="opsHeading"><div><span className="eyebrow">CONTRACTS & FINANCE</span><h2>{ar ? "العقود والأقساط والعمولات" : "Contracts, installments & commissions"}</h2></div></div>
+    {error && <div className="systemError">{error}</div>}
+
+    <div className="opsGrid financeGrid">
+      <form className="panel opsForm" onSubmit={createContract}>
+        <div className="opsTitle"><ClipboardCheck size={19}/><strong>{ar ? "تحويل حجز إلى عقد" : "Convert reservation to contract"}</strong></div>
+        <label>{ar ? "الحجز النشط" : "Active reservation"}
+          <select name="reservation_id" required><option value="">{ar ? "اختر الحجز" : "Select reservation"}</option>{activeReservations.map(r=><option key={r.id} value={r.id}>{r.id.slice(0,8)} · {r.unit_id.slice(0,8)} · {money(Number(r.reservation_amount),"EGP",locale)}</option>)}</select>
+        </label>
+        <label>{ar ? "رقم العقد" : "Contract number"}<input name="contract_number" required placeholder="CNT-2026-001"/></label>
+        <button className="primaryButton" type="submit">{ar ? "إنشاء العقد وتثبيت البيع" : "Create contract & close sale"}</button>
+      </form>
+
+      <section className="panel opsForm">
+        <div className="opsTitle"><ClipboardCheck size={19}/><strong>{ar ? "العقد الحالي" : "Selected contract"}</strong></div>
+        <label>{ar ? "العقد" : "Contract"}
+          <select value={selectedContract} onChange={e=>setSelectedContract(e.target.value)}><option value="">{ar ? "اختر" : "Select"}</option>{contracts.map(c=><option key={c.id} value={c.id}>{c.contract_number}</option>)}</select>
+        </label>
+        {selected && <div className="financeSummary"><strong>{selected.contract_number}</strong><span>{money(Number(selected.total_price),selected.currency,locale)}</span><span className={`statusBadge status-${selected.status}`}>{selected.status}</span></div>}
+      </section>
+
+      <form className="panel opsForm" onSubmit={createSchedule}>
+        <div className="opsTitle"><ClipboardCheck size={19}/><strong>{ar ? "جدول الأقساط" : "Installment schedule"}</strong></div>
+        <label>{ar ? "أول استحقاق" : "First due date"}<input name="first_due_at" type="datetime-local" required /></label>
+        <div className="inlineFields"><label>{ar ? "عدد الأقساط" : "Count"}<input name="installment_count" type="number" min="1" max="240" defaultValue="12" required/></label><label>{ar ? "كل كم شهر" : "Every months"}<input name="frequency_months" type="number" min="1" max="12" defaultValue="1" required/></label></div>
+        <button className="primaryButton" type="submit" disabled={!selectedContract}>{ar ? "توليد الجدول" : "Generate schedule"}</button>
+      </form>
+
+      <form className="panel opsForm" onSubmit={createCommission}>
+        <div className="opsTitle"><ClipboardCheck size={19}/><strong>{ar ? "عمولة وسيط" : "Broker commission"}</strong></div>
+        <label>{ar ? "اسم الوسيط" : "Broker name"}<input name="broker_name" required/></label>
+        <label>{ar ? "نسبة العمولة %" : "Commission %"}<input name="rate_percent" type="number" min="0.001" max="100" step="0.001" required/></label>
+        <button className="primaryButton" type="submit" disabled={!selectedContract}>{ar ? "إضافة العمولة" : "Add commission"}</button>
+      </form>
+    </div>
+
+    <section className="panel opsList">
+      <div className="panelHead"><h2>{ar ? "الأقساط" : "Installments"}</h2><span>{installments.length}</span></div>
+      <div className="financeRows">{installments.map(item=><div className="financeRow" key={item.id}><strong>#{item.sequence}</strong><span>{new Date(item.due_at).toLocaleDateString(ar?"ar-EG":"en-US")}</span><span>{money(Number(item.amount), selected?.currency || "EGP", locale)}</span><span className={`statusBadge status-${item.status}`}>{item.status}</span>{item.status==="due"&&<button className="secondaryButton" onClick={()=>void payInstallment(item.id)}>{ar?"تسجيل سداد":"Mark paid"}</button>}</div>)}</div>
+    </section>
+
+    <section className="panel opsList">
+      <div className="panelHead"><h2>{ar ? "العمولات" : "Commissions"}</h2><span>{commissions.length}</span></div>
+      <div className="financeRows">{commissions.map(item=><div className="financeRow" key={item.id}><strong>{item.broker_name}</strong><span>{Number(item.rate_percent)}%</span><span>{money(Number(item.amount), selected?.currency || "EGP", locale)}</span><span className={`statusBadge status-${item.status}`}>{item.status}</span>{item.status==="pending"&&<button className="secondaryButton" onClick={()=>void payCommission(item.id)}>{ar?"تسجيل السداد":"Mark paid"}</button>}</div>)}</div>
+    </section>
+  </div>;
+}
