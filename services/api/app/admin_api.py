@@ -14,6 +14,7 @@ from .commercial_models import BankTransferSubmission, BillingInvoice, SaaSSubsc
 from .db import get_db
 from .finance_models import BrokerCommission, Contract, Installment
 from .growth_models import AudienceSegment, CustomerFeedback, CustomerJourneyEvent, MarketingCampaign, PropertyMediaAsset, SalesPlaybook
+from .omnichannel_models import ConversationSalesState, InboundMessageReceipt, MarketingAttributionEvent, OmnichannelOutbox
 from .models import (
     Appointment,
     AuditEvent,
@@ -229,6 +230,10 @@ def export_backup(
         "property_media_assets": (PropertyMediaAsset, set()),
         "sales_playbooks": (SalesPlaybook, set()),
         "customer_feedback": (CustomerFeedback, set()),
+        "conversation_sales_states": (ConversationSalesState, set()),
+        "inbound_message_receipts": (InboundMessageReceipt, set()),
+        "omnichannel_outbox": (OmnichannelOutbox, set()),
+        "marketing_attribution_events": (MarketingAttributionEvent, set()),
         "tenant_saas_profiles": (TenantSaaSProfile, set()),
         "tenant_integrations": (TenantIntegration, {"encrypted_secret_json"}),
         "saas_subscriptions": (SaaSSubscription, set()),
@@ -248,7 +253,7 @@ def export_backup(
 
     data: dict[str, Any] = {
         "format": "NEXVARY-RealEstate-AI-OS-backup",
-        "version": "1.7.0",
+        "version": "1.8.0",
         "exported_at": datetime.now(timezone.utc).isoformat(),
         "tenant": row_dict(tenant),
         "tables": {},
