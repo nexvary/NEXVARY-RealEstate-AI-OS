@@ -41,7 +41,7 @@ Item {
                 Image {
                     anchors.fill: parent
                     anchors.margins: 7
-                    source: "qrc:/qt/qml/Nexvary/RealEstate/assets/nexvary-mark.svg"
+                    source: "qrc:/Nexvary/RealEstate/assets/nexvary-mark.svg"
                     fillMode: Image.PreserveAspectFit
                 }
             }
