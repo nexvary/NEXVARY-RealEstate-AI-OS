@@ -10,6 +10,7 @@
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QProcessEnvironment>
+#include <QStringList>
 #include <QUrl>
 
 namespace {
@@ -71,6 +72,13 @@ QVariantList ApiClient::whatsappChannels() const { return m_whatsappChannels; }
 QVariantMap ApiClient::salesState() const { return m_salesState; }
 QVariantMap ApiClient::groundedReply() const { return m_groundedReply; }
 QString ApiClient::selectedConversationId() const { return m_selectedConversationId; }
+QVariantList ApiClient::growthCampaigns() const { return m_growthCampaigns; }
+QVariantList ApiClient::growthAttribution() const { return m_growthAttribution; }
+QVariantList ApiClient::growthAudiences() const { return m_growthAudiences; }
+QVariantList ApiClient::growthMedia() const { return m_growthMedia; }
+QVariantList ApiClient::growthPlaybooks() const { return m_growthPlaybooks; }
+QVariantList ApiClient::growthFeedback() const { return m_growthFeedback; }
+QVariantMap ApiClient::growthFeedbackSummary() const { return m_growthFeedbackSummary; }
 QVariantMap ApiClient::enterpriseSummary() const { return m_enterpriseSummary; }
 QVariantList ApiClient::proposals() const { return m_proposals; }
 QVariantList ApiClient::invoices() const { return m_invoices; }
@@ -199,6 +207,13 @@ void ApiClient::logout()
     m_salesState.clear();
     m_groundedReply.clear();
     m_selectedConversationId.clear();
+    m_growthCampaigns.clear();
+    m_growthAttribution.clear();
+    m_growthAudiences.clear();
+    m_growthMedia.clear();
+    m_growthPlaybooks.clear();
+    m_growthFeedback.clear();
+    m_growthFeedbackSummary.clear();
     m_enterpriseSummary.clear();
     m_proposals.clear();
     m_invoices.clear();
@@ -228,6 +243,13 @@ void ApiClient::logout()
     emit whatsappChannelsChanged();
     emit salesStateChanged();
     emit groundedReplyChanged();
+    emit growthCampaignsChanged();
+    emit growthAttributionChanged();
+    emit growthAudiencesChanged();
+    emit growthMediaChanged();
+    emit growthPlaybooksChanged();
+    emit growthFeedbackChanged();
+    emit growthFeedbackSummaryChanged();
     emit enterpriseSummaryChanged();
     emit proposalsChanged();
     emit invoicesChanged();
@@ -251,6 +273,7 @@ void ApiClient::refreshAll()
     fetchAppointments();
     fetchTenantSettings();
     refreshWorkspace();
+    refreshGrowth();
     refreshEnterprise();
 }
 
@@ -1240,6 +1263,223 @@ void ApiClient::fetchWhatsAppChannels()
         const QByteArray body = reply->readAll();
         if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
         else { m_whatsappChannels = QJsonDocument::fromJson(body).array().toVariantList(); emit whatsappChannelsChanged(); }
+        reply->deleteLater();
+    });
+}
+
+
+void ApiClient::refreshGrowth()
+{
+    if (!loggedIn())
+        return;
+    fetchGrowthCampaigns();
+    fetchGrowthAttribution();
+    fetchGrowthAudiences();
+    fetchGrowthMedia();
+    fetchGrowthPlaybooks();
+    fetchGrowthFeedback();
+    fetchGrowthFeedbackSummary();
+}
+
+void ApiClient::createGrowthCampaign(const QString &name, const QString &channel, const QString &objective, double budget, double spend, const QString &currency, const QString &utmSource, const QString &utmMedium, const QString &utmCampaign)
+{
+    QJsonObject payload{
+        {QStringLiteral("name"), name.trimmed()},
+        {QStringLiteral("channel"), channel.trimmed()},
+        {QStringLiteral("status"), QStringLiteral("draft")},
+        {QStringLiteral("budget"), budget},
+        {QStringLiteral("spend"), spend},
+        {QStringLiteral("currency"), currency.trimmed().isEmpty() ? QStringLiteral("EGP") : currency.trimmed().toUpper()},
+    };
+    if (!objective.trimmed().isEmpty()) payload.insert(QStringLiteral("objective"), objective.trimmed());
+    if (!utmSource.trimmed().isEmpty()) payload.insert(QStringLiteral("utm_source"), utmSource.trimmed());
+    if (!utmMedium.trimmed().isEmpty()) payload.insert(QStringLiteral("utm_medium"), utmMedium.trimmed());
+    if (!utmCampaign.trimmed().isEmpty()) payload.insert(QStringLiteral("utm_campaign"), utmCampaign.trimmed());
+
+    setBusy(true);
+    auto *reply = m_network.post(makeRequest(QStringLiteral("/api/v1/growth/campaigns"), true), QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { setError(QString()); fetchGrowthCampaigns(); fetchGrowthAttribution(); }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::createGrowthAudience(const QString &name, const QString &description, const QString &source, const QString &status, int minScore, const QString &city, double minBudget, double maxBudget)
+{
+    QJsonObject rules;
+    if (!source.trimmed().isEmpty()) rules.insert(QStringLiteral("sources"), QJsonArray{source.trimmed()});
+    if (!status.trimmed().isEmpty()) rules.insert(QStringLiteral("statuses"), QJsonArray{status.trimmed()});
+    if (minScore >= 0) rules.insert(QStringLiteral("min_score"), minScore);
+    if (!city.trimmed().isEmpty()) rules.insert(QStringLiteral("preferred_city"), city.trimmed());
+    if (minBudget > 0) rules.insert(QStringLiteral("min_budget"), minBudget);
+    if (maxBudget > 0) rules.insert(QStringLiteral("max_budget"), maxBudget);
+
+    QJsonObject payload{
+        {QStringLiteral("name"), name.trimmed()},
+        {QStringLiteral("description"), description.trimmed()},
+        {QStringLiteral("rules"), rules},
+        {QStringLiteral("is_active"), true},
+    };
+    setBusy(true);
+    auto *reply = m_network.post(makeRequest(QStringLiteral("/api/v1/growth/audiences"), true), QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { setError(QString()); fetchGrowthAudiences(); }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::createGrowthMedia(const QString &projectId, const QString &unitId, const QString &title, const QString &mediaType, const QString &url, const QString &sourceKind, bool verified)
+{
+    QJsonObject payload{
+        {QStringLiteral("title"), title.trimmed()},
+        {QStringLiteral("media_type"), mediaType.trimmed()},
+        {QStringLiteral("url"), url.trimmed()},
+        {QStringLiteral("tags"), QJsonArray{}},
+        {QStringLiteral("source_kind"), sourceKind.trimmed().isEmpty() ? QStringLiteral("company") : sourceKind.trimmed()},
+        {QStringLiteral("is_verified"), verified},
+    };
+    if (!projectId.trimmed().isEmpty()) payload.insert(QStringLiteral("project_id"), projectId.trimmed());
+    if (!unitId.trimmed().isEmpty()) payload.insert(QStringLiteral("unit_id"), unitId.trimmed());
+
+    setBusy(true);
+    auto *reply = m_network.post(makeRequest(QStringLiteral("/api/v1/growth/media"), true), QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { setError(QString()); fetchGrowthMedia(); }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::createGrowthPlaybook(const QString &name, const QString &description, const QString &triggerStage, const QString &stepsText)
+{
+    QJsonArray steps;
+    for (const QString &raw : stepsText.split('\n', Qt::SkipEmptyParts)) {
+        const QString item = raw.trimmed();
+        if (!item.isEmpty())
+            steps.append(item);
+    }
+    QJsonObject payload{
+        {QStringLiteral("name"), name.trimmed()},
+        {QStringLiteral("description"), description.trimmed()},
+        {QStringLiteral("steps"), steps},
+        {QStringLiteral("is_active"), true},
+    };
+    if (!triggerStage.trimmed().isEmpty()) payload.insert(QStringLiteral("trigger_stage"), triggerStage.trimmed());
+
+    setBusy(true);
+    auto *reply = m_network.post(makeRequest(QStringLiteral("/api/v1/growth/playbooks"), true), QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { setError(QString()); fetchGrowthPlaybooks(); }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::createGrowthFeedback(const QString &leadId, const QString &conversationId, const QString &channel, const QString &category, int rating, const QString &comment)
+{
+    QJsonObject payload{
+        {QStringLiteral("category"), category.trimmed().isEmpty() ? QStringLiteral("general") : category.trimmed()},
+        {QStringLiteral("comment"), comment.trimmed()},
+    };
+    if (!leadId.trimmed().isEmpty()) payload.insert(QStringLiteral("lead_id"), leadId.trimmed());
+    if (!conversationId.trimmed().isEmpty()) payload.insert(QStringLiteral("conversation_id"), conversationId.trimmed());
+    if (!channel.trimmed().isEmpty()) payload.insert(QStringLiteral("channel"), channel.trimmed());
+    if (rating >= 1 && rating <= 5) payload.insert(QStringLiteral("rating"), rating);
+
+    setBusy(true);
+    auto *reply = m_network.post(makeRequest(QStringLiteral("/api/v1/growth/feedback"), true), QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { setError(QString()); fetchGrowthFeedback(); fetchGrowthFeedbackSummary(); }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::fetchGrowthCampaigns()
+{
+    auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/growth/campaigns"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { m_growthCampaigns = QJsonDocument::fromJson(body).array().toVariantList(); emit growthCampaignsChanged(); }
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::fetchGrowthAttribution()
+{
+    auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/growth/attribution/campaigns"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { m_growthAttribution = QJsonDocument::fromJson(body).array().toVariantList(); emit growthAttributionChanged(); }
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::fetchGrowthAudiences()
+{
+    auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/growth/audiences"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { m_growthAudiences = QJsonDocument::fromJson(body).array().toVariantList(); emit growthAudiencesChanged(); }
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::fetchGrowthMedia()
+{
+    auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/growth/media"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { m_growthMedia = QJsonDocument::fromJson(body).array().toVariantList(); emit growthMediaChanged(); }
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::fetchGrowthPlaybooks()
+{
+    auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/growth/playbooks"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { m_growthPlaybooks = QJsonDocument::fromJson(body).array().toVariantList(); emit growthPlaybooksChanged(); }
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::fetchGrowthFeedback()
+{
+    auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/growth/feedback"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { m_growthFeedback = QJsonDocument::fromJson(body).array().toVariantList(); emit growthFeedbackChanged(); }
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::fetchGrowthFeedbackSummary()
+{
+    auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/growth/feedback/summary"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { m_growthFeedbackSummary = QJsonDocument::fromJson(body).object().toVariantMap(); emit growthFeedbackSummaryChanged(); }
         reply->deleteLater();
     });
 }
