@@ -21,6 +21,13 @@ class ApiClient final : public QObject
     Q_PROPERTY(QVariantMap overview READ overview NOTIFY overviewChanged)
     Q_PROPERTY(QVariantList leads READ leads NOTIFY leadsChanged)
     Q_PROPERTY(QVariantList units READ units NOTIFY unitsChanged)
+    Q_PROPERTY(QVariantMap enterpriseSummary READ enterpriseSummary NOTIFY enterpriseSummaryChanged)
+    Q_PROPERTY(QVariantList proposals READ proposals NOTIFY proposalsChanged)
+    Q_PROPERTY(QVariantList invoices READ invoices NOTIFY invoicesChanged)
+    Q_PROPERTY(QVariantList tickets READ tickets NOTIFY ticketsChanged)
+    Q_PROPERTY(QVariantList reminders READ reminders NOTIFY remindersChanged)
+    Q_PROPERTY(QVariantList timeline READ timeline NOTIFY timelineChanged)
+    Q_PROPERTY(QString timelineLeadId READ timelineLeadId NOTIFY timelineChanged)
 
 public:
     explicit ApiClient(QObject *parent = nullptr);
@@ -37,11 +44,20 @@ public:
     QVariantMap overview() const;
     QVariantList leads() const;
     QVariantList units() const;
+    QVariantMap enterpriseSummary() const;
+    QVariantList proposals() const;
+    QVariantList invoices() const;
+    QVariantList tickets() const;
+    QVariantList reminders() const;
+    QVariantList timeline() const;
+    QString timelineLeadId() const;
 
     Q_INVOKABLE void health();
     Q_INVOKABLE void login(const QString &tenantSlug, const QString &email, const QString &password);
     Q_INVOKABLE void logout();
     Q_INVOKABLE void refreshAll();
+    Q_INVOKABLE void refreshEnterprise();
+    Q_INVOKABLE void loadTimeline(const QString &leadId);
 
 signals:
     void baseUrlChanged();
@@ -52,6 +68,12 @@ signals:
     void overviewChanged();
     void leadsChanged();
     void unitsChanged();
+    void enterpriseSummaryChanged();
+    void proposalsChanged();
+    void invoicesChanged();
+    void ticketsChanged();
+    void remindersChanged();
+    void timelineChanged();
 
 private:
     QNetworkRequest makeRequest(const QString &path, bool authenticated) const;
@@ -60,6 +82,11 @@ private:
     void fetchOverview();
     void fetchLeads();
     void fetchUnits();
+    void fetchEnterpriseSummary();
+    void fetchProposals();
+    void fetchInvoices();
+    void fetchTickets();
+    void fetchReminders();
 
     QNetworkAccessManager m_network;
     QString m_baseUrl;
@@ -72,4 +99,11 @@ private:
     QVariantMap m_overview;
     QVariantList m_leads;
     QVariantList m_units;
+    QVariantMap m_enterpriseSummary;
+    QVariantList m_proposals;
+    QVariantList m_invoices;
+    QVariantList m_tickets;
+    QVariantList m_reminders;
+    QVariantList m_timeline;
+    QString m_timelineLeadId;
 };
