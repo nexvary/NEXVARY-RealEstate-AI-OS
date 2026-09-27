@@ -294,6 +294,53 @@ test("SEO Autopilot synchronizes real-estate project pages from live inventory d
   await expect(page.getByText(/بوابة القاهرة — New Cairo/)).toBeVisible();
 });
 
+test("Automation Studio builds and runs a safe visual workflow", async ({ page, isMobile }) => {
+  if (isMobile) test.skip();
+
+  await page.goto("/");
+  await page.getByLabel("معرّف الشركة").fill("nexvary-test");
+  await page.getByLabel("البريد الإلكتروني").fill("owner@nexvary.test");
+  await page.getByLabel("كلمة المرور").fill("ReleaseGate123!");
+  await page.getByRole("button", { name: "تسجيل الدخول" }).click();
+
+  await page.getByRole("button", { name: "Automation Studio" }).click();
+  await expect(page.getByText("VISUAL AUTOMATION STUDIO")).toBeVisible();
+  await expect(page.getByText(/لا يوجد PowerShell أو Shell مخفي/)).toBeVisible();
+
+  const create = page.locator("form.automationCreate");
+  await create.getByPlaceholder("اسم Workflow").fill("E2E Safe Automation");
+  await create.getByPlaceholder("وصف مختصر").fill("Visual workflow release gate");
+  await create.getByRole("button", { name: "جديد" }).click();
+
+  await page.getByRole("button", { name: /تشغيل يدوي/ }).click();
+  await page.getByRole("button", { name: /إنشاء مهمة/ }).click();
+  await page.getByRole("button", { name: /إرجاع النتيجة/ }).click();
+
+  await page.locator(".automationNode").filter({ hasText: "إنشاء مهمة" }).click();
+  await page.getByLabel("إعدادات JSON").fill('{"title":"E2E Automation Task","notes":"Created by Automation Studio release gate","due_hours":1}');
+  await page.getByRole("button", { name: "تطبيق الإعدادات" }).click();
+
+  const composer = page.locator(".edgeComposer");
+  await composer.locator("select").nth(0).selectOption({ label: "تشغيل يدوي" });
+  await composer.locator("select").nth(1).selectOption({ label: "إنشاء مهمة" });
+  await composer.getByRole("button", { name: "ربط" }).click();
+
+  await composer.locator("select").nth(0).selectOption({ label: "إنشاء مهمة" });
+  await composer.locator("select").nth(1).selectOption({ label: "إرجاع النتيجة" });
+  await composer.getByRole("button", { name: "ربط" }).click();
+
+  await page.getByRole("button", { name: "حفظ الرسم" }).click();
+  await expect(page.getByText("تم حفظ الرسم والتحقق من عدم وجود حلقات.")).toBeVisible();
+
+  await page.getByRole("button", { name: "Run Workflow" }).click();
+  await expect(page.getByText(/انتهى التشغيل بالحالة: succeeded/)).toBeVisible();
+  await expect(page.locator(".automationRuns article").first()).toContainText("succeeded");
+  await expect(page.locator(".automationRuns article").first()).toContainText("3 nodes");
+
+  await expect(page.getByRole("button", { name: "نسخ" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "حفظ الرسم" })).toBeDisabled();
+});
+
 test("mobile layout exposes navigation and does not overflow core controls", async ({ page, isMobile }) => {
   if (!isMobile) test.skip();
 
