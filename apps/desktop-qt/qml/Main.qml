@@ -294,11 +294,15 @@ ApplicationWindow {
                                                                         ? seoComponent
                                                                         : appState.currentPage === "automation"
                                                                             ? automationComponent
-                                                                            : appState.currentPage === "settings"
-                                                                        ? settingsComponent
-                                                                    : appState.currentPage === "company"
-                                                                        ? companyComponent
-                                                                        : migrationComponent
+                                                                            : appState.currentPage === "ai"
+                                                                                ? aiComponent
+                                                                                : appState.currentPage === "about"
+                                                                                    ? aboutComponent
+                                                                                    : appState.currentPage === "settings"
+                                                                                        ? settingsComponent
+                                                                                        : appState.currentPage === "company"
+                                                                                            ? companyComponent
+                                                                                            : migrationComponent
                 }
             }
         }
@@ -377,6 +381,16 @@ ApplicationWindow {
     Component {
         id: automationComponent
         AutomationStudioPage {}
+    }
+
+    Component {
+        id: aiComponent
+        AiSalesPage {}
+    }
+
+    Component {
+        id: aboutComponent
+        AboutSystemPage {}
     }
 
     Component {
