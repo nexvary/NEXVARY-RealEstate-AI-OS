@@ -15,6 +15,7 @@ from .db import get_db
 from .finance_models import BrokerCommission, Contract, Installment
 from .growth_models import AudienceSegment, CustomerFeedback, CustomerJourneyEvent, MarketingCampaign, PropertyMediaAsset, SalesPlaybook
 from .omnichannel_models import ConversationSalesState, InboundMessageReceipt, MarketingAttributionEvent, OmnichannelOutbox
+from .property_sales_models import AdPropertyReferral, ConversationPropertyContext
 from .models import (
     Appointment,
     AuditEvent,
@@ -234,6 +235,8 @@ def export_backup(
         "inbound_message_receipts": (InboundMessageReceipt, set()),
         "omnichannel_outbox": (OmnichannelOutbox, set()),
         "marketing_attribution_events": (MarketingAttributionEvent, set()),
+        "ad_property_referrals": (AdPropertyReferral, set()),
+        "conversation_property_contexts": (ConversationPropertyContext, set()),
         "tenant_saas_profiles": (TenantSaaSProfile, set()),
         "tenant_integrations": (TenantIntegration, {"encrypted_secret_json"}),
         "saas_subscriptions": (SaaSSubscription, set()),
