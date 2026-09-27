@@ -45,3 +45,37 @@ The Python/FastAPI service remains the transactional source of truth while domai
 ## Non-goal
 
 This is not a rewrite that discards the current backend. It is a controlled UI/application-core migration with testable boundaries.
+
+
+## Current parity status
+
+Implemented and wired in the Qt native client:
+
+- Authentication, bilingual Arabic/English shell, true RTL, native back stack and digital clock.
+- Dashboard, Leads, Inventory, Appointments, Reservations and Finance.
+- Enterprise CRM: proposals, invoices/payments, expenses, tickets, reminders and Universal Customer Timeline.
+- Knowledge Base, Tasks, Team/RBAC.
+- Omnichannel/WhatsApp workspace, sales state, grounded reply preparation, human handoff and outbox actions.
+- Growth Intelligence.
+- SEO Autopilot.
+- Automation Studio.
+- AI Sales Copilot with live inventory, knowledge evidence and verified media.
+- White-Label Settings, tenant logo/cover import and Company Page.
+- Native About/System page.
+- Windows local FastAPI sidecar bootstrap and native packaging pipeline.
+
+The React v1.8 shell remains intact until the native installer passes the complete release matrix and the sidecar lifecycle is validated on an installed Windows machine.
+
+## Native Windows packaging
+
+The native client automatically looks for `NEXVARY-RealEstate-API.exe` next to the Qt executable. When present, it selects a free localhost port, starts the sidecar, points Qt Network to that local service, and terminates the sidecar when the desktop application exits.
+
+The CI packaging path uses:
+
+1. CMake/Qt build and CTest.
+2. PyInstaller API sidecar.
+3. `windeployqt` for the Qt/QML runtime.
+4. Inno Setup for a separate Native Preview installer.
+5. SHA256 generation and artifact upload.
+
+The original v1.8 installer is not overwritten by this preview pipeline.
