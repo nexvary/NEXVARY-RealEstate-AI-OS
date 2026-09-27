@@ -2040,9 +2040,15 @@ header {
   background: rgba(3,9,16,.82);
 }
 .companyCoverLogo img { width:100%; height:100%; object-fit:cover; }
-.companyCoverText h2 {
+.companyCoverText h2,
+.companyCoverTitle {
   margin: 6px 0 8px;
   font-size: clamp(28px, 4vw, 46px);
+  font-weight: 700;
+  color: #f2f7fb;
+}
+[dir="rtl"] .companyCoverTitle {
+  font-family: "Noto Kufi Arabic", Cairo, sans-serif;
 }
 .companyCoverText p {
   margin: 0;
