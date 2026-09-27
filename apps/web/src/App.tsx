@@ -18,6 +18,8 @@ import {
   CalendarDays,
   ClipboardCheck,
   ChevronLeft,
+  ChevronRight,
+  Clock3,
   CircleDollarSign,
   Home,
   Globe2,
@@ -135,6 +137,7 @@ type TenantSettings = {
   brand_name?: string | null;
   primary_color: string;
   logo_data_url?: string | null;
+  cover_data_url?: string | null;
   contact_email?: string | null;
   website_url?: string | null;
   facebook_url?: string | null;
@@ -673,6 +676,12 @@ function ControlCenter({
   const [busy, setBusy] = useState(true);
   const [systemError, setSystemError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const t = copy[locale];
   const dir = locale === "ar" ? "rtl" : "ltr";
@@ -784,7 +793,7 @@ function ControlCenter({
     <div className="app" dir={dir} style={tenantStyle}>
       <aside className="sidebar">
         <div className={tenantSettings?.logo_data_url ? "logoMark tenantLogoMark" : "logoMark"}>
-          {tenantSettings?.logo_data_url ? <img src={tenantSettings.logo_data_url} alt={tenantSettings.brand_name || tenantSettings.name}/> : "N"}
+          {tenantSettings?.logo_data_url ? <img src={tenantSettings.logo_data_url} alt={tenantSettings.brand_name || tenantSettings.name}/> : <img src="/assets/nexvary-logo.png" alt="NEXVARY"/>}
         </div>
         <div className="brandBlock">
           <strong>{tenantSettings?.brand_name || t.brand}</strong>
@@ -795,7 +804,7 @@ function ControlCenter({
             <button key={id} className={view === id ? "navItem active" : "navItem"} onClick={() => navigateTo(id)}>
               <Icon size={19} />
               <span>{t[key]}</span>
-              {view === id && <ChevronLeft size={16} className="navArrow" />}
+              {view === id && (locale === "ar" ? <ChevronRight size={16} className="navArrow" /> : <ChevronLeft size={16} className="navArrow" />)}
             </button>
           ))}
         </nav>
@@ -821,6 +830,10 @@ function ControlCenter({
               <span>{t.back}</span>
             </button>
           )}
+          <div className="digitalClock" data-testid="digital-clock">
+            <Clock3 size={18}/>
+            <div><strong>{formatClock(now, locale)}</strong><span>{formatClockDate(now, locale)}</span></div>
+          </div>
           <div className="searchBox">
             <Search size={18} />
             <input aria-label={t.search} placeholder={t.search} value={search} onChange={(event) => setSearch(event.target.value)} />
@@ -954,9 +967,9 @@ function ControlCenter({
           {view === "systemAbout" && (
             <section className="aboutSystem">
               <div className="panel systemHero">
-                <div className="logoMark">N</div>
+                <div className="logoMark nexvaryLogoMark"><img src="/assets/nexvary-logo.png" alt="NEXVARY"/></div>
                 <div>
-                  <span className="eyebrow">NEXVARY REALESTATE AI OS · v1.7</span>
+                  <span className="eyebrow">NEXVARY REALESTATE AI OS · v1.8.0</span>
                   <h2>{locale === "ar" ? "عن النظام" : "About the System"}</h2>
                   <p>{locale === "ar"
                     ? "منصة White-Label متعددة الشركات لإدارة دورة العمل العقاري كاملة، من العميل والمخزون حتى العقود والتحصيل والتسويق والذكاء الاصطناعي."
@@ -998,37 +1011,51 @@ function ControlCenter({
           )}
 
           {view === "companyAbout" && (
-            <section className="panel aboutPanel companyAboutPanel">
-              <div className={tenantSettings?.logo_data_url ? "companyAboutLogo tenantLogoMark" : "companyAboutLogo"}>
-                {tenantSettings?.logo_data_url ? <img src={tenantSettings.logo_data_url} alt={tenantSettings.brand_name || tenantSettings.name}/> : <Building2 size={34}/>}
-              </div>
-              <span className="eyebrow">{locale === "ar" ? "عن الشركة" : "ABOUT COMPANY"}</span>
-              <h2>{tenantSettings?.brand_name || tenantSettings?.name || t.brand}</h2>
-              <p>{locale === "ar"
-                ? "بيانات وهوية الشركة الحالية داخل منصة NEXVARY White-Label. يمكن تعديل الاسم والشعار والروابط من إعدادات الشركة."
-                : "Current company identity inside the NEXVARY White-Label platform. Brand, logo and links can be changed from Company Settings."}</p>
-              <div className="companyIdentityFacts">
-                <span><strong>{locale === "ar" ? "الخطة" : "Plan"}</strong>{tenantSettings?.plan || "—"}</span>
-                <span><strong>{locale === "ar" ? "الحالة" : "Status"}</strong>{tenantSettings?.lifecycle || "—"}</span>
-                <span><strong>{locale === "ar" ? "معرّف الشركة" : "Company ID"}</strong>{tenantSettings?.slug || "—"}</span>
-              </div>
-              <div className="aboutLinks companySocialLinks">
-                {tenantSettings?.website_url && <a href={tenantSettings.website_url} target="_blank" rel="noreferrer">Website</a>}
-                {tenantSettings?.facebook_url && <a href={tenantSettings.facebook_url} target="_blank" rel="noreferrer">Facebook</a>}
-                {tenantSettings?.linkedin_url && <a href={tenantSettings.linkedin_url} target="_blank" rel="noreferrer">LinkedIn</a>}
-                {tenantSettings?.youtube_url && <a href={tenantSettings.youtube_url} target="_blank" rel="noreferrer">YouTube</a>}
-                {tenantSettings?.x_url && <a href={tenantSettings.x_url} target="_blank" rel="noreferrer">X</a>}
-                {tenantSettings?.tiktok_url && <a href={tenantSettings.tiktok_url} target="_blank" rel="noreferrer">TikTok</a>}
-                {tenantSettings?.contact_email && <a href={`mailto:${tenantSettings.contact_email}`}>Email</a>}
-              </div>
-              {!tenantSettings?.website_url && !tenantSettings?.facebook_url && !tenantSettings?.linkedin_url && !tenantSettings?.youtube_url && !tenantSettings?.x_url && !tenantSettings?.tiktok_url && !tenantSettings?.contact_email && (
-                <div className="companyLinksEmpty">
-                  {locale === "ar" ? "لم تتم إضافة روابط الشركة بعد. افتح «إعدادات الشركة» لإضافتها." : "Company links have not been configured yet. Add them from Company Settings."}
+            <section className="companyAboutPage">
+              <div
+                className={tenantSettings?.cover_data_url ? "companyHeroCover panel customCover" : "companyHeroCover panel"}
+                style={tenantSettings?.cover_data_url ? { backgroundImage: `linear-gradient(90deg, rgba(2,8,16,.88), rgba(5,17,31,.46)), url("${tenantSettings.cover_data_url}")` } : undefined}
+              >
+                <div className="companyCoverCircuit" aria-hidden="true"/>
+                <div className={tenantSettings?.logo_data_url ? "companyCoverLogo tenantLogoMark" : "companyCoverLogo nexvaryCoverLogo"}>
+                  <img src={tenantSettings?.logo_data_url || "/assets/nexvary-logo.png"} alt={tenantSettings?.brand_name || tenantSettings?.name || "NEXVARY"}/>
                 </div>
-              )}
-              {tenantSettings?.powered_by_nexvary && (
-                <div className="poweredByBlock"><span>Powered by</span><strong>NEXVARY RealEstate AI OS</strong></div>
-              )}
+                <div className="companyCoverText">
+                  <span className="eyebrow">{locale === "ar" ? "هوية الشركة" : "COMPANY IDENTITY"}</span>
+                  <h2>{tenantSettings?.brand_name || tenantSettings?.name || t.brand}</h2>
+                  <p>{locale === "ar" ? "منصة تشغيل عقاري ذكية · مبيعات · أتمتة · نمو" : "Intelligent real-estate operations · Sales · Automation · Growth"}</p>
+                </div>
+              </div>
+
+              <section className="panel aboutPanel companyAboutPanel">
+                <span className="eyebrow">{locale === "ar" ? "عن الشركة" : "ABOUT COMPANY"}</span>
+                <h2>{tenantSettings?.brand_name || tenantSettings?.name || t.brand}</h2>
+                <p>{locale === "ar"
+                  ? "بيانات وهوية الشركة الحالية داخل منصة NEXVARY White-Label. يمكن تعديل الاسم والشعار وصورة الغلاف والروابط من إعدادات الشركة."
+                  : "Current company identity inside the NEXVARY White-Label platform. Brand, logo, cover image and links can be changed from Company Settings."}</p>
+                <div className="companyIdentityFacts">
+                  <span><strong>{locale === "ar" ? "الخطة" : "Plan"}</strong>{tenantSettings?.plan || "—"}</span>
+                  <span><strong>{locale === "ar" ? "الحالة" : "Status"}</strong>{tenantSettings?.lifecycle || "—"}</span>
+                  <span><strong>{locale === "ar" ? "معرّف الشركة" : "Company ID"}</strong>{tenantSettings?.slug || "—"}</span>
+                </div>
+                <div className="aboutLinks companySocialLinks">
+                  {tenantSettings?.website_url && <a href={tenantSettings.website_url} target="_blank" rel="noreferrer">Website</a>}
+                  {tenantSettings?.facebook_url && <a href={tenantSettings.facebook_url} target="_blank" rel="noreferrer">Facebook</a>}
+                  {tenantSettings?.linkedin_url && <a href={tenantSettings.linkedin_url} target="_blank" rel="noreferrer">LinkedIn</a>}
+                  {tenantSettings?.youtube_url && <a href={tenantSettings.youtube_url} target="_blank" rel="noreferrer">YouTube</a>}
+                  {tenantSettings?.x_url && <a href={tenantSettings.x_url} target="_blank" rel="noreferrer">X</a>}
+                  {tenantSettings?.tiktok_url && <a href={tenantSettings.tiktok_url} target="_blank" rel="noreferrer">TikTok</a>}
+                  {tenantSettings?.contact_email && <a href={`mailto:${tenantSettings.contact_email}`}>Email</a>}
+                </div>
+                {!tenantSettings?.website_url && !tenantSettings?.facebook_url && !tenantSettings?.linkedin_url && !tenantSettings?.youtube_url && !tenantSettings?.x_url && !tenantSettings?.tiktok_url && !tenantSettings?.contact_email && (
+                  <div className="companyLinksEmpty">
+                    {locale === "ar" ? "لم تتم إضافة روابط الشركة بعد. افتح «إعدادات الشركة» لإضافتها." : "Company links have not been configured yet. Add them from Company Settings."}
+                  </div>
+                )}
+                {tenantSettings?.powered_by_nexvary && (
+                  <div className="poweredByBlock"><span>Powered by</span><strong>NEXVARY RealEstate AI OS</strong></div>
+                )}
+              </section>
             </section>
           )}
         </section>
@@ -1090,6 +1117,23 @@ function formatMoney(value: number | null | undefined, currency: string, locale:
   } catch {
     return `${Number(value).toLocaleString()} ${currency}`;
   }
+}
+
+function formatClock(value: Date, locale: Locale) {
+  return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG-u-nu-latn" : "en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).format(value);
+}
+
+function formatClockDate(value: Date, locale: Locale) {
+  return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG-u-nu-latn" : "en-GB", {
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+  }).format(value);
 }
 
 function formatDateTime(value: string, locale: Locale) {
