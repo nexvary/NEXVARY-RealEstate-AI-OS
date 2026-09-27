@@ -52,7 +52,7 @@ test("Growth Intelligence connects campaign journey audience media playbook and 
 
   await page.getByRole("button", { name: "رحلات العملاء" }).click();
   const journeyForm = page.locator("form").filter({ hasText: "تسجيل نقطة رحلة" });
-  await journeyForm.getByLabel("العميل").selectOption({ label: /Growth E2E Lead/ });
+  await journeyForm.getByLabel("العميل").selectOption({ label: "Growth E2E Lead · new" });
   await journeyForm.getByLabel("الحملة").selectOption({ label: "Growth E2E Campaign" });
   await journeyForm.getByLabel("الحدث").selectOption("campaign_touch");
   await journeyForm.getByLabel("القناة").fill("facebook");
@@ -71,7 +71,7 @@ test("Growth Intelligence connects campaign journey audience media playbook and 
 
   await page.getByRole("button", { name: "مكتبة الوسائط" }).click();
   const mediaForm = page.locator("form").filter({ hasText: "إضافة أصل حقيقي" });
-  await mediaForm.getByLabel("المشروع").selectOption({ label: /Growth E2E Project/ });
+  await mediaForm.getByLabel("المشروع").selectOption({ label: "Growth E2E Project" });
   await mediaForm.getByLabel("العنوان").fill("Growth E2E Brochure");
   await mediaForm.getByLabel("النوع").selectOption("pdf");
   await mediaForm.getByLabel("المصدر").selectOption("verified");
