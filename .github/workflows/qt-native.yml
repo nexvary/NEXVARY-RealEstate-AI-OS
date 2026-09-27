@@ -82,6 +82,34 @@ jobs:
           windeployqt --release --qmldir apps/desktop-qt/qml $exe
           Copy-Item "dist/NEXVARY-RealEstate-API.exe" "native-dist/bin/NEXVARY-RealEstate-API.exe" -Force
 
+      - name: Smoke-test packaged Qt client with bundled API sidecar
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path native-dist/smoke | Out-Null
+          $api = Start-Process -FilePath "native-dist/bin/NEXVARY-RealEstate-API.exe" -ArgumentList "--port","8765" -PassThru
+          try {
+            $ready = $false
+            for ($i = 0; $i -lt 60; $i++) {
+              try {
+                $response = Invoke-WebRequest -UseBasicParsing "http://127.0.0.1:8765/health" -TimeoutSec 2
+                if ($response.StatusCode -eq 200) { $ready = $true; break }
+              } catch {}
+              Start-Sleep -Milliseconds 500
+            }
+            if (-not $ready) { throw "Packaged API sidecar did not become healthy" }
+
+            $env:QT_QPA_PLATFORM = "offscreen"
+            $env:QT_QUICK_BACKEND = "software"
+            & "native-dist/bin/nexvary_realestate_native.exe" --api-url "http://127.0.0.1:8765" --language ar --width 1600 --height 900 --screenshot "native-dist/smoke/native-packaged-ar.png"
+            if (-not (Test-Path "native-dist/smoke/native-packaged-ar.png")) {
+              throw "Packaged Qt smoke screenshot was not created"
+            }
+          }
+          finally {
+            if ($api -and -not $api.HasExited) { Stop-Process -Id $api.Id -Force }
+          }
+
       - name: Install Inno Setup
         if: runner.os == 'Windows'
         shell: pwsh
@@ -112,6 +140,7 @@ jobs:
           path: |
             native-installer/NEXVARY-RealEstate-AI-OS-Native-v2.0.0-Preview-Setup.exe
             native-installer/SHA256.txt
+            native-dist/smoke/native-packaged-ar.png
           if-no-files-found: error
 
       - name: QML Arabic RTL screenshot gate
