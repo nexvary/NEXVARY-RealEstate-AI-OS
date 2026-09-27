@@ -268,11 +268,17 @@ ApplicationWindow {
                         ? loginComponent
                         : appState.currentPage === "dashboard"
                             ? dashboardComponent
-                            : appState.currentPage === "enterprise"
-                                ? enterpriseComponent
-                                : appState.currentPage === "timeline"
-                                    ? timelineComponent
-                                    : migrationComponent
+                            : appState.currentPage === "leads"
+                                ? leadsComponent
+                                : appState.currentPage === "inventory"
+                                    ? inventoryComponent
+                                    : appState.currentPage === "finance"
+                                        ? financeComponent
+                                        : appState.currentPage === "enterprise"
+                                            ? enterpriseComponent
+                                            : appState.currentPage === "timeline"
+                                                ? timelineComponent
+                                                : migrationComponent
                 }
             }
         }
@@ -286,6 +292,21 @@ ApplicationWindow {
     Component {
         id: dashboardComponent
         DashboardPage {}
+    }
+
+    Component {
+        id: leadsComponent
+        LeadsPage {}
+    }
+
+    Component {
+        id: inventoryComponent
+        InventoryPage {}
+    }
+
+    Component {
+        id: financeComponent
+        FinancePage {}
     }
 
     Component {
