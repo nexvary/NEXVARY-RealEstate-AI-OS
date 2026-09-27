@@ -265,7 +265,11 @@ ApplicationWindow {
                     anchors.fill: parent
                     anchors.margins: 22
                     sourceComponent: !apiClient.loggedIn
-                        ? loginComponent
+                        ? (!apiClient.setupKnown
+                            ? startupComponent
+                            : apiClient.needsSetup
+                                ? firstRunSetupComponent
+                                : loginComponent)
                         : appState.currentPage === "dashboard"
                             ? dashboardComponent
                             : appState.currentPage === "leads"
@@ -306,6 +310,69 @@ ApplicationWindow {
                 }
             }
         }
+    }
+
+    Component {
+        id: startupComponent
+        Item {
+            ColumnLayout {
+                anchors.centerIn: parent
+                width: Math.min(520, parent.width - 40)
+                spacing: 14
+
+                Rectangle {
+                    Layout.alignment: Qt.AlignHCenter
+                    width: 68
+                    height: 68
+                    radius: 18
+                    color: Theme.panel
+                    border.width: 1
+                    border.color: apiClient.healthStatus === "ok" ? Theme.emerald : Theme.electricBlue
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: apiClient.healthStatus === "ok" ? "✓" : "…"
+                        color: apiClient.healthStatus === "ok" ? Theme.emerald : Theme.electricCyan
+                        font.pixelSize: 24
+                        font.bold: true
+                    }
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    text: appState.rtl ? "جاري تجهيز مساحة العمل المحلية" : "Preparing the local workspace"
+                    color: Theme.platinum
+                    font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"
+                    font.pixelSize: 22
+                    font.bold: true
+                    horizontalAlignment: Text.AlignHCenter
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    text: appState.rtl
+                        ? "يتم تشغيل الخدمة المحلية والتحقق من حالة الإعداد. لا تحتاج إلى أي أوامر يدوية."
+                        : "Starting the local service and checking setup state. No manual commands are required."
+                    color: Theme.muted
+                    font.pixelSize: 12
+                    wrapMode: Text.WordWrap
+                    horizontalAlignment: Text.AlignHCenter
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    text: "API · " + apiClient.healthStatus
+                    color: apiClient.healthStatus === "ok" ? Theme.emerald : Theme.gold
+                    font.pixelSize: 10
+                    horizontalAlignment: Text.AlignHCenter
+                }
+            }
+        }
+    }
+
+    Component {
+        id: firstRunSetupComponent
+        FirstRunSetupPage {}
     }
 
     Component {
