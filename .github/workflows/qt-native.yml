@@ -9,10 +9,12 @@ on:
     branches: ["migration/**"]
     paths:
       - "apps/desktop-qt/**"
+      - "desktop/**"
       - ".github/workflows/qt-native.yml"
   pull_request:
     paths:
       - "apps/desktop-qt/**"
+      - "desktop/**"
       - ".github/workflows/qt-native.yml"
       - "services/api/**"
 
@@ -82,12 +84,12 @@ jobs:
           windeployqt --release --qmldir apps/desktop-qt/qml $exe
           Copy-Item "dist/NEXVARY-RealEstate-API.exe" "native-dist/bin/NEXVARY-RealEstate-API.exe" -Force
 
-      - name: Smoke-test packaged Qt client with bundled API sidecar
+      - name: Smoke-test packaged API sidecar
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path native-dist/smoke | Out-Null
-          $env:NEXVARY_SIDECAR_LOG = (Resolve-Path "native-dist/smoke").Path + "\sidecar-boot.log"
+          $env:NEXVARY_SIDECAR_LOG = (Resolve-Path "native-dist/smoke").Path + "\sidecar-standalone.log"
           $api = Start-Process -FilePath "native-dist/bin/NEXVARY-RealEstate-API.exe" -ArgumentList "--port","8765" -PassThru
           try {
             $ready = $false
@@ -99,28 +101,40 @@ jobs:
               Start-Sleep -Milliseconds 500
             }
             if (-not $ready) {
-              if (Test-Path $env:NEXVARY_SIDECAR_LOG) {
-                Write-Host "===== Packaged sidecar boot log ====="
-                Get-Content $env:NEXVARY_SIDECAR_LOG
-              }
-              if ($api.HasExited) { Write-Host "Sidecar exit code: $($api.ExitCode)" }
+              if (Test-Path $env:NEXVARY_SIDECAR_LOG) { Get-Content $env:NEXVARY_SIDECAR_LOG }
               throw "Packaged API sidecar did not become healthy"
             }
 
-            $env:QT_QPA_PLATFORM = "minimal"
-            $env:QT_QUICK_BACKEND = "software"
-            $env:NEXVARY_QT_LOG = (Resolve-Path "native-dist/smoke").Path + "\qt-startup.log"
-            & "native-dist/bin/nexvary_realestate_native.exe" --api-url "http://127.0.0.1:8765" --language ar --width 1600 --height 900 --smoke-test
-            if ($LASTEXITCODE -ne 0) {
-              if (Test-Path $env:NEXVARY_QT_LOG) {
-                Write-Host "===== Packaged Qt startup log ====="
-                Get-Content $env:NEXVARY_QT_LOG
-              }
-              throw "Packaged Qt runtime smoke test failed with exit code $LASTEXITCODE"
+            $setup = Invoke-RestMethod "http://127.0.0.1:8765/api/v1/setup/status" -TimeoutSec 3
+            if ($null -eq $setup.needs_setup) {
+              throw "Packaged API did not return first-run setup status"
             }
           }
           finally {
             if ($api -and -not $api.HasExited) { Stop-Process -Id $api.Id -Force }
+          }
+
+      - name: Smoke-test Qt client automatic sidecar lifecycle
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $smokeDir = (Resolve-Path "native-dist/smoke").Path
+          $env:NEXVARY_SIDECAR_LOG = $smokeDir + "\sidecar-auto.log"
+          $env:NEXVARY_QT_LOG = $smokeDir + "\qt-startup.log"
+          $env:QT_QPA_PLATFORM = "minimal"
+          $env:QT_QUICK_BACKEND = "software"
+
+          & "native-dist/bin/nexvary_realestate_native.exe" --language ar --width 1600 --height 900 --smoke-test
+          if ($LASTEXITCODE -ne 0) {
+            if (Test-Path $env:NEXVARY_SIDECAR_LOG) {
+              Write-Host "===== Auto sidecar log ====="
+              Get-Content $env:NEXVARY_SIDECAR_LOG
+            }
+            if (Test-Path $env:NEXVARY_QT_LOG) {
+              Write-Host "===== Packaged Qt startup log ====="
+              Get-Content $env:NEXVARY_QT_LOG
+            }
+            throw "Automatic native sidecar lifecycle smoke test failed with exit code $LASTEXITCODE"
           }
 
       - name: Install Inno Setup
@@ -135,6 +149,38 @@ jobs:
           New-Item -ItemType Directory -Force -Path native-installer | Out-Null
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
           & $iscc "desktop\native-installer.iss"
+
+      - name: Smoke-test installed native preview
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $installer = Resolve-Path "native-installer\NEXVARY-RealEstate-AI-OS-Native-v2.0.0-Preview-Setup.exe"
+          $installDir = Join-Path $PWD "native-installed"
+          New-Item -ItemType Directory -Force -Path $installDir | Out-Null
+
+          & $installer /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /DIR="$installDir"
+          if ($LASTEXITCODE -ne 0) {
+            throw "Native preview installer failed with exit code $LASTEXITCODE"
+          }
+
+          $client = Join-Path $installDir "nexvary_realestate_native.exe"
+          $sidecar = Join-Path $installDir "NEXVARY-RealEstate-API.exe"
+          if (-not (Test-Path $client)) { throw "Installed Qt client is missing" }
+          if (-not (Test-Path $sidecar)) { throw "Installed API sidecar is missing" }
+
+          $installSmoke = Join-Path $PWD "native-installer\install-smoke"
+          New-Item -ItemType Directory -Force -Path $installSmoke | Out-Null
+          $env:NEXVARY_SIDECAR_LOG = Join-Path $installSmoke "sidecar-installed.log"
+          $env:NEXVARY_QT_LOG = Join-Path $installSmoke "qt-installed.log"
+          $env:QT_QPA_PLATFORM = "minimal"
+          $env:QT_QUICK_BACKEND = "software"
+
+          & $client --language en --width 1600 --height 900 --smoke-test
+          if ($LASTEXITCODE -ne 0) {
+            if (Test-Path $env:NEXVARY_SIDECAR_LOG) { Get-Content $env:NEXVARY_SIDECAR_LOG }
+            if (Test-Path $env:NEXVARY_QT_LOG) { Get-Content $env:NEXVARY_QT_LOG }
+            throw "Installed native preview smoke test failed with exit code $LASTEXITCODE"
+          }
 
       - name: Generate native installer SHA256
         if: runner.os == 'Windows'
@@ -153,7 +199,8 @@ jobs:
           path: |
             native-installer/NEXVARY-RealEstate-AI-OS-Native-v2.0.0-Preview-Setup.exe
             native-installer/SHA256.txt
-            native-dist/smoke/sidecar-boot.log
+            native-dist/smoke/*.log
+            native-installer/install-smoke/*.log
           if-no-files-found: error
 
       - name: QML Arabic RTL screenshot gate
