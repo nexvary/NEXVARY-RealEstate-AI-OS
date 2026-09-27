@@ -107,11 +107,11 @@ jobs:
               throw "Packaged API sidecar did not become healthy"
             }
 
-            $env:QT_QPA_PLATFORM = "offscreen"
+            $env:QT_QPA_PLATFORM = "minimal"
             $env:QT_QUICK_BACKEND = "software"
-            & "native-dist/bin/nexvary_realestate_native.exe" --api-url "http://127.0.0.1:8765" --language ar --width 1600 --height 900 --screenshot "native-dist/smoke/native-packaged-ar.png"
-            if (-not (Test-Path "native-dist/smoke/native-packaged-ar.png")) {
-              throw "Packaged Qt smoke screenshot was not created"
+            & "native-dist/bin/nexvary_realestate_native.exe" --api-url "http://127.0.0.1:8765" --language ar --width 1600 --height 900 --smoke-test
+            if ($LASTEXITCODE -ne 0) {
+              throw "Packaged Qt runtime smoke test failed with exit code $LASTEXITCODE"
             }
           }
           finally {
@@ -148,7 +148,7 @@ jobs:
           path: |
             native-installer/NEXVARY-RealEstate-AI-OS-Native-v2.0.0-Preview-Setup.exe
             native-installer/SHA256.txt
-            native-dist/smoke/native-packaged-ar.png
+            native-dist/smoke/sidecar-boot.log
           if-no-files-found: error
 
       - name: QML Arabic RTL screenshot gate
