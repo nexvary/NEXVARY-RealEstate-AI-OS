@@ -1,4 +1,8 @@
 import hmac
+import json
+import os
+import secrets
+from pathlib import Path
 from pydantic import BaseModel, Field
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 from sqlalchemy import func, select
@@ -9,6 +13,8 @@ from typing import Annotated
 from .config import get_settings
 from .db import get_db
 from .models import AuditEvent, Tenant, User, UserRole
+from .quota import PLAN_DEFAULTS
+from .saas_models import PlatformAdmin, TenantLifecycle, TenantPlan, TenantSaaSProfile
 from .security import create_access_token, hash_password
 
 router = APIRouter(prefix="/api/v1")
@@ -18,6 +24,7 @@ class SetupStatus(BaseModel):
     needs_setup: bool
     tenant_count: int
     desktop_mode: bool
+    development_workspace: bool = False
 
 
 class BootstrapRequest(BaseModel):
@@ -46,10 +53,14 @@ class BootstrapResponse(BaseModel):
 def setup_status(db: Session = Depends(get_db)) -> SetupStatus:
     count = db.scalar(select(func.count()).select_from(Tenant)) or 0
     settings = get_settings()
+    development_workspace = db.scalar(
+        select(func.count()).select_from(Tenant).where(Tenant.slug == "nexvary-dev")
+    ) or 0
     return SetupStatus(
         needs_setup=count == 0,
         tenant_count=count,
         desktop_mode=settings.app_env == "desktop",
+        development_workspace=bool(development_workspace),
     )
 
 
@@ -79,6 +90,21 @@ def bootstrap_first_owner(payload: BootstrapRequest, db: Session = Depends(get_d
         db.add(owner)
         db.flush()
         db.add(
+            PlatformAdmin(
+                email=owner.email,
+                display_name=owner.display_name,
+                password_hash=hash_password(payload.owner_password),
+            )
+        )
+        db.add(
+            TenantSaaSProfile(
+                tenant_id=tenant.id,
+                plan=TenantPlan.professional,
+                lifecycle=TenantLifecycle.active,
+                **PLAN_DEFAULTS[TenantPlan.professional],
+            )
+        )
+        db.add(
             AuditEvent(
                 tenant_id=tenant.id,
                 actor=owner.email,
@@ -93,6 +119,153 @@ def bootstrap_first_owner(payload: BootstrapRequest, db: Session = Depends(get_d
         db.rollback()
         raise HTTPException(status_code=409, detail="Company or owner already exists") from exc
 
+    token = create_access_token(user_id=owner.id, tenant_id=tenant.id, role=owner.role.value)
+    return BootstrapResponse(
+        access_token=token,
+        expires_in_minutes=settings.jwt_ttl_minutes,
+        tenant_id=tenant.id,
+        tenant_slug=tenant.slug,
+        user_id=owner.id,
+        user_email=owner.email,
+        user_name=owner.display_name,
+        role=owner.role.value,
+    )
+
+
+def _write_development_marker() -> None:
+    data_dir = os.getenv("NEXVARY_DATA_DIR")
+    if not data_dir:
+        return
+    marker = Path(data_dir) / "development-profile.json"
+    marker.write_text(
+        json.dumps(
+            {
+                "enabled": True,
+                "schema_generation": os.getenv("NEXVARY_SCHEMA_GENERATION", "v1.5"),
+                "workspace_slug": "nexvary-dev",
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+
+@router.post("/auth/bootstrap-development", response_model=BootstrapResponse, status_code=201)
+def bootstrap_development_workspace(db: Session = Depends(get_db)) -> BootstrapResponse:
+    settings = get_settings()
+    if settings.app_env not in {"desktop", "development", "test"}:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Development setup is not available")
+
+    existing = db.scalar(select(Tenant).where(Tenant.slug == "nexvary-dev"))
+    if existing is not None:
+        owner = db.scalar(
+            select(User).where(
+                User.tenant_id == existing.id,
+                User.role == UserRole.owner,
+                User.is_active == 1,
+            )
+        )
+        if owner is None:
+            raise HTTPException(status_code=409, detail="Development workspace owner is missing")
+        token = create_access_token(user_id=owner.id, tenant_id=existing.id, role=owner.role.value)
+        _write_development_marker()
+        return BootstrapResponse(
+            access_token=token,
+            expires_in_minutes=settings.jwt_ttl_minutes,
+            tenant_id=existing.id,
+            tenant_slug=existing.slug,
+            user_id=owner.id,
+            user_email=owner.email,
+            user_name=owner.display_name,
+            role=owner.role.value,
+        )
+
+    tenant = Tenant(
+        name="NEXVARY Development Workspace",
+        slug="nexvary-dev",
+        brand_name="NEXVARY Development",
+        primary_color="#128FE7",
+    )
+    db.add(tenant)
+    try:
+        db.flush()
+        generated_password = secrets.token_urlsafe(48)
+        owner = User(
+            tenant_id=tenant.id,
+            email="developer@nexvary.local",
+            display_name="Development Owner",
+            role=UserRole.owner,
+            password_hash=hash_password(generated_password),
+        )
+        db.add(owner)
+        db.flush()
+        db.add(
+            PlatformAdmin(
+                email=owner.email,
+                display_name=owner.display_name,
+                password_hash=hash_password(generated_password),
+            )
+        )
+        db.add(
+            TenantSaaSProfile(
+                tenant_id=tenant.id,
+                plan=TenantPlan.professional,
+                lifecycle=TenantLifecycle.active,
+                contact_email="info@nexvary.com",
+                website_url="https://nexvary.com/",
+                facebook_url="https://www.facebook.com/share/14p9krEn5ij/",
+                youtube_url="https://www.youtube.com/@NexvaryInc",
+                x_url="https://x.com/Nexvary",
+                **PLAN_DEFAULTS[TenantPlan.professional],
+            )
+        )
+        db.add(
+            AuditEvent(
+                tenant_id=tenant.id,
+                actor=owner.email,
+                action="tenant.development_bootstrap",
+                entity_type="tenant",
+                entity_id=tenant.id,
+                details="desktop-development-skip",
+            )
+        )
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Development workspace could not be created") from exc
+
+    _write_development_marker()
+    token = create_access_token(user_id=owner.id, tenant_id=tenant.id, role=owner.role.value)
+    return BootstrapResponse(
+        access_token=token,
+        expires_in_minutes=settings.jwt_ttl_minutes,
+        tenant_id=tenant.id,
+        tenant_slug=tenant.slug,
+        user_id=owner.id,
+        user_email=owner.email,
+        user_name=owner.display_name,
+        role=owner.role.value,
+    )
+
+
+@router.post("/auth/development-session", response_model=BootstrapResponse)
+def development_session(db: Session = Depends(get_db)) -> BootstrapResponse:
+    settings = get_settings()
+    if settings.app_env not in {"desktop", "test"}:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Desktop development session is not available")
+    tenant = db.scalar(select(Tenant).where(Tenant.slug == "nexvary-dev"))
+    if tenant is None:
+        raise HTTPException(status_code=404, detail="Development workspace not found")
+    owner = db.scalar(
+        select(User).where(
+            User.tenant_id == tenant.id,
+            User.role == UserRole.owner,
+            User.is_active == 1,
+        )
+    )
+    if owner is None:
+        raise HTTPException(status_code=404, detail="Development owner not found")
+    _write_development_marker()
     token = create_access_token(user_id=owner.id, tenant_id=tenant.id, role=owner.role.value)
     return BootstrapResponse(
         access_token=token,

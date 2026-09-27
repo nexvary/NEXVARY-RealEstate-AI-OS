@@ -1,8 +1,8 @@
-name: Windows Stage 170 Installer
+name: Windows v1.8.0 Omnichannel Growth Installer
 
 on:
   push:
-    branches: ["release/stage-170-windows"]
+    branches: ["release/stage-170-windows", "white-label/**", "integration/**"]
   pull_request:
     branches: ["main"]
   workflow_dispatch:
@@ -48,7 +48,7 @@ jobs:
         shell: pwsh
         env:
           APP_ENV: test
-          DATABASE_URL: sqlite:///./stage170-test.db
+          DATABASE_URL: sqlite:///./v180-test.db
         run: |
           Set-Location services/api
           pytest -q
@@ -61,12 +61,13 @@ jobs:
           npx playwright install chromium
           Set-Location ../..
 
-          Remove-Item "services/api/e2e-stage170.db" -ErrorAction SilentlyContinue
+          Remove-Item "services/api/e2e-v180.db" -ErrorAction SilentlyContinue
           $env:APP_ENV = "desktop"
-          $env:DATABASE_URL = "sqlite:///./e2e-stage170.db"
+          $env:DATABASE_URL = "sqlite:///./e2e-v180.db"
           $env:NEXVARY_STATIC_DIR = (Resolve-Path "apps/web/dist").Path
-          $env:JWT_SECRET = "stage170-release-gate-jwt-secret-at-least-32-bytes-long"
-          $env:PLATFORM_ADMIN_KEY = "stage170-release-gate-platform-key-at-least-32-bytes"
+          $env:JWT_SECRET = "v180-release-gate-jwt-secret-at-least-32-bytes-long"
+          $env:PLATFORM_ADMIN_KEY = "v180-release-gate-platform-key-at-least-32-bytes"
+          $env:INTEGRATION_MASTER_SECRET = "v180-release-gate-integration-secret-at-least-32-bytes"
           $server = Start-Process python -ArgumentList "-m","uvicorn","app.main:app","--host","127.0.0.1","--port","8000","--log-level","warning" -WorkingDirectory "services/api" -PassThru
 
           try {
@@ -111,21 +112,21 @@ jobs:
           if (!(Test-Path $iscc)) { throw "Inno Setup compiler not found" }
           & $iscc "desktop\installer.iss"
           if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed with exit code $LASTEXITCODE" }
-          if (!(Test-Path "installer/NEXVARY-RealEstate-AI-OS-Stage170-Setup.exe")) { throw "Installer output is missing" }
+          if (!(Test-Path "installer/NEXVARY-RealEstate-AI-OS-WhiteLabel-v1.8.0-Setup.exe")) { throw "Installer output is missing" }
 
       - name: Generate SHA256
         shell: pwsh
         run: |
-          $hash = Get-FileHash "installer/NEXVARY-RealEstate-AI-OS-Stage170-Setup.exe" -Algorithm SHA256
-          "$($hash.Hash)  NEXVARY-RealEstate-AI-OS-Stage170-Setup.exe" | Out-File -FilePath "installer/SHA256.txt" -Encoding ascii
-          Get-Item "installer/NEXVARY-RealEstate-AI-OS-Stage170-Setup.exe" | Select-Object Name, Length, LastWriteTime
+          $hash = Get-FileHash "installer/NEXVARY-RealEstate-AI-OS-WhiteLabel-v1.8.0-Setup.exe" -Algorithm SHA256
+          "$($hash.Hash)  NEXVARY-RealEstate-AI-OS-WhiteLabel-v1.8.0-Setup.exe" | Out-File -FilePath "installer/SHA256.txt" -Encoding ascii
+          Get-Item "installer/NEXVARY-RealEstate-AI-OS-WhiteLabel-v1.8.0-Setup.exe" | Select-Object Name, Length, LastWriteTime
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
         with:
-          name: NEXVARY-RealEstate-AI-OS-Stage170-Windows
+          name: NEXVARY-RealEstate-AI-OS-WhiteLabel-v1.8.0-Windows
           path: |
-            installer/NEXVARY-RealEstate-AI-OS-Stage170-Setup.exe
+            installer/NEXVARY-RealEstate-AI-OS-WhiteLabel-v1.8.0-Setup.exe
             installer/SHA256.txt
           if-no-files-found: error
           compression-level: 0

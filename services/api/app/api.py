@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from .config import get_settings
 from .db import get_db
+from .growth_models import CustomerJourneyEvent
 from .models import (
     Appointment,
     AuditEvent,
@@ -26,6 +27,8 @@ from .models import (
     UserRole,
 )
 from .policy import RequestContext, get_request_context, manage_inventory, manage_users, write_sales
+from .quota import PLAN_DEFAULTS, enforce_entity_limit
+from .saas_models import TenantLifecycle, TenantPlan, TenantSaaSProfile
 from .schemas import (
     AppointmentCreate,
     AppointmentRead,
@@ -121,6 +124,14 @@ def provision_company(
         db.add(owner)
         db.flush()
         db.add(
+            TenantSaaSProfile(
+                tenant_id=tenant.id,
+                plan=TenantPlan.professional,
+                lifecycle=TenantLifecycle.active,
+                **PLAN_DEFAULTS[TenantPlan.professional],
+            )
+        )
+        db.add(
             AuditEvent(
                 tenant_id=tenant.id,
                 actor=owner.email,
@@ -187,6 +198,7 @@ def create_user(
     ctx: RequestContext = Depends(manage_users),
     db: Session = Depends(get_db),
 ) -> User:
+    enforce_entity_limit(db, ctx.tenant_id, "users")
     user = User(
         tenant_id=ctx.tenant_id,
         email=payload.email.lower(),
@@ -215,6 +227,7 @@ def create_project(
     ctx: RequestContext = Depends(manage_inventory),
     db: Session = Depends(get_db),
 ) -> Project:
+    enforce_entity_limit(db, ctx.tenant_id, "projects")
     project = Project(tenant_id=ctx.tenant_id, **payload.model_dump())
     db.add(project)
     add_audit(db, ctx, action="project.create", entity_type="project", entity_id=project.id, details=payload.name)
@@ -291,6 +304,7 @@ def create_unit(
     ctx: RequestContext = Depends(manage_inventory),
     db: Session = Depends(get_db),
 ) -> Unit:
+    enforce_entity_limit(db, ctx.tenant_id, "units")
     tenant_entity(db, Project, payload.project_id, ctx.tenant_id)
     if payload.building_id:
         building = tenant_entity(db, Building, payload.building_id, ctx.tenant_id)
@@ -372,6 +386,15 @@ def create_lead(
         ),
     )
     db.add(lead)
+    db.flush()
+    db.add(CustomerJourneyEvent(
+        tenant_id=ctx.tenant_id,
+        lead_id=lead.id,
+        event_type="lead_created",
+        channel=payload.source,
+        occurred_at=lead.created_at or func.now(),
+        created_by_user_id=ctx.user_id,
+    ))
     add_audit(db, ctx, action="lead.create", entity_type="lead", entity_id=lead.id, details=payload.phone)
     db.commit()
     db.refresh(lead)
@@ -401,6 +424,7 @@ def update_lead(
     db: Session = Depends(get_db),
 ) -> Lead:
     lead = tenant_entity(db, Lead, lead_id, ctx.tenant_id)
+    previous_status = lead.status
     changes = payload.model_dump(exclude_unset=True)
     if "assigned_user_id" in changes and changes["assigned_user_id"]:
         tenant_entity(db, User, changes["assigned_user_id"], ctx.tenant_id)
@@ -415,6 +439,15 @@ def update_lead(
             source=lead.source,
             notes=lead.notes,
         )
+    if "status" in changes and lead.status != previous_status:
+        db.add(CustomerJourneyEvent(
+            tenant_id=ctx.tenant_id,
+            lead_id=lead.id,
+            event_type=f"stage_{lead.status.value}",
+            channel=lead.source,
+            occurred_at=func.now(),
+            created_by_user_id=ctx.user_id,
+        ))
     add_audit(db, ctx, action="lead.update", entity_type="lead", entity_id=lead.id, details=",".join(changes))
     db.commit()
     db.refresh(lead)
@@ -451,6 +484,16 @@ def create_appointment(
 
     appointment = Appointment(tenant_id=ctx.tenant_id, **payload.model_dump())
     db.add(appointment)
+    db.flush()
+    db.add(CustomerJourneyEvent(
+        tenant_id=ctx.tenant_id,
+        lead_id=payload.lead_id,
+        event_type="viewing_scheduled",
+        channel="crm",
+        metadata_json=f'{{"appointment_id":"{appointment.id}"}}',
+        occurred_at=func.now(),
+        created_by_user_id=ctx.user_id,
+    ))
     add_audit(db, ctx, action="appointment.create", entity_type="appointment", entity_id=appointment.id)
     db.commit()
     db.refresh(appointment)
@@ -499,6 +542,16 @@ def create_reservation(
     unit.status = UnitStatus.reserved
     reservation = Reservation(tenant_id=ctx.tenant_id, **payload.model_dump())
     db.add(reservation)
+    db.flush()
+    db.add(CustomerJourneyEvent(
+        tenant_id=ctx.tenant_id,
+        lead_id=payload.lead_id,
+        event_type="reservation_created",
+        channel="sales",
+        metadata_json=f'{{"reservation_id":"{reservation.id}","unit_id":"{unit.id}"}}',
+        occurred_at=func.now(),
+        created_by_user_id=ctx.user_id,
+    ))
     add_audit(
         db,
         ctx,

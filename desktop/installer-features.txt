@@ -1,0 +1,32 @@
+NEXVARY RealEstate AI OS — White-Label v1.8.0
+
+A complete operating platform for modern real-estate teams.
+
+• CRM & Sales Command Center
+  Leads, qualification, pipeline, appointments and follow-up.
+
+• Real-Estate Inventory
+  Projects, buildings, units, live availability, prices and payment plans.
+
+• AI Sales Copilot
+  Grounded responses based on verified inventory and company knowledge.
+
+• Omnichannel & WhatsApp
+  Campaign referral, unified conversations, approval-aware outbox and human handoff.
+
+• Growth & Sales Intelligence
+  Customer journeys, Audience 360, media intelligence, attribution and playbooks.
+
+• SEO Autopilot
+  Database-grounded project/unit pages, structured data and guarded change plans.
+
+• Automation Studio
+  Visual workflows connecting CRM, inventory, tasks, approvals and business actions.
+
+• White-Label Branding
+  Company name, logo, cover artwork, colors, links and custom tenant identity.
+
+• Security & Governance
+  RBAC, tenant isolation, encrypted integration secrets, audit trail and safe exports.
+
+NEXVARY — Secure Today, Protect Tomorrow.

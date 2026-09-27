@@ -411,6 +411,15 @@ type CopilotResult = {
     price: number;
     currency: string;
   }>;
+  media: Array<{
+    id: string;
+    project_id?: string | null;
+    unit_id?: string | null;
+    title: string;
+    media_type: string;
+    url: string;
+    verified: boolean;
+  }>;
   evidence: Array<{
     document_title: string;
     source_name?: string | null;
@@ -472,7 +481,7 @@ export function AICopilotOps({ token, locale }: { token: string; locale: Locale 
           {busy ? <RefreshCw size={17} className="spin"/> : <Bot size={17}/>}
           {ar ? "تحليل البيانات" : "Analyze live data"}
         </button>
-        <div className="truthRules"><span>DB → Price</span><span>DB → Availability</span><span>Knowledge → Evidence</span></div>
+        <div className="truthRules"><span>DB → Price</span><span>DB → Availability</span><span>Knowledge → Evidence</span><span>Media → Verified assets</span></div>
       </form>
 
       <section className="panel copilotResult">
@@ -484,6 +493,8 @@ export function AICopilotOps({ token, locale }: { token: string; locale: Locale 
           <div className="groundingRow">{result.grounding.map(item=><span key={item}>{item}</span>)}</div>
           <h3>{ar ? "الوحدات المطابقة" : "Matching units"}</h3>
           <div className="copilotUnits">{result.units.map(unit=><article key={unit.id}><strong>{unit.code}</strong><span>{unit.unit_type} · {unit.bedrooms ?? "—"} BR · {Number(unit.area_sqm).toLocaleString()} m²</span><b>{money(Number(unit.price), unit.currency, locale)}</b></article>)}</div>
+          <h3>{ar ? "الوسائط المرتبطة" : "Related media"}</h3>
+          <div className="copilotMedia">{result.media.map(item=><a key={item.id} href={item.url} target="_blank" rel="noreferrer"><strong>{item.title}</strong><span>{item.media_type}{item.verified ? " · verified" : ""}</span></a>)}</div>
           <h3>{ar ? "المصادر" : "Sources"}</h3>
           <div className="hitList">{result.evidence.map((hit,index)=><article key={hit.document_title+"-"+hit.chunk_position}><span className="eyebrow">#{index+1} · score {hit.score}</span><strong>{hit.document_title}</strong><p>{hit.text}</p><small>{hit.source_name || "internal"}</small></article>)}</div>
         </>}
@@ -499,6 +510,19 @@ type TenantSettings = {
   slug: string;
   brand_name?: string | null;
   primary_color: string;
+  logo_data_url?: string | null;
+  cover_data_url?: string | null;
+  contact_email?: string | null;
+  website_url?: string | null;
+  facebook_url?: string | null;
+  linkedin_url?: string | null;
+  youtube_url?: string | null;
+  x_url?: string | null;
+  tiktok_url?: string | null;
+  custom_domain?: string | null;
+  powered_by_nexvary: boolean;
+  plan: string;
+  lifecycle: string;
 };
 type AuditEntry = {
   id: string;
@@ -524,6 +548,8 @@ export function SettingsOps({
   const [audit, setAudit] = useState<AuditEntry[]>([]);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState("");
+  const [logoData, setLogoData] = useState<string | null>(null);
+  const [coverData, setCoverData] = useState<string | null>(null);
 
   async function load() {
     try {
@@ -532,6 +558,8 @@ export function SettingsOps({
         callApi<AuditEntry[]>("/api/v1/audit?limit=80", token),
       ]);
       setSettings(s);
+      setLogoData(s.logo_data_url || null);
+      setCoverData(s.cover_data_url || null);
       setAudit(a);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Load failed");
@@ -551,6 +579,15 @@ export function SettingsOps({
         body: JSON.stringify({
           brand_name: String(data.get("brand_name") || "").trim(),
           primary_color: String(data.get("primary_color") || "#0B1F33"),
+          logo_data_url: logoData,
+          cover_data_url: coverData,
+          contact_email: String(data.get("contact_email") || "").trim() || null,
+          website_url: String(data.get("website_url") || "").trim() || null,
+          facebook_url: String(data.get("facebook_url") || "").trim() || null,
+          linkedin_url: String(data.get("linkedin_url") || "").trim() || null,
+          youtube_url: String(data.get("youtube_url") || "").trim() || null,
+          x_url: String(data.get("x_url") || "").trim() || null,
+          tiktok_url: String(data.get("tiktok_url") || "").trim() || null,
         }),
       });
       setSettings(updated);
@@ -596,6 +633,60 @@ export function SettingsOps({
         <label>{ar ? "معرّف الشركة" : "Company identifier"}<input value={settings?.slug || ""} disabled /></label>
         <label>{ar ? "الاسم التجاري الظاهر" : "Displayed brand"}<input name="brand_name" defaultValue={settings?.brand_name || settings?.name || ""} key={settings?.brand_name || settings?.name}/></label>
         <label>{ar ? "لون الهوية" : "Brand color"}<input name="primary_color" type="color" defaultValue={settings?.primary_color || "#0B1F33"} key={settings?.primary_color}/></label>
+        <div className="brandLogoEditor">
+          <div className="brandLogoPreview">
+            {logoData ? <img src={logoData} alt="Company logo"/> : <Building2 size={28}/>}
+          </div>
+          <label>{ar ? "شعار الشركة PNG/JPG/WEBP" : "Company logo PNG/JPG/WEBP"}
+            <input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (!file) return;
+              if (file.size > 1_000_000) {
+                setError(ar ? "حجم الشعار يجب ألا يتجاوز 1 ميجابايت." : "Logo must be 1 MB or smaller.");
+                event.target.value = "";
+                return;
+              }
+              const reader = new FileReader();
+              reader.onload = () => setLogoData(typeof reader.result === "string" ? reader.result : null);
+              reader.readAsDataURL(file);
+            }}/>
+          </label>
+          {logoData && <button type="button" className="secondaryButton" onClick={() => setLogoData(null)}>{ar ? "إزالة الشعار" : "Remove logo"}</button>}
+        </div>
+        <div className="brandCoverEditor">
+          <div className="brandCoverPreview" style={coverData ? { backgroundImage: `linear-gradient(90deg, rgba(2,8,16,.62), rgba(2,8,16,.22)), url("${coverData}")` } : undefined}>
+            {!coverData && <><span>NEXVARY</span><small>{ar ? "غلاف الشركة" : "Company cover"}</small></>}
+          </div>
+          <label>{ar ? "صورة غلاف الشركة PNG/JPG/WEBP" : "Company cover PNG/JPG/WEBP"}
+            <input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (!file) return;
+              if (file.size > 3_000_000) {
+                setError(ar ? "حجم صورة الغلاف يجب ألا يتجاوز 3 ميجابايت." : "Cover image must be 3 MB or smaller.");
+                event.target.value = "";
+                return;
+              }
+              const reader = new FileReader();
+              reader.onload = () => setCoverData(typeof reader.result === "string" ? reader.result : null);
+              reader.readAsDataURL(file);
+            }}/>
+          </label>
+          {coverData && <button type="button" className="secondaryButton" onClick={() => setCoverData(null)}>{ar ? "إزالة صورة الغلاف" : "Remove cover"}</button>}
+        </div>
+        <div className="formGrid">
+          <label>{ar ? "بريد التواصل" : "Contact email"}<input name="contact_email" type="email" defaultValue={settings?.contact_email || ""}/></label>
+          <label>{ar ? "الموقع الإلكتروني" : "Website"}<input name="website_url" defaultValue={settings?.website_url || ""} placeholder="https://company.com"/></label>
+          <label>Facebook<input name="facebook_url" defaultValue={settings?.facebook_url || ""}/></label>
+          <label>LinkedIn<input name="linkedin_url" defaultValue={settings?.linkedin_url || ""}/></label>
+          <label>YouTube<input name="youtube_url" defaultValue={settings?.youtube_url || ""}/></label>
+          <label>X<input name="x_url" defaultValue={settings?.x_url || ""}/></label>
+          <label>TikTok<input name="tiktok_url" defaultValue={settings?.tiktok_url || ""}/></label>
+          <label>{ar ? "النطاق المخصص" : "Custom domain"}<input value={settings?.custom_domain || "—"} disabled/></label>
+        </div>
+        <div className="planReadOnly">
+          <span>{ar ? "الخطة" : "Plan"}: <strong>{settings?.plan || "—"}</strong></span>
+          <span>{ar ? "الحالة" : "Status"}: <strong>{settings?.lifecycle || "—"}</strong></span>
+        </div>
         <button className="primaryButton" type="submit">{ar ? "حفظ الهوية" : "Save branding"}</button>
         <button className="secondaryButton" type="button" onClick={() => void backup()}>{ar ? "تصدير نسخة احتياطية JSON" : "Export JSON backup"}</button>
       </form>

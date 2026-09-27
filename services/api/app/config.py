@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_ttl_minutes: int = 480
     platform_admin_key: str = "dev-platform-key-change-me"
+    integration_master_secret: str = "dev-integration-secret-change-me-use-production"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

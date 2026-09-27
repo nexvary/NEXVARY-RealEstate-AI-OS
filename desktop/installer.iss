@@ -1,5 +1,5 @@
 #define MyAppName "NEXVARY RealEstate AI OS"
-#define MyAppVersion "1.0.0-stage170"
+#define MyAppVersion "1.8.0"
 #define MyAppPublisher "NEXVARY"
 #define MyAppURL "https://nexvary.com/"
 #define MyAppExeName "NEXVARY-RealEstate-AI-OS.exe"
@@ -15,12 +15,13 @@ DefaultDirName={autopf}\NEXVARY\RealEstate AI OS
 DefaultGroupName=NEXVARY RealEstate AI OS
 DisableProgramGroupPage=yes
 OutputDir=..\installer
-OutputBaseFilename=NEXVARY-RealEstate-AI-OS-Stage170-Setup
+OutputBaseFilename=NEXVARY-RealEstate-AI-OS-WhiteLabel-v1.8.0-Setup
 SetupIconFile=nexvary-realestate.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
+InfoBeforeFile=installer-features.txt
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=admin
@@ -42,3 +43,23 @@ Name: "{autodesktop}\NEXVARY RealEstate AI OS"; Filename: "{app}\{#MyAppExeName}
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "Launch NEXVARY RealEstate AI OS"; Flags: nowait postinstall skipifsilent
+
+
+[Code]
+procedure CurInstallProgressChanged(CurProgress, MaxProgress: Integer);
+var
+  Pct: Integer;
+begin
+  if MaxProgress <= 0 then Exit;
+  Pct := (CurProgress * 100) div MaxProgress;
+  if Pct < 20 then
+    WizardForm.StatusLabel.Caption := 'Preparing CRM, leads and inventory workspace...'
+  else if Pct < 40 then
+    WizardForm.StatusLabel.Caption := 'Installing AI Sales Copilot and verified knowledge tools...'
+  else if Pct < 60 then
+    WizardForm.StatusLabel.Caption := 'Preparing WhatsApp, omnichannel sales and human handoff...'
+  else if Pct < 80 then
+    WizardForm.StatusLabel.Caption := 'Installing Growth Intelligence, SEO Autopilot and media workflows...'
+  else
+    WizardForm.StatusLabel.Caption := 'Finalizing Automation Studio, white-label branding and security...';
+end;

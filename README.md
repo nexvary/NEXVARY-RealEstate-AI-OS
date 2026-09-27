@@ -1,30 +1,101 @@
 # NEXVARY RealEstate AI OS
 
-AI-first, white-label operating system for real-estate companies.
+AI-first, multi-tenant, white-label operating system for real-estate companies.
 
-> **Status:** foundation build in progress. Multi-tenant transactional core, CRM primitives, unit search, Arabic/English dashboard and CI are being developed first.
+## Current release line
+
+**v1.8.0 — White-Label Omnichannel Growth Intelligence Release**
+
+The product now has two isolated workspaces:
+
+1. **Company workspace** — CRM, inventory, viewings, reservations, contracts, installments, commissions, tasks, inbox, knowledge base and grounded AI.
+2. **NEXVARY Platform Admin** — create and manage multiple real-estate companies from one control plane.
+
+The Windows desktop build is designed for normal installation without Python, Node.js, Docker or terminal commands. During active development, first-run setup can be skipped with a one-click local development workspace.
 
 ## Product rule: AI never owns the truth
 
-The platform deliberately separates data that must be exact from AI-generated reasoning:
+The platform separates exact transactional data from probabilistic AI:
 
-- **PostgreSQL is authoritative** for price, unit availability, reservations, installments, commissions and customer records.
-- **RAG is used** for brochures, policies, contracts, FAQs and other documents.
-- **n8n orchestrates** messaging and repetitive workflows; it is not the business database.
-- **Human approval gates** protect contractual, financial and inventory-changing actions.
+- **Transactional database** is authoritative for price, unit availability, reservations, contracts, installments, commissions and customer records.
+- **Knowledge retrieval** is used for brochures, policies, contracts, FAQs and other documents.
+- **Grounded AI Sales Copilot** combines tenant-scoped inventory tools with tenant-scoped knowledge evidence.
+- **Human and RBAC gates** protect financial, contractual, administrative and inventory-changing actions.
 
-## Current foundation
+## Platform Admin capabilities
 
-- FastAPI service with health endpoint, CRM lead creation, deterministic lead scoring, inventory search and overview metrics.
-- Initial multi-tenant models for tenants, projects, units, leads, appointments and audit events.
-- React/Vite management UI with Arabic RTL + English, responsive layout, working navigation, language switcher and add-lead flow.
-- PostgreSQL/pgvector-ready development stack, Redis and n8n via Docker Compose.
-- GitHub Actions build/test gate for Python and web UI.
-- Architecture and product roadmap documentation.
+- Create a new company and its first owner from the GUI.
+- Starter / Professional / Enterprise plans.
+- Active / Trial / Suspended tenant lifecycle.
+- Enforced limits for users, projects, units and monthly AI requests.
+- Live platform totals and per-company usage.
+- Custom domains with public branding resolution.
+- White-label brand name, primary color, logo and social/contact links.
+- Optional **Powered by NEXVARY** policy per tenant.
+- Encrypted per-tenant integration credentials for providers such as WhatsApp, OpenAI and Telegram.
+- Platform-admin authentication separated from company-user authentication.
+- Upgrade path: an existing first-company owner can claim the Platform Admin console once.
+- Commercial subscription lifecycle and invoice ledger per tenant.
+- Verified bank-transfer subscription payments; no online card-payment gateway.
+- Tenant payment submission + Platform Admin approval/rejection workflow.
+- Reusable tenant templates and one-click complete company provisioning.
 
-## Quick start
+## Company workspace
 
-### 1. API
+- CRM leads and deterministic lead scoring.
+- Projects, buildings, units and payment plans.
+- Sales pipeline and viewings.
+- Reservation locking and cancellation/release rules.
+- Contracts, installment schedules and broker commissions.
+- Follow-up tasks.
+- Unified conversation/inbox data model.
+- Tenant knowledge base and evidence-oriented retrieval.
+- Grounded AI Sales Copilot with tenant-scoped verified property media suggestions.
+- Growth Intelligence: campaigns, customer journeys, Audience 360, last-touch revenue attribution, media library, sales playbooks and Voice of Customer.
+- Users and database-backed RBAC.
+- Company audit log.
+- Safe operational JSON export.
+- Arabic RTL + English.
+- Responsive desktop/mobile web UI.
+- Development-mode first-run skip plus one-click re-entry for repeated install/uninstall testing.
+- Internal Back navigation history that stays inside the application.
+- Visual Automation Studio with tenant-scoped workflow graphs, safe internal actions, routing and human approvals.
+- Separate About the System and About the Company sections.
+- Company logo, social links and custom white-label identity.
+- Integrated White-Label SEO Autopilot workspace copied from the preserved original SEO project.
+- Grounded omnichannel sales inbox with inbound dedupe, persistent customer sales state and human handoff.
+- Approval-aware outbound queue with official WhatsApp Cloud API dispatch when tenant credentials are configured.
+- Persistent text/voice preference with a professional female voice reply plan of up to three concise segments.
+- Campaign/ad attribution from first conversation through qualification, viewing, reservation, contract and revenue.
+- Technical audits, bounded crawling, Search Console read-only analytics, opportunities, schema, performance and guarded dry-run SEO planning.
+- Per-tenant WhatsApp channel configuration with encrypted credentials and readiness checks.
+- Transactional SEO page generation for real-estate projects and units, including price and availability sourced directly from the database.
+
+## Security boundaries
+
+- Tenant identity and roles come from signed authenticated sessions, not trusted request headers.
+- Suspended tenants are blocked centrally.
+- Platform Admin uses a distinct token type.
+- Passwords use salted PBKDF2-SHA256 hashes.
+- Provider credentials are encrypted at rest and secret values are never returned by read APIs.
+- Operational backup exports exclude password hashes and integration secret ciphertext.
+- Desktop runtime secrets are generated once per local data profile and are reused safely across uninstall/reinstall cycles; incompatible development databases are archived instead of overwritten.
+- Automation Studio exposes no shell/PowerShell execution and validates cross-tenant data access at action boundaries.
+
+## Verification
+
+GitHub Actions runs:
+
+- Python API test suite.
+- TypeScript/Vite production build.
+- Browser UI Release Gate with Playwright on desktop and mobile.
+- Windows PyInstaller freeze.
+- Inno Setup compilation.
+- SHA-256 generation for the installer artifact.
+
+## Developer quick start
+
+### API
 
 ```bash
 cd services/api
@@ -37,9 +108,7 @@ pip install -r requirements.txt
 python -m uvicorn app.main:app --reload --port 8000
 ```
 
-Open API docs at `http://localhost:8000/docs`.
-
-### 2. Web control center
+### Web control center
 
 ```bash
 cd apps/web
@@ -47,36 +116,22 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5173`.
-
-### 3. Infrastructure
-
-Copy `.env.example` to `.env`, change development secrets, then:
+### Infrastructure
 
 ```bash
 docker compose up -d postgres redis n8n
-```
-
-n8n will be available at `http://localhost:5678`.
-
-### 4. Verification
-
-```bash
-make test
-```
-
-Or run each gate separately:
-
-```bash
-cd services/api && pytest -q
-cd apps/web && npm install && npm run build
 ```
 
 ## Documentation
 
 - [Architecture](docs/ARCHITECTURE.md)
 - [Roadmap](docs/ROADMAP.md)
-
-## Planned platform areas
-
-CRM · Inventory · Sales Pipeline · Viewings · Reservations · Contracts · Installments · Broker Commissions · Omnichannel Inbox · RAG Knowledge Base · AI Sales Agent · AI Customer Service · Marketing Studio · White Label · Audit & Analytics
+- [Stage 170 release](docs/STAGE_170_RELEASE.md)
+- [Platform Admin & White Label](docs/PLATFORM_ADMIN.md)
+- [White-Label SEO Autopilot integration](docs/SEO_AUTOPILOT_INTEGRATION.md)
+- [Commercial Platform v1.3.0](docs/COMMERCIAL_PLATFORM_V13.md)
+- [Verified Bank Transfer Billing v1.4.0](docs/BANK_TRANSFER_BILLING_V14.md)
+- [UX & Development Release v1.5.0](docs/UX_RELEASE_V15.md)
+- [Automation Studio v1.6.0](docs/AUTOMATION_STUDIO_V16.md)
+- [Growth Intelligence v1.7.0](docs/GROWTH_INTELLIGENCE_V17.md)
+- [Omnichannel Sales v1.7.0](docs/OMNICHANNEL_SALES_V17.md)

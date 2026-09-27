@@ -4,49 +4,42 @@ from PIL import Image, ImageDraw, ImageFont
 
 OUT = Path(__file__).resolve().parent / "nexvary-realestate.ico"
 SIZE = 512
-
-img = Image.new("RGBA", (SIZE, SIZE), (5, 13, 24, 255))
+img = Image.new("RGBA", (SIZE, SIZE), (1, 4, 9, 255))
 draw = ImageDraw.Draw(img)
 
-# metallic/electric border
-for i in range(16):
-    value = 28 + i * 4
-    draw.rounded_rectangle(
-        (18 + i, 18 + i, SIZE - 18 - i, SIZE - 18 - i),
-        radius=86 - i,
-        outline=(value, min(180, value + 70), min(255, value + 120), 255),
-        width=2,
-    )
+# NEXVARY-style circular metallic/electric frame.
+for width, inset, color in [
+    (7, 14, (215, 231, 242, 255)),
+    (6, 23, (29, 187, 255, 255)),
+    (2, 42, (75, 132, 176, 220)),
+]:
+    draw.ellipse((inset, inset, SIZE-inset, SIZE-inset), outline=color, width=width)
 
-# building silhouette
-base_y = 390
-buildings = [
-    (105, 215, 190, base_y),
-    (205, 145, 300, base_y),
-    (316, 245, 405, base_y),
-]
-for x1, y1, x2, y2 in buildings:
-    draw.rounded_rectangle((x1, y1, x2, y2), radius=12, fill=(11, 43, 68, 255), outline=(48, 190, 255, 255), width=5)
-    for y in range(y1 + 30, y2 - 25, 44):
-        for x in range(x1 + 22, x2 - 18, 36):
-            draw.rounded_rectangle((x, y, x + 12, y + 18), radius=3, fill=(82, 217, 255, 255))
+# Security lock.
+draw.arc((225, 68, 287, 130), start=180, end=360, fill=(75, 220, 255, 255), width=8)
+draw.rounded_rectangle((218, 103, 294, 167), radius=9, fill=(20, 170, 245, 255), outline=(110, 230, 255, 255), width=3)
+draw.ellipse((250, 126, 262, 138), fill=(1, 12, 21, 255))
+draw.rectangle((254, 136, 258, 151), fill=(1, 12, 21, 255))
 
-# roof / AI circuit accent
-draw.line((85, 400, 425, 400), fill=(104, 111, 255, 255), width=8)
-draw.ellipse((230, 70, 282, 122), fill=(37, 194, 255, 255))
-draw.line((256, 122, 256, 145), fill=(37, 194, 255, 255), width=7)
-draw.line((256, 96, 170, 145), fill=(115, 103, 255, 255), width=5)
-draw.line((256, 96, 342, 145), fill=(115, 103, 255, 255), width=5)
+# Circuit accents.
+for y in (214, 256, 298):
+    draw.line((55, y, 156, y), fill=(25, 196, 255, 255), width=3)
+    draw.line((356, y, 457, y), fill=(25, 196, 255, 255), width=3)
+    draw.ellipse((46, y-6, 58, y+6), outline=(25, 196, 255, 255), width=2)
+    draw.ellipse((454, y-6, 466, y+6), outline=(25, 196, 255, 255), width=2)
 
-# central N
+# Metallic NX monogram.
 try:
-    font = ImageFont.truetype("arialbd.ttf", 120)
+    mono = ImageFont.truetype("arialbd.ttf", 176)
 except OSError:
-    font = ImageFont.load_default()
-text = "N"
-bbox = draw.textbbox((0, 0), text, font=font)
-tw = bbox[2] - bbox[0]
-draw.text(((SIZE - tw) / 2, 235), text, font=font, fill=(240, 248, 255, 255), stroke_width=3, stroke_fill=(37, 162, 255, 255))
+    mono = ImageFont.load_default()
+for offset, color in [(5, (22, 111, 168, 255)), (0, (229, 239, 247, 255))]:
+    bbox = draw.textbbox((0, 0), "NX", font=mono)
+    tw = bbox[2] - bbox[0]
+    draw.text(((SIZE - tw) / 2 + offset, 165 + offset), "NX", font=mono, fill=color)
+
+# Electric diagonal accent.
+draw.polygon([(271, 203), (309, 165), (326, 180), (289, 219)], fill=(24, 182, 255, 255))
 
 img.save(
     OUT,

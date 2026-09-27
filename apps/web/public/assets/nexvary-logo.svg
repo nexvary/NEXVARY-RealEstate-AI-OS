@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="t d">
+<title id="t">NEXVARY</title><desc id="d">Electric blue and metallic silver NEXVARY security emblem</desc>
+<defs>
+  <radialGradient id="bg" cx="50%" cy="45%" r="62%"><stop offset="0" stop-color="#0b2238"/><stop offset=".62" stop-color="#030b15"/><stop offset="1" stop-color="#010307"/></radialGradient>
+  <linearGradient id="silver" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffffff"/><stop offset=".45" stop-color="#c5d0da"/><stop offset=".75" stop-color="#6f8191"/><stop offset="1" stop-color="#f2f7fb"/></linearGradient>
+  <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#55e8ff"/><stop offset=".48" stop-color="#0fb6ff"/><stop offset="1" stop-color="#325dff"/></linearGradient>
+  <filter id="glow"><feGaussianBlur stdDeviation="9" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<rect width="1024" height="1024" fill="#010307"/>
+<circle cx="512" cy="512" r="470" fill="url(#bg)" stroke="url(#silver)" stroke-width="14"/>
+<circle cx="512" cy="512" r="442" fill="none" stroke="#10b9ff" stroke-width="10" filter="url(#glow)"/>
+<circle cx="512" cy="468" r="318" fill="none" stroke="#178ee9" stroke-width="3" opacity=".72"/>
+<g stroke="#20c8ff" stroke-width="4" fill="none" opacity=".88">
+  <path d="M175 415H305M719 415H849M150 470H285M739 470H874M180 525H310M714 525H844"/>
+  <circle cx="150" cy="470" r="7" fill="#03111c"/><circle cx="874" cy="470" r="7" fill="#03111c"/>
+</g>
+<g transform="translate(0,-36)" filter="url(#glow)">
+  <path d="M342 608V326L512 516 682 326V608L622 662V470L512 596 402 470V662Z" fill="none" stroke="url(#silver)" stroke-width="48" stroke-linejoin="miter"/>
+  <path d="M404 340L622 650" stroke="url(#silver)" stroke-width="48"/>
+  <path d="M545 390L603 326" stroke="url(#blue)" stroke-width="30"/>
+</g>
+<g transform="translate(0,-4)" filter="url(#glow)">
+  <path d="M486 190v-24a26 26 0 0 1 52 0v24" fill="none" stroke="#4fdcff" stroke-width="9"/>
+  <rect x="474" y="188" width="76" height="66" rx="9" fill="url(#blue)"/>
+  <circle cx="512" cy="218" r="8" fill="#02101a"/><path d="M512 224v14" stroke="#02101a" stroke-width="7"/>
+</g>
+<text x="512" y="790" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="112" font-weight="700" letter-spacing="18" fill="url(#silver)">NEXVARY</text>
+<text x="512" y="852" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="54" letter-spacing="18" fill="url(#blue)">Inc</text>
+<line x1="220" y1="842" x2="412" y2="842" stroke="#1fd1ff" stroke-width="4"/><line x1="612" y1="842" x2="804" y2="842" stroke="#1fd1ff" stroke-width="4"/>
+<text x="512" y="916" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="22" letter-spacing="8" fill="#edf3f7">SECURE TODAY, PROTECT TOMORROW</text>
+</svg>

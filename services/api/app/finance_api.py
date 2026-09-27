@@ -11,6 +11,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from .db import get_db
+from .growth_models import CustomerJourneyEvent
 from .finance_models import (
     BrokerCommission,
     CommissionStatus,
@@ -129,6 +130,17 @@ def convert_reservation_to_contract(
             entity_type="contract",
             entity_id=contract.id,
             details=f"reservation={reservation.id};unit={unit.id}",
+        )
+    )
+    db.add(
+        CustomerJourneyEvent(
+            tenant_id=ctx.tenant_id,
+            lead_id=reservation.lead_id,
+            event_type="deal_won",
+            channel="sales",
+            metadata_json=f'{{"contract_id":"{contract.id}","unit_id":"{unit.id}","value":"{contract.total_price}","currency":"{contract.currency}"}}',
+            occurred_at=contract.signed_at,
+            created_by_user_id=ctx.user_id,
         )
     )
     try:

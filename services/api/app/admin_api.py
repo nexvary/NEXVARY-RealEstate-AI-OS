@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime, timezone
+import json
 from decimal import Decimal
 from typing import Any
 
@@ -9,8 +10,13 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from .automation_models import AutomationApproval, AutomationEdge, AutomationNode, AutomationNodeRun, AutomationRun, AutomationWorkflow
+from .commercial_models import BankTransferSubmission, BillingInvoice, SaaSSubscription, SEOEntityPage, TenantTemplate, WhatsAppChannel
 from .db import get_db
 from .finance_models import BrokerCommission, Contract, Installment
+from .growth_models import AudienceSegment, CustomerFeedback, CustomerJourneyEvent, MarketingCampaign, PropertyMediaAsset, SalesPlaybook
+from .omnichannel_models import ConversationSalesState, InboundMessageReceipt, MarketingAttributionEvent, OmnichannelOutbox
+from .property_sales_models import AdPropertyReferral, ConversationPropertyContext
 from .models import (
     Appointment,
     AuditEvent,
@@ -24,6 +30,9 @@ from .models import (
     User,
 )
 from .policy import RequestContext, get_request_context, manage_users
+from .quota import ensure_profile
+from .saas_models import TenantIntegration, TenantSaaSProfile
+from .seo_models import SEOChangeDraft, SEOProject, SEOSnapshot
 from .workspace_models import FollowUpTask, InboxConversation, InboxMessage, KnowledgeDocument
 
 router = APIRouter(prefix="/api/v1")
@@ -35,12 +44,33 @@ class TenantSettingsRead(BaseModel):
     slug: str
     brand_name: str | None
     primary_color: str
-    model_config = ConfigDict(from_attributes=True)
+    logo_data_url: str | None
+    cover_data_url: str | None
+    contact_email: str | None
+    website_url: str | None
+    facebook_url: str | None
+    linkedin_url: str | None
+    youtube_url: str | None
+    x_url: str | None
+    tiktok_url: str | None
+    custom_domain: str | None
+    powered_by_nexvary: bool
+    plan: str
+    lifecycle: str
 
 
 class TenantSettingsUpdate(BaseModel):
     brand_name: str | None = Field(default=None, min_length=2, max_length=160)
     primary_color: str | None = Field(default=None, pattern=r"^#[0-9A-Fa-f]{6}$")
+    logo_data_url: str | None = Field(default=None, max_length=1500000)
+    cover_data_url: str | None = Field(default=None, max_length=4500000)
+    contact_email: str | None = Field(default=None, max_length=255)
+    website_url: str | None = Field(default=None, max_length=500)
+    facebook_url: str | None = Field(default=None, max_length=500)
+    linkedin_url: str | None = Field(default=None, max_length=500)
+    youtube_url: str | None = Field(default=None, max_length=500)
+    x_url: str | None = Field(default=None, max_length=500)
+    tiktok_url: str | None = Field(default=None, max_length=500)
 
 
 class AuditRead(BaseModel):
@@ -73,15 +103,70 @@ def row_dict(row: Any, excluded: set[str] | None = None) -> dict[str, Any]:
     }
 
 
+def validate_logo(value: str | None) -> str | None:
+    if value in (None, ""):
+        return None
+    allowed = ("data:image/png;base64,", "data:image/jpeg;base64,", "data:image/webp;base64,")
+    if not value.startswith(allowed):
+        raise HTTPException(status_code=422, detail="Logo must be PNG, JPEG or WEBP data URL")
+    if len(value) > 1_500_000:
+        raise HTTPException(status_code=413, detail="Logo is too large")
+    return value
+
+
+def profile_feature_flags(profile: TenantSaaSProfile) -> dict[str, Any]:
+    try:
+        value = json.loads(profile.feature_flags_json or "{}")
+        return value if isinstance(value, dict) else {}
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return {}
+
+
+def validate_cover(value: str | None) -> str | None:
+    if value in (None, ""):
+        return None
+    allowed = ("data:image/png;base64,", "data:image/jpeg;base64,", "data:image/webp;base64,")
+    if not value.startswith(allowed):
+        raise HTTPException(status_code=422, detail="Cover must be PNG, JPEG or WEBP data URL")
+    if len(value) > 4_500_000:
+        raise HTTPException(status_code=413, detail="Cover image is too large")
+    return value
+
+
+def settings_payload(tenant: Tenant, profile: TenantSaaSProfile) -> TenantSettingsRead:
+    flags = profile_feature_flags(profile)
+    return TenantSettingsRead(
+        id=tenant.id,
+        name=tenant.name,
+        slug=tenant.slug,
+        brand_name=tenant.brand_name,
+        primary_color=tenant.primary_color,
+        logo_data_url=profile.logo_data_url,
+        cover_data_url=flags.get("branding_cover_data_url"),
+        contact_email=profile.contact_email,
+        website_url=profile.website_url,
+        facebook_url=profile.facebook_url,
+        linkedin_url=profile.linkedin_url,
+        youtube_url=profile.youtube_url,
+        x_url=profile.x_url,
+        tiktok_url=profile.tiktok_url,
+        custom_domain=profile.custom_domain,
+        powered_by_nexvary=bool(profile.powered_by_nexvary),
+        plan=profile.plan.value,
+        lifecycle=profile.lifecycle.value,
+    )
+
+
 @router.get("/tenant/settings", response_model=TenantSettingsRead)
 def tenant_settings(
     ctx: RequestContext = Depends(get_request_context),
     db: Session = Depends(get_db),
-) -> Tenant:
+) -> TenantSettingsRead:
     tenant = db.scalar(select(Tenant).where(Tenant.id == ctx.tenant_id))
     if tenant is None:
         raise HTTPException(status_code=404, detail="Tenant not found")
-    return tenant
+    profile = ensure_profile(db, tenant.id)
+    return settings_payload(tenant, profile)
 
 
 @router.patch("/tenant/settings", response_model=TenantSettingsRead)
@@ -89,15 +174,28 @@ def update_tenant_settings(
     payload: TenantSettingsUpdate,
     ctx: RequestContext = Depends(manage_users),
     db: Session = Depends(get_db),
-) -> Tenant:
+) -> TenantSettingsRead:
     tenant = db.scalar(select(Tenant).where(Tenant.id == ctx.tenant_id))
     if tenant is None:
         raise HTTPException(status_code=404, detail="Tenant not found")
+    profile = ensure_profile(db, tenant.id)
 
     changes = payload.model_dump(exclude_unset=True)
+    for key in ("brand_name", "primary_color"):
+        if key in changes and changes[key] is not None:
+            setattr(tenant, key, changes.pop(key))
+    if "logo_data_url" in changes:
+        profile.logo_data_url = validate_logo(changes.pop("logo_data_url"))
+    if "cover_data_url" in changes:
+        cover = validate_cover(changes.pop("cover_data_url"))
+        flags = profile_feature_flags(profile)
+        if cover:
+            flags["branding_cover_data_url"] = cover
+        else:
+            flags.pop("branding_cover_data_url", None)
+        profile.feature_flags_json = json.dumps(flags, ensure_ascii=False, separators=(",", ":"))
     for key, value in changes.items():
-        if value is not None:
-            setattr(tenant, key, value)
+        setattr(profile, key, value)
 
     db.add(
         AuditEvent(
@@ -106,12 +204,13 @@ def update_tenant_settings(
             action="tenant.settings.update",
             entity_type="tenant",
             entity_id=tenant.id,
-            details=",".join(changes.keys()),
+            details=",".join(payload.model_dump(exclude_unset=True).keys()),
         )
     )
     db.commit()
     db.refresh(tenant)
-    return tenant
+    db.refresh(profile)
+    return settings_payload(tenant, profile)
 
 
 @router.get("/audit", response_model=list[AuditRead])
@@ -152,6 +251,34 @@ def export_backup(
         "inbox_conversations": (InboxConversation, set()),
         "inbox_messages": (InboxMessage, set()),
         "followup_tasks": (FollowUpTask, set()),
+        "automation_workflows": (AutomationWorkflow, set()),
+        "automation_nodes": (AutomationNode, set()),
+        "automation_edges": (AutomationEdge, set()),
+        "automation_runs": (AutomationRun, set()),
+        "automation_node_runs": (AutomationNodeRun, set()),
+        "automation_approvals": (AutomationApproval, set()),
+        "marketing_campaigns": (MarketingCampaign, set()),
+        "customer_journey_events": (CustomerJourneyEvent, set()),
+        "audience_segments": (AudienceSegment, set()),
+        "property_media_assets": (PropertyMediaAsset, set()),
+        "sales_playbooks": (SalesPlaybook, set()),
+        "customer_feedback": (CustomerFeedback, set()),
+        "conversation_sales_states": (ConversationSalesState, set()),
+        "inbound_message_receipts": (InboundMessageReceipt, set()),
+        "omnichannel_outbox": (OmnichannelOutbox, set()),
+        "marketing_attribution_events": (MarketingAttributionEvent, set()),
+        "ad_property_referrals": (AdPropertyReferral, set()),
+        "conversation_property_contexts": (ConversationPropertyContext, set()),
+        "tenant_saas_profiles": (TenantSaaSProfile, set()),
+        "tenant_integrations": (TenantIntegration, {"encrypted_secret_json"}),
+        "saas_subscriptions": (SaaSSubscription, set()),
+        "billing_invoices": (BillingInvoice, set()),
+        "bank_transfer_submissions": (BankTransferSubmission, set()),
+        "whatsapp_channels": (WhatsAppChannel, set()),
+        "seo_entity_pages": (SEOEntityPage, set()),
+        "seo_projects": (SEOProject, set()),
+        "seo_snapshots": (SEOSnapshot, set()),
+        "seo_change_drafts": (SEOChangeDraft, set()),
         "audit_events": (AuditEvent, set()),
     }
 
@@ -161,7 +288,7 @@ def export_backup(
 
     data: dict[str, Any] = {
         "format": "NEXVARY-RealEstate-AI-OS-backup",
-        "version": "1.0.0-stage170",
+        "version": "1.8.0",
         "exported_at": datetime.now(timezone.utc).isoformat(),
         "tenant": row_dict(tenant),
         "tables": {},
