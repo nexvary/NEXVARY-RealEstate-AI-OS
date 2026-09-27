@@ -49,6 +49,10 @@ qt_add_qml_module(nexvary_realestate_native
         qml/CrmQuickAddDialog.qml
         qml/SettingsPage.qml
         qml/CompanyPage.qml
+        qml/KnowledgePage.qml
+        qml/TasksPage.qml
+        qml/TeamPage.qml
+        qml/OmnichannelPage.qml
         qml/SidebarItem.qml
     RESOURCES
         qml/Theme.js
