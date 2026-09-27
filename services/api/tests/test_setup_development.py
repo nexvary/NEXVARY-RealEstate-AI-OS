@@ -38,10 +38,17 @@ def test_development_skip_creates_workspace_and_quick_entry_session():
     assert quick_body["access_token"]
 
 
-def test_development_skip_is_blocked_after_normal_company_exists():
+def test_development_workspace_can_be_created_alongside_existing_companies():
     status = client.get("/api/v1/setup/status")
     assert status.status_code == 200
     assert status.json()["tenant_count"] == 2
+    assert status.json()["development_workspace"] is False
 
     response = client.post("/api/v1/auth/bootstrap-development")
-    assert response.status_code == 409
+    assert response.status_code == 201
+    assert response.json()["tenant_slug"] == "nexvary-dev"
+
+    status = client.get("/api/v1/setup/status")
+    assert status.status_code == 200
+    assert status.json()["tenant_count"] == 3
+    assert status.json()["development_workspace"] is True
