@@ -109,8 +109,13 @@ jobs:
 
             $env:QT_QPA_PLATFORM = "minimal"
             $env:QT_QUICK_BACKEND = "software"
+            $env:NEXVARY_QT_LOG = (Resolve-Path "native-dist/smoke").Path + "\qt-startup.log"
             & "native-dist/bin/nexvary_realestate_native.exe" --api-url "http://127.0.0.1:8765" --language ar --width 1600 --height 900 --smoke-test
             if ($LASTEXITCODE -ne 0) {
+              if (Test-Path $env:NEXVARY_QT_LOG) {
+                Write-Host "===== Packaged Qt startup log ====="
+                Get-Content $env:NEXVARY_QT_LOG
+              }
               throw "Packaged Qt runtime smoke test failed with exit code $LASTEXITCODE"
             }
           }
