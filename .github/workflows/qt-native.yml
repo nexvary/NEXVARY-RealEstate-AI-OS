@@ -49,6 +49,71 @@ jobs:
         shell: bash
         run: ctest --test-dir build-qt -C Release --output-on-failure
 
+      - name: Setup Python for native sidecar
+        if: runner.os == 'Windows'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install native sidecar packaging dependencies
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r services/api/requirements.txt
+          pip install -r desktop/requirements-desktop.txt
+
+      - name: Build NEXVARY icon
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: python desktop/build_icon.py
+
+      - name: Build local API sidecar
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: pyinstaller desktop/NEXVARY-RealEstate-API.spec --noconfirm --clean
+
+      - name: Stage Qt native runtime
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cmake --install build-qt --config Release --prefix native-dist
+          $exe = Resolve-Path "native-dist/bin/nexvary_realestate_native.exe"
+          windeployqt --release --qmldir apps/desktop-qt/qml $exe
+          Copy-Item "dist/NEXVARY-RealEstate-API.exe" "native-dist/bin/NEXVARY-RealEstate-API.exe" -Force
+
+      - name: Install Inno Setup
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
+      - name: Compile native preview installer
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path native-installer | Out-Null
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          & $iscc "desktop\native-installer.iss"
+
+      - name: Generate native installer SHA256
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $file = Get-ChildItem "native-installer\NEXVARY-RealEstate-AI-OS-Native-v2.0.0-Preview-Setup.exe"
+          $hash = (Get-FileHash $file.FullName -Algorithm SHA256).Hash.ToLower()
+          "$hash  $($file.Name)" | Out-File -Encoding ascii "native-installer\SHA256.txt"
+          Get-Content "native-installer\SHA256.txt"
+
+      - name: Upload Windows native preview
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: NEXVARY-RealEstate-AI-OS-Native-v2.0.0-Preview-Windows
+          path: |
+            native-installer/NEXVARY-RealEstate-AI-OS-Native-v2.0.0-Preview-Setup.exe
+            native-installer/SHA256.txt
+          if-no-files-found: error
+
       - name: QML Arabic RTL screenshot gate
         if: runner.os == 'Linux'
         shell: bash
