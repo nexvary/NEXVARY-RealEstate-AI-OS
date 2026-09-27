@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from .automation_models import AutomationApproval, AutomationEdge, AutomationNode, AutomationNodeRun, AutomationRun, AutomationWorkflow
 from .commercial_models import BankTransferSubmission, BillingInvoice, SaaSSubscription, SEOEntityPage, TenantTemplate, WhatsAppChannel
 from .db import get_db
 from .finance_models import BrokerCommission, Contract, Installment
@@ -215,6 +216,12 @@ def export_backup(
         "inbox_conversations": (InboxConversation, set()),
         "inbox_messages": (InboxMessage, set()),
         "followup_tasks": (FollowUpTask, set()),
+        "automation_workflows": (AutomationWorkflow, set()),
+        "automation_nodes": (AutomationNode, set()),
+        "automation_edges": (AutomationEdge, set()),
+        "automation_runs": (AutomationRun, set()),
+        "automation_node_runs": (AutomationNodeRun, set()),
+        "automation_approvals": (AutomationApproval, set()),
         "tenant_saas_profiles": (TenantSaaSProfile, set()),
         "tenant_integrations": (TenantIntegration, {"encrypted_secret_json"}),
         "saas_subscriptions": (SaaSSubscription, set()),
