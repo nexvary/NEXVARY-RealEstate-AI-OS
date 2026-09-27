@@ -33,10 +33,10 @@ QString apiErrorMessage(const QByteArray &body, const QString &fallback)
 ApiClient::ApiClient(QObject *parent)
     : QObject(parent)
 {
-    const QString configured = QProcessEnvironment::systemEnvironment().value(
-        QStringLiteral("NEXVARY_API_URL"),
-        QStringLiteral("http://127.0.0.1:8000"));
-    m_baseUrl = normalizeBaseUrl(configured);
+    m_baseUrl = normalizeBaseUrl(
+        QProcessEnvironment::systemEnvironment().value(
+            QStringLiteral("NEXVARY_API_URL"),
+            QStringLiteral("http://127.0.0.1:8000")));
 }
 
 QString ApiClient::baseUrl() const { return m_baseUrl; }
@@ -50,6 +50,13 @@ QString ApiClient::healthStatus() const { return m_healthStatus; }
 QVariantMap ApiClient::overview() const { return m_overview; }
 QVariantList ApiClient::leads() const { return m_leads; }
 QVariantList ApiClient::units() const { return m_units; }
+QVariantMap ApiClient::enterpriseSummary() const { return m_enterpriseSummary; }
+QVariantList ApiClient::proposals() const { return m_proposals; }
+QVariantList ApiClient::invoices() const { return m_invoices; }
+QVariantList ApiClient::tickets() const { return m_tickets; }
+QVariantList ApiClient::reminders() const { return m_reminders; }
+QVariantList ApiClient::timeline() const { return m_timeline; }
+QString ApiClient::timelineLeadId() const { return m_timelineLeadId; }
 
 void ApiClient::setBaseUrl(const QString &value)
 {
@@ -95,8 +102,7 @@ void ApiClient::health()
             m_healthStatus = QStringLiteral("offline");
             setError(apiErrorMessage(body, reply->errorString()));
         } else {
-            const auto doc = QJsonDocument::fromJson(body);
-            m_healthStatus = doc.object().value(QStringLiteral("status")).toString(QStringLiteral("ok"));
+            m_healthStatus = QJsonDocument::fromJson(body).object().value(QStringLiteral("status")).toString(QStringLiteral("ok"));
             setError(QString());
         }
         emit healthChanged();
@@ -114,7 +120,7 @@ void ApiClient::login(const QString &tenantSlug, const QString &email, const QSt
     setBusy(true);
     setError(QString());
 
-    QJsonObject payload{
+    const QJsonObject payload{
         {QStringLiteral("tenant_slug"), tenantSlug.trimmed()},
         {QStringLiteral("email"), email.trimmed()},
         {QStringLiteral("password"), password},
@@ -133,10 +139,8 @@ void ApiClient::login(const QString &tenantSlug, const QString &email, const QSt
             return;
         }
 
-        const auto doc = QJsonDocument::fromJson(body);
-        const QJsonObject object = doc.object();
+        const QJsonObject object = QJsonDocument::fromJson(body).object();
         m_token = object.value(QStringLiteral("access_token")).toString();
-
         const QJsonObject user = object.value(QStringLiteral("user")).toObject();
         m_userName = user.value(QStringLiteral("display_name")).toString();
         m_userRole = user.value(QStringLiteral("role")).toString();
@@ -156,11 +160,24 @@ void ApiClient::logout()
     m_overview.clear();
     m_leads.clear();
     m_units.clear();
+    m_enterpriseSummary.clear();
+    m_proposals.clear();
+    m_invoices.clear();
+    m_tickets.clear();
+    m_reminders.clear();
+    m_timeline.clear();
+    m_timelineLeadId.clear();
     setError(QString());
     emit sessionChanged();
     emit overviewChanged();
     emit leadsChanged();
     emit unitsChanged();
+    emit enterpriseSummaryChanged();
+    emit proposalsChanged();
+    emit invoicesChanged();
+    emit ticketsChanged();
+    emit remindersChanged();
+    emit timelineChanged();
 }
 
 void ApiClient::refreshAll()
@@ -171,6 +188,40 @@ void ApiClient::refreshAll()
     fetchOverview();
     fetchLeads();
     fetchUnits();
+    refreshEnterprise();
+}
+
+void ApiClient::refreshEnterprise()
+{
+    if (!loggedIn())
+        return;
+    fetchEnterpriseSummary();
+    fetchProposals();
+    fetchInvoices();
+    fetchTickets();
+    fetchReminders();
+}
+
+void ApiClient::loadTimeline(const QString &leadId)
+{
+    if (!loggedIn() || leadId.trimmed().isEmpty())
+        return;
+
+    m_timelineLeadId = leadId.trimmed();
+    auto *reply = m_network.get(
+        makeRequest(QStringLiteral("/api/v1/enterprise-crm/leads/") + m_timelineLeadId + QStringLiteral("/timeline"), true));
+
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) {
+            setError(apiErrorMessage(body, reply->errorString()));
+        } else {
+            m_timeline = QJsonDocument::fromJson(body).array().toVariantList();
+            setError(QString());
+            emit timelineChanged();
+        }
+        reply->deleteLater();
+    });
 }
 
 void ApiClient::fetchOverview()
@@ -178,9 +229,9 @@ void ApiClient::fetchOverview()
     auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/overview"), true));
     connect(reply, &QNetworkReply::finished, this, [this, reply] {
         const QByteArray body = reply->readAll();
-        if (reply->error() != QNetworkReply::NoError) {
+        if (reply->error() != QNetworkReply::NoError)
             setError(apiErrorMessage(body, reply->errorString()));
-        } else {
+        else {
             m_overview = QJsonDocument::fromJson(body).object().toVariantMap();
             emit overviewChanged();
         }
@@ -193,9 +244,9 @@ void ApiClient::fetchLeads()
     auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/leads"), true));
     connect(reply, &QNetworkReply::finished, this, [this, reply] {
         const QByteArray body = reply->readAll();
-        if (reply->error() != QNetworkReply::NoError) {
+        if (reply->error() != QNetworkReply::NoError)
             setError(apiErrorMessage(body, reply->errorString()));
-        } else {
+        else {
             m_leads = QJsonDocument::fromJson(body).array().toVariantList();
             emit leadsChanged();
         }
@@ -208,11 +259,86 @@ void ApiClient::fetchUnits()
     auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/units"), true));
     connect(reply, &QNetworkReply::finished, this, [this, reply] {
         const QByteArray body = reply->readAll();
-        if (reply->error() != QNetworkReply::NoError) {
+        if (reply->error() != QNetworkReply::NoError)
             setError(apiErrorMessage(body, reply->errorString()));
-        } else {
+        else {
             m_units = QJsonDocument::fromJson(body).array().toVariantList();
             emit unitsChanged();
+        }
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::fetchEnterpriseSummary()
+{
+    auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/enterprise-crm/summary"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError)
+            setError(apiErrorMessage(body, reply->errorString()));
+        else {
+            m_enterpriseSummary = QJsonDocument::fromJson(body).object().toVariantMap();
+            emit enterpriseSummaryChanged();
+        }
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::fetchProposals()
+{
+    auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/enterprise-crm/proposals"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError)
+            setError(apiErrorMessage(body, reply->errorString()));
+        else {
+            m_proposals = QJsonDocument::fromJson(body).array().toVariantList();
+            emit proposalsChanged();
+        }
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::fetchInvoices()
+{
+    auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/enterprise-crm/invoices"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError)
+            setError(apiErrorMessage(body, reply->errorString()));
+        else {
+            m_invoices = QJsonDocument::fromJson(body).array().toVariantList();
+            emit invoicesChanged();
+        }
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::fetchTickets()
+{
+    auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/enterprise-crm/tickets"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError)
+            setError(apiErrorMessage(body, reply->errorString()));
+        else {
+            m_tickets = QJsonDocument::fromJson(body).array().toVariantList();
+            emit ticketsChanged();
+        }
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::fetchReminders()
+{
+    auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/enterprise-crm/reminders?pending_only=true"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError)
+            setError(apiErrorMessage(body, reply->errorString()));
+        else {
+            m_reminders = QJsonDocument::fromJson(body).array().toVariantList();
+            emit remindersChanged();
         }
         reply->deleteLater();
     });
