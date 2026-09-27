@@ -4,7 +4,7 @@ AI-first, multi-tenant, white-label operating system for real-estate companies.
 
 ## Current release line
 
-**v1.5.0 — White-Label UX & Development Release**
+**v1.6.0 — White-Label Automation Studio Release**
 
 The product now has two isolated workspaces:
 
@@ -58,6 +58,7 @@ The platform separates exact transactional data from probabilistic AI:
 - Responsive desktop/mobile web UI.
 - Development-mode first-run skip plus one-click re-entry for repeated install/uninstall testing.
 - Internal Back navigation history that stays inside the application.
+- Visual Automation Studio with tenant-scoped workflow graphs, safe internal actions, routing and human approvals.
 - Separate About the System and About the Company sections.
 - Company logo, social links and custom white-label identity.
 - Integrated White-Label SEO Autopilot workspace copied from the preserved original SEO project.
@@ -74,6 +75,7 @@ The platform separates exact transactional data from probabilistic AI:
 - Provider credentials are encrypted at rest and secret values are never returned by read APIs.
 - Operational backup exports exclude password hashes and integration secret ciphertext.
 - Desktop runtime secrets are generated once per local data profile and are reused safely across uninstall/reinstall cycles; incompatible development databases are archived instead of overwritten.
+- Automation Studio exposes no shell/PowerShell execution and validates cross-tenant data access at action boundaries.
 
 ## Verification
 
@@ -125,3 +127,4 @@ docker compose up -d postgres redis n8n
 - [Commercial Platform v1.3.0](docs/COMMERCIAL_PLATFORM_V13.md)
 - [Verified Bank Transfer Billing v1.4.0](docs/BANK_TRANSFER_BILLING_V14.md)
 - [UX & Development Release v1.5.0](docs/UX_RELEASE_V15.md)
+- [Automation Studio v1.6.0](docs/AUTOMATION_STUDIO_V16.md)
