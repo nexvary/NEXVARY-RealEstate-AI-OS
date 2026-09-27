@@ -793,7 +793,7 @@ function ControlCenter({
     <div className="app" dir={dir} style={tenantStyle}>
       <aside className="sidebar">
         <div className={tenantSettings?.logo_data_url ? "logoMark tenantLogoMark" : "logoMark"}>
-          {tenantSettings?.logo_data_url ? <img src={tenantSettings.logo_data_url} alt={tenantSettings.brand_name || tenantSettings.name}/> : <img src="/assets/nexvary-logo.png" alt="NEXVARY"/>}
+          {tenantSettings?.logo_data_url ? <img src={tenantSettings.logo_data_url} alt={tenantSettings.brand_name || tenantSettings.name}/> : <img src="/assets/nexvary-logo.svg" alt="NEXVARY"/>}
         </div>
         <div className="brandBlock">
           <strong>{tenantSettings?.brand_name || t.brand}</strong>
@@ -967,7 +967,7 @@ function ControlCenter({
           {view === "systemAbout" && (
             <section className="aboutSystem">
               <div className="panel systemHero">
-                <div className="logoMark nexvaryLogoMark"><img src="/assets/nexvary-logo.png" alt="NEXVARY"/></div>
+                <div className="logoMark nexvaryLogoMark"><img src="/assets/nexvary-logo.svg" alt="NEXVARY"/></div>
                 <div>
                   <span className="eyebrow">NEXVARY REALESTATE AI OS · v1.8.0</span>
                   <h2>{locale === "ar" ? "عن النظام" : "About the System"}</h2>
@@ -1018,7 +1018,7 @@ function ControlCenter({
               >
                 <div className="companyCoverCircuit" aria-hidden="true"/>
                 <div className={tenantSettings?.logo_data_url ? "companyCoverLogo tenantLogoMark" : "companyCoverLogo nexvaryCoverLogo"}>
-                  <img src={tenantSettings?.logo_data_url || "/assets/nexvary-logo.png"} alt={tenantSettings?.brand_name || tenantSettings?.name || "NEXVARY"}/>
+                  <img src={tenantSettings?.logo_data_url || "/assets/nexvary-logo.svg"} alt={tenantSettings?.brand_name || tenantSettings?.name || "NEXVARY"}/>
                 </div>
                 <div className="companyCoverText">
                   <span className="eyebrow">{locale === "ar" ? "هوية الشركة" : "COMPANY IDENTITY"}</span>
