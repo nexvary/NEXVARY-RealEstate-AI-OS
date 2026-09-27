@@ -101,6 +101,11 @@ def bootstrap_first_owner(payload: BootstrapRequest, db: Session = Depends(get_d
                 tenant_id=tenant.id,
                 plan=TenantPlan.professional,
                 lifecycle=TenantLifecycle.active,
+                contact_email="info@nexvary.com",
+                website_url="https://nexvary.com/",
+                facebook_url="https://www.facebook.com/share/14p9krEn5ij/",
+                youtube_url="https://www.youtube.com/@NexvaryInc",
+                x_url="https://x.com/Nexvary",
                 **PLAN_DEFAULTS[TenantPlan.professional],
             )
         )
