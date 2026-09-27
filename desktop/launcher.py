@@ -14,7 +14,7 @@ from pathlib import Path
 
 APP_NAME = "NEXVARY RealEstate AI OS"
 APP_DIR_NAME = "NEXVARY-RealEstate-AI-OS"
-SCHEMA_GENERATION = "v1.5"
+SCHEMA_GENERATION = "v1.6"
 
 
 def resource_path(relative: str) -> Path:
