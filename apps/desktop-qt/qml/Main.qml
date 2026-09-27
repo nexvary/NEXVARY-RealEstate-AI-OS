@@ -20,6 +20,8 @@ ApplicationWindow {
         {page:"inventory", key:"inventory", symbol:"▦"},
         {page:"appointments", key:"appointments", symbol:"◫"},
         {page:"finance", key:"finance", symbol:"$"},
+        {page:"enterprise", key:"enterpriseCrm", symbol:"▣"},
+        {page:"timeline", key:"customerTimeline", symbol:"↯"},
         {page:"inbox", key:"inbox", symbol:"✉"},
         {page:"knowledge", key:"knowledge", symbol:"▤"},
         {page:"tasks", key:"tasks", symbol:"✓"},
@@ -266,7 +268,11 @@ ApplicationWindow {
                         ? loginComponent
                         : appState.currentPage === "dashboard"
                             ? dashboardComponent
-                            : migrationComponent
+                            : appState.currentPage === "enterprise"
+                                ? enterpriseComponent
+                                : appState.currentPage === "timeline"
+                                    ? timelineComponent
+                                    : migrationComponent
                 }
             }
         }
@@ -280,6 +286,16 @@ ApplicationWindow {
     Component {
         id: dashboardComponent
         DashboardPage {}
+    }
+
+    Component {
+        id: enterpriseComponent
+        EnterpriseCrmPage {}
+    }
+
+    Component {
+        id: timelineComponent
+        CustomerTimelinePage {}
     }
 
     Component {
