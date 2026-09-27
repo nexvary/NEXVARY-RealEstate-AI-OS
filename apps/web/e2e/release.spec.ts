@@ -40,7 +40,7 @@ test("desktop first-run, navigation, lead flow and back button", async ({ page, 
   await expect(page.locator('select[name="project_id"]').first()).toContainText("بوابة القاهرة");
 
   await page.getByRole("button", { name: "رجوع" }).click();
-  await expect(page.getByRole("heading", { name: "العملاء المحتملون" })).toBeVisible();
+  await expect(page.locator(".pageHeading h1").filter({ hasText: "العملاء المحتملون" })).toBeVisible();
 
   await page.getByRole("button", { name: "رجوع" }).click();
   await expect(page.getByText("مركز قيادة المبيعات")).toBeVisible();
@@ -59,7 +59,7 @@ test("system and company about sections are separate and reachable with internal
   await page.getByRole("button", { name: "تسجيل الدخول" }).click();
 
   await page.getByRole("button", { name: "عن النظام" }).click();
-  await expect(page.getByRole("heading", { name: "عن النظام" })).toBeVisible();
+  await expect(page.locator(".pageHeading h1").filter({ hasText: "عن النظام" })).toBeVisible();
   await expect(page.getByText("CRM والمبيعات")).toBeVisible();
   await expect(page.getByText("White-Label وSaaS")).toBeVisible();
   await expect(page.getByRole("link", { name: "NEXVARY" })).toBeVisible();
@@ -69,7 +69,7 @@ test("system and company about sections are separate and reachable with internal
   await expect(page.getByText("بيانات وهوية الشركة الحالية داخل منصة NEXVARY White-Label.")).toBeVisible();
 
   await page.getByRole("button", { name: "رجوع" }).click();
-  await expect(page.getByRole("heading", { name: "عن النظام" })).toBeVisible();
+  await expect(page.locator(".pageHeading h1").filter({ hasText: "عن النظام" })).toBeVisible();
 });
 
 test("platform admin creates and manages a second white-label company", async ({ page, isMobile }) => {
