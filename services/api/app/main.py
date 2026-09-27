@@ -20,6 +20,7 @@ from .setup_api import router as setup_router
 from .finance_api import router as finance_router
 from .growth_api import router as growth_router
 from .omnichannel_api import router as omnichannel_router
+from .property_sales_api import router as property_sales_router
 from .platform_api import router as platform_router
 from .workspace_api import router as workspace_router
 
@@ -59,6 +60,7 @@ app.include_router(workspace_router)
 app.include_router(finance_router)
 app.include_router(growth_router)
 app.include_router(omnichannel_router)
+app.include_router(property_sales_router)
 app.include_router(ai_router)
 app.include_router(automation_router)
 app.include_router(admin_router)
