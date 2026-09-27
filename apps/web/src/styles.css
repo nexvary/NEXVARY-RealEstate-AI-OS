@@ -2280,3 +2280,13 @@ header {
   .companyHeroCover { grid-template-columns:1fr; text-align:center; justify-items:center; }
   .companyCoverText p { font-size:12px; }
 }
+
+
+/* Physical grid direction: keep columns deterministic while content remains RTL */
+@media (min-width: 981px) {
+  .app { direction: ltr; }
+  .app[dir="rtl"] .sidebar,
+  .app[dir="rtl"] .main { direction: rtl; }
+  .app[dir="ltr"] .sidebar,
+  .app[dir="ltr"] .main { direction: ltr; }
+}
