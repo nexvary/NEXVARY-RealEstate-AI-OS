@@ -155,8 +155,21 @@ int main(int argc, char *argv[])
     });
 
     if (parser.isSet(smokeTestOption)) {
-        QTimer::singleShot(1800, &app, [&app] {
-            app.exit(0);
+        auto *smokeProbe = new QTimer(&app);
+        smokeProbe->setInterval(250);
+        QObject::connect(smokeProbe, &QTimer::timeout, &app, [&api, &app, smokeProbe] {
+            if (api.healthStatus() == QStringLiteral("ok") && api.setupKnown()) {
+                smokeProbe->stop();
+                app.exit(0);
+            }
+        });
+        smokeProbe->start();
+
+        QTimer::singleShot(12000, &app, [&api, &app, smokeProbe] {
+            if (smokeProbe->isActive()) {
+                smokeProbe->stop();
+                app.exit(api.healthStatus() == QStringLiteral("ok") ? 6 : 5);
+            }
         });
     } else if (parser.isSet(screenshotOption)) {
         const QString path = parser.value(screenshotOption);
