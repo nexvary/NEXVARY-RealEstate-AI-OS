@@ -39,7 +39,7 @@ Item {
             cityField.text = item.preferred_city || ""
             budgetField.text = item.budget === null || item.budget === undefined ? "" : String(item.budget)
             bedroomsField.value = item.bedrooms === null || item.bedrooms === undefined ? 0 : Number(item.bedrooms)
-            var statuses = ["new", "contacted", "qualified", "viewing", "negotiation", "won", "lost"]
+            var statuses = ["new", "qualified", "viewing", "negotiation", "won", "lost"]
             statusField.currentIndex = Math.max(0, statuses.indexOf(item.status || "new"))
             notesField.text = item.notes || ""
             open()
@@ -90,7 +90,7 @@ Item {
                 id: statusField
                 visible: leadDialog.editing
                 Layout.fillWidth: true
-                model: ["new", "contacted", "qualified", "viewing", "negotiation", "won", "lost"]
+                model: ["new", "qualified", "viewing", "negotiation", "won", "lost"]
             }
             TextArea {
                 id: notesField
