@@ -341,6 +341,39 @@ test("Automation Studio builds and runs a safe visual workflow", async ({ page, 
   await expect(page.getByRole("button", { name: "حفظ الرسم" })).toBeDisabled();
 });
 
+test("omnichannel sales inbox keeps unverified replies behind human handoff", async ({ page, isMobile }) => {
+  if (isMobile) test.skip();
+
+  await page.goto("/");
+  await page.getByLabel("معرّف الشركة").fill("nexvary-test");
+  await page.getByLabel("البريد الإلكتروني").fill("owner@nexvary.test");
+  await page.getByLabel("كلمة المرور").fill("ReleaseGate123!");
+  await page.getByRole("button", { name: "تسجيل الدخول" }).click();
+
+  await page.getByRole("button", { name: "المحادثات" }).click();
+  await expect(page.getByText("GROUNDED OMNICHANNEL SALES")).toBeVisible();
+
+  const creator = page.locator("form.salesConversationCreate");
+  await creator.locator('select[name="channel"]').selectOption("whatsapp");
+  await creator.locator('input[name="external_contact"]').fill("201099999999");
+  await creator.locator('input[name="display_name"]').fill("عميل Omnichannel");
+  await creator.getByRole("button", { name: "إضافة" }).click();
+
+  await expect(page.getByText("عميل Omnichannel")).toBeVisible();
+  await page.getByLabel("طريقة الرد").selectOption("voice");
+
+  const replyForm = page.locator("form").filter({ hasText: "تجهيز رد مبيعات مؤكد" });
+  await replyForm.getByLabel("سؤال العميل").fill("عايز فيلا 6 غرف في أسوان");
+  await replyForm.getByLabel("المدينة").fill("Aswan");
+  await replyForm.getByLabel("الغرف").fill("6");
+  await replyForm.getByLabel("نوع الوحدة").fill("villa");
+  await replyForm.getByRole("button", { name: "تجهيز الرد" }).click();
+
+  await expect(page.getByText("لا توجد إجابة تجارية مؤكدة؛ تم إنشاء تحويل لموظف.")).toBeVisible();
+  await expect(page.getByText("pending_approval")).toBeVisible();
+  await expect(page.getByText(/مطلوب موظف|No currently available unit matched/)).toBeVisible();
+});
+
 test("mobile layout exposes navigation and does not overflow core controls", async ({ page, isMobile }) => {
   if (!isMobile) test.skip();
 
