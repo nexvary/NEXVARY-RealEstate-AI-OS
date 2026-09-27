@@ -10,6 +10,7 @@ hiddenimports = [
     "uvicorn.protocols.http.auto",
     "uvicorn.protocols.websockets.auto",
     "uvicorn.lifespan.on",
+    "app.main",
 ]
 
 a = Analysis(
