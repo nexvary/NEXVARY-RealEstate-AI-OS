@@ -9,6 +9,11 @@ type Message = { id:string; direction:string; sender:string; body:string; create
 type SalesState = { conversation_id:string; reply_preference:string; journey_stage:string; lead_score:number; campaign_id?:string|null; ad_id?:string|null; auto_reply_enabled:boolean; handoff_required:boolean; handoff_reason?:string|null };
 type Outbox = { id:string; conversation_id:string; kind:string; body?:string|null; grounded:boolean; source_confidence:number; status:string; attempts:number; last_error?:string|null };
 type Campaign = { campaign_id:string; events:Record<string,number>; revenue:string };
+type PropertyContext = { id:string; conversation_id:string; campaign_id?:string|null; ad_id?:string|null; source_url?:string|null; project_id?:string|null; project_name?:string|null; project_city?:string|null; unit_id?:string|null; unit_code?:string|null };
+type PropertyMedia = { id:string; project_id?:string|null; unit_id?:string|null; title:string; media_type:string; url:string; source_kind:string; verified:boolean };
+type Referral = { id:string; channel:string; campaign_id?:string|null; ad_id:string; project_id:string; project_name:string; unit_id?:string|null; unit_code?:string|null; label?:string|null; source_url?:string|null };
+type Project = { id:string; name:string; city:string };
+type Unit = { id:string; project_id:string; code:string; unit_type:string; status:string };
 
 async function api<T>(path:string, token:string, init?:RequestInit):Promise<T>{
   const headers=new Headers(init?.headers); headers.set("Authorization","Bearer "+token);
@@ -28,6 +33,11 @@ export default function OmnichannelSales({token,locale}:{token:string;locale:Loc
   const [outbox,setOutbox]=useState<Outbox[]>([]);
   const [campaigns,setCampaigns]=useState<Campaign[]>([]);
   const [voicePlan,setVoicePlan]=useState<string[]>([]);
+  const [propertyContext,setPropertyContext]=useState<PropertyContext|null>(null);
+  const [propertyMedia,setPropertyMedia]=useState<PropertyMedia[]>([]);
+  const [referrals,setReferrals]=useState<Referral[]>([]);
+  const [projects,setProjects]=useState<Project[]>([]);
+  const [units,setUnits]=useState<Unit[]>([]);
   const [error,setError]=useState("");
   const [notice,setNotice]=useState("");
   const [busy,setBusy]=useState("");
@@ -39,18 +49,29 @@ export default function OmnichannelSales({token,locale}:{token:string;locale:Loc
     }catch(e){setError(e instanceof Error?e.message:"Load failed");}
   }
   async function loadSelected(id:string){
-    if(!id){setMessages([]);setState(null);setOutbox([]);return;}
+    if(!id){setMessages([]);setState(null);setOutbox([]);setPropertyContext(null);setPropertyMedia([]);return;}
     try{
-      const [m,s,o,a]=await Promise.all([
+      const [m,s,o,a,pc]=await Promise.all([
         api<Message[]>("/api/v1/inbox/conversations/"+id+"/messages",token),
         api<SalesState>("/api/v1/omnichannel/conversations/"+id+"/sales-state",token),
         api<Outbox[]>("/api/v1/omnichannel/outbox",token),
-        api<Campaign[]>("/api/v1/omnichannel/attribution/campaigns",token)
+        api<Campaign[]>("/api/v1/omnichannel/attribution/campaigns",token),
+        api<{context:PropertyContext|null}>("/api/v1/property-sales/conversations/"+id+"/context",token)
       ]);
-      setMessages(m); setState(s); setOutbox(o.filter((x)=>x.conversation_id===id)); setCampaigns(a);
+      setMessages(m); setState(s); setOutbox(o.filter((x)=>x.conversation_id===id)); setCampaigns(a); setPropertyContext(pc.context);
     }catch(e){setError(e instanceof Error?e.message:"Load failed");}
   }
-  useEffect(()=>{void loadConversations();},[token]);
+  async function loadPropertySales(){
+    try{
+      const [r,p,u]=await Promise.all([
+        api<Referral[]>("/api/v1/property-sales/ad-referrals",token),
+        api<Project[]>("/api/v1/projects",token),
+        api<Unit[]>("/api/v1/units",token)
+      ]);
+      setReferrals(r); setProjects(p); setUnits(u);
+    }catch(e){setError(e instanceof Error?e.message:"Property sales load failed");}
+  }
+  useEffect(()=>{void loadConversations();void loadPropertySales();},[token]);
   useEffect(()=>{void loadSelected(selected);},[selected,token]);
 
   async function createManual(event:FormEvent<HTMLFormElement>){
@@ -83,6 +104,7 @@ export default function OmnichannelSales({token,locale}:{token:string;locale:Loc
         unit_type:String(d.get("unit_type")||"")||null, source_confidence:0.95
       })});
       if(result.voice_plan?.segments)setVoicePlan(result.voice_plan.segments);
+      setPropertyMedia(Array.isArray(result.media)?result.media:[]);
       setNotice(result.requires_handoff
         ? (ar?"لا توجد إجابة تجارية مؤكدة؛ تم إنشاء تحويل لموظف.":"No verified commercial answer; a human handoff was created.")
         : result.approval_required
@@ -90,6 +112,32 @@ export default function OmnichannelSales({token,locale}:{token:string;locale:Loc
           : (ar?"الرد مؤكد ومسموح بالإرسال التلقائي.":"Grounded reply is eligible for automatic delivery."));
       await loadSelected(selected);
     }catch(e){setError(e instanceof Error?e.message:"Reply preparation failed");}
+    finally{setBusy("");}
+  }
+
+  async function createReferral(event:FormEvent<HTMLFormElement>){
+    event.preventDefault(); const form=event.currentTarget; const d=new FormData(form); setError(""); setNotice("");
+    try{
+      await api<Referral>("/api/v1/property-sales/ad-referrals",token,{method:"POST",body:JSON.stringify({
+        channel:"whatsapp",
+        campaign_id:String(d.get("campaign_id")||"").trim()||null,
+        ad_id:String(d.get("ad_id")||"").trim(),
+        project_id:String(d.get("project_id")||""),
+        unit_id:String(d.get("unit_id")||"")||null,
+        label:String(d.get("label")||"").trim()||null,
+        source_url:String(d.get("source_url")||"").trim()||null
+      })});
+      form.reset(); setNotice(ar?"تم ربط الإعلان بالعقار.":"Ad mapped to property."); await loadPropertySales();
+    }catch(e){setError(e instanceof Error?e.message:"Referral mapping failed");}
+  }
+
+  async function queueMedia(){
+    if(!selected||propertyMedia.length===0)return; setBusy("media"); setError(""); setNotice("");
+    try{
+      const rows=await api<any[]>("/api/v1/property-sales/conversations/"+selected+"/media-outbox",token,{method:"POST",body:JSON.stringify({asset_ids:propertyMedia.map((x)=>x.id).slice(0,10)})});
+      setNotice(ar?`تمت إضافة ${rows.length} وسائط موثقة إلى صندوق الإرسال.`:`${rows.length} verified media items queued.`);
+      await loadSelected(selected);
+    }catch(e){setError(e instanceof Error?e.message:"Media queue failed");}
     finally{setBusy("");}
   }
 
@@ -131,6 +179,7 @@ export default function OmnichannelSales({token,locale}:{token:string;locale:Loc
             <label className="autoReplyToggle"><input type="checkbox" checked={Boolean(state?.auto_reply_enabled)} onChange={(e)=>void patchState({auto_reply_enabled:e.target.checked})}/><span>{ar?"رد تلقائي مؤكد فقط":"Grounded auto-reply only"}</span></label>
           </div>
           {(state?.campaign_id||state?.ad_id)&&<div className="campaignContext"><Sparkles size={14}/><span>{(state?.campaign_id||"")+" "+(state?.ad_id?"· "+state.ad_id:"")}</span></div>}
+          {propertyContext&&<div className="campaignContext propertyContext"><ShieldCheck size={14}/><span>{ar?"العقار المرتبط: ":"Property context: "}{propertyContext.project_name||propertyContext.project_id}{propertyContext.unit_code?" · "+propertyContext.unit_code:""}{propertyContext.source_url&&<a href={propertyContext.source_url} target="_blank" rel="noreferrer">{ar?"مصدر الإعلان":"Ad source"}</a>}</span></div>}
           {state?.handoff_required&&<div className="handoffBadge"><Headphones size={14}/>{state.handoff_reason|| (ar?"مطلوب موظف":"Human required")}</div>}
           <div className="salesMessages">{messages.map((m)=><article key={m.id} className={"messageBubble "+m.direction}><small>{m.sender}</small><p>{m.body}</p></article>)}</div>
         </>}
@@ -143,6 +192,7 @@ export default function OmnichannelSales({token,locale}:{token:string;locale:Loc
         <div className="formGrid"><label>{ar?"المدينة":"City"}<input name="city"/></label><label>{ar?"أقصى سعر":"Max price"}<input name="max_price" type="number" min="0"/></label><label>{ar?"الغرف":"Bedrooms"}<input name="bedrooms" type="number" min="0"/></label><label>{ar?"نوع الوحدة":"Unit type"}<input name="unit_type"/></label></div>
         <button className="primaryButton" disabled={busy==="reply"}>{busy==="reply"?<RefreshCw size={16} className="spin"/>:<Bot size={16}/>} {ar?"تجهيز الرد":"Prepare reply"}</button>
         {voicePlan.length>0&&<div className="voicePlan"><Volume2 size={17}/><div><strong>{ar?"خطة صوت أنثوي احترافي":"Professional female voice plan"}</strong>{voicePlan.map((x,i)=><p key={i}>{String(i+1)+". "+x}</p>)}</div></div>}
+        {propertyMedia.length>0&&<div className="propertyMediaResult"><div className="opsTitle"><ShieldCheck size={17}/><strong>{ar?"وسائط العقار الموثقة":"Verified property media"}</strong></div><div className="propertyMediaCards">{propertyMedia.map((m)=><article key={m.id}><span>{m.media_type}</span><strong>{m.title}</strong><a href={m.url} target="_blank" rel="noreferrer">{ar?"فتح المصدر":"Open source"}</a></article>)}</div><button type="button" className="secondaryButton" disabled={busy==="media"} onClick={()=>void queueMedia()}><Send size={15}/>{ar?"إضافة الوسائط إلى Outbox":"Queue media to Outbox"}</button></div>}
       </form>
 
       <section className="panel outboxPanel"><div className="panelHead"><h3>{ar?"Outbox والموافقات":"Outbox & approvals"}</h3><span>{outbox.length}</span></div><div className="outboxList">{outbox.map((x)=><article key={x.id}><div>{x.status==="sent"?<CheckCircle2 size={17}/>:x.status==="rejected"?<XCircle size={17}/>:<Send size={17}/>}</div><div><strong>{x.kind+" · "+x.status}</strong><p>{x.body||"—"}</p><small>{(x.grounded?"grounded":"not grounded")+" · "+Number(x.source_confidence).toFixed(2)}</small>{x.last_error&&<small className="outboxError">{x.last_error}</small>}</div><div className="outboxActions">{x.status==="pending_approval"&&<><button className="secondaryButton" onClick={()=>void action(x.id,"approve")}>{ar?"اعتماد":"Approve"}</button><button className="secondaryButton" onClick={()=>void action(x.id,"reject")}>{ar?"رفض":"Reject"}</button></>}{x.status==="approved"&&<button className="primaryButton" onClick={()=>void action(x.id,"dispatch")}>{ar?"إرسال رسمي":"Dispatch"}</button>}</div></article>)}</div></section>
