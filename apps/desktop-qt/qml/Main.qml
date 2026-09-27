@@ -272,7 +272,9 @@ ApplicationWindow {
                                 ? leadsComponent
                                 : appState.currentPage === "inventory"
                                     ? inventoryComponent
-                                    : appState.currentPage === "finance"
+                                    : appState.currentPage === "appointments"
+                                        ? appointmentsComponent
+                                        : appState.currentPage === "finance"
                                         ? financeComponent
                                         : appState.currentPage === "enterprise"
                                             ? enterpriseComponent
@@ -302,6 +304,11 @@ ApplicationWindow {
     Component {
         id: inventoryComponent
         InventoryPage {}
+    }
+
+    Component {
+        id: appointmentsComponent
+        AppointmentsPage {}
     }
 
     Component {
