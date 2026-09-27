@@ -20,6 +20,7 @@ from .setup_api import router as setup_router
 from .finance_api import router as finance_router
 from .platform_api import router as platform_router
 from .workspace_api import router as workspace_router
+from .omnichannel_api import router as omnichannel_router
 
 settings = get_settings()
 validate_production_secrets()
@@ -54,6 +55,7 @@ def health() -> dict[str, str]:
 app.include_router(setup_router)
 app.include_router(router)
 app.include_router(workspace_router)
+app.include_router(omnichannel_router)
 app.include_router(finance_router)
 app.include_router(ai_router)
 app.include_router(automation_router)
