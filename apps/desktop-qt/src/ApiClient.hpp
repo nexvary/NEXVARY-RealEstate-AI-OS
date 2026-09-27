@@ -49,6 +49,13 @@ class ApiClient final : public QObject
     Q_PROPERTY(QVariantList growthPlaybooks READ growthPlaybooks NOTIFY growthPlaybooksChanged)
     Q_PROPERTY(QVariantList growthFeedback READ growthFeedback NOTIFY growthFeedbackChanged)
     Q_PROPERTY(QVariantMap growthFeedbackSummary READ growthFeedbackSummary NOTIFY growthFeedbackSummaryChanged)
+    Q_PROPERTY(QVariantList seoProjects READ seoProjects NOTIFY seoProjectsChanged)
+    Q_PROPERTY(QVariantMap seoDashboard READ seoDashboard NOTIFY seoDashboardChanged)
+    Q_PROPERTY(QVariantList seoOpportunities READ seoOpportunities NOTIFY seoOpportunitiesChanged)
+    Q_PROPERTY(QVariantList seoPlans READ seoPlans NOTIFY seoPlansChanged)
+    Q_PROPERTY(QVariantList seoSnapshots READ seoSnapshots NOTIFY seoSnapshotsChanged)
+    Q_PROPERTY(QVariantMap seoLastResult READ seoLastResult NOTIFY seoLastResultChanged)
+    Q_PROPERTY(QString selectedSeoProjectId READ selectedSeoProjectId NOTIFY seoDashboardChanged)
     Q_PROPERTY(QVariantMap enterpriseSummary READ enterpriseSummary NOTIFY enterpriseSummaryChanged)
     Q_PROPERTY(QVariantList proposals READ proposals NOTIFY proposalsChanged)
     Q_PROPERTY(QVariantList invoices READ invoices NOTIFY invoicesChanged)
@@ -97,6 +104,13 @@ public:
     QVariantList growthPlaybooks() const;
     QVariantList growthFeedback() const;
     QVariantMap growthFeedbackSummary() const;
+    QVariantList seoProjects() const;
+    QVariantMap seoDashboard() const;
+    QVariantList seoOpportunities() const;
+    QVariantList seoPlans() const;
+    QVariantList seoSnapshots() const;
+    QVariantMap seoLastResult() const;
+    QString selectedSeoProjectId() const;
     QVariantMap enterpriseSummary() const;
     QVariantList proposals() const;
     QVariantList invoices() const;
@@ -155,6 +169,13 @@ public:
     Q_INVOKABLE void createGrowthMedia(const QString &projectId, const QString &unitId, const QString &title, const QString &mediaType, const QString &url, const QString &sourceKind, bool verified);
     Q_INVOKABLE void createGrowthPlaybook(const QString &name, const QString &description, const QString &triggerStage, const QString &stepsText);
     Q_INVOKABLE void createGrowthFeedback(const QString &leadId, const QString &conversationId, const QString &channel, const QString &category, int rating, const QString &comment);
+    Q_INVOKABLE void refreshSeo();
+    Q_INVOKABLE void selectSeoProject(const QString &projectId);
+    Q_INVOKABLE void createSeoProject(const QString &name, const QString &siteUrl);
+    Q_INVOKABLE void runSeoAudit(const QString &projectId, const QString &targetUrl);
+    Q_INVOKABLE void runSeoCrawl(const QString &projectId, int maxPages, int concurrency);
+    Q_INVOKABLE void loadSeoOpportunities(const QString &projectId);
+    Q_INVOKABLE void planSeoChange(const QString &projectId, const QString &targetUrl, const QString &action, const QString &reason);
 
 signals:
     void baseUrlChanged();
@@ -189,6 +210,12 @@ signals:
     void growthPlaybooksChanged();
     void growthFeedbackChanged();
     void growthFeedbackSummaryChanged();
+    void seoProjectsChanged();
+    void seoDashboardChanged();
+    void seoOpportunitiesChanged();
+    void seoPlansChanged();
+    void seoSnapshotsChanged();
+    void seoLastResultChanged();
     void enterpriseSummaryChanged();
     void proposalsChanged();
     void invoicesChanged();
@@ -222,6 +249,10 @@ private:
     void fetchGrowthPlaybooks();
     void fetchGrowthFeedback();
     void fetchGrowthFeedbackSummary();
+    void fetchSeoProjects();
+    void fetchSeoDashboard(const QString &projectId);
+    void fetchSeoPlans(const QString &projectId);
+    void fetchSeoSnapshots(const QString &projectId);
     void fetchEnterpriseSummary();
     void fetchProposals();
     void fetchInvoices();
@@ -265,6 +296,13 @@ private:
     QVariantList m_growthPlaybooks;
     QVariantList m_growthFeedback;
     QVariantMap m_growthFeedbackSummary;
+    QVariantList m_seoProjects;
+    QVariantMap m_seoDashboard;
+    QVariantList m_seoOpportunities;
+    QVariantList m_seoPlans;
+    QVariantList m_seoSnapshots;
+    QVariantMap m_seoLastResult;
+    QString m_selectedSeoProjectId;
     QVariantMap m_enterpriseSummary;
     QVariantList m_proposals;
     QVariantList m_invoices;
