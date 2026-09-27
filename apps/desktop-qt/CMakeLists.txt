@@ -57,6 +57,7 @@ set(NEXVARY_QML_FILES
     qml/AiSalesPage.qml
     qml/AboutSystemPage.qml
     qml/SidebarItem.qml
+    qml/NavIcon.qml
 )
 
 # Keep every QML type at the URI root. Without explicit aliases, an installed

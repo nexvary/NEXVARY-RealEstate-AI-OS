@@ -18,6 +18,7 @@
 #include <QDir>
 #include <QTcpServer>
 #include <QHostAddress>
+#include <QIcon>
 
 int main(int argc, char *argv[])
 {
@@ -25,7 +26,8 @@ int main(int argc, char *argv[])
     QGuiApplication::setOrganizationName(QStringLiteral("NEXVARY"));
     QGuiApplication::setOrganizationDomain(QStringLiteral("nexvary.com"));
     QGuiApplication::setApplicationName(QStringLiteral("NEXVARY RealEstate AI OS"));
-    QGuiApplication::setApplicationVersion(QStringLiteral("2.0.0"));
+    QGuiApplication::setApplicationVersion(QStringLiteral("2.0.1"));
+    QGuiApplication::setWindowIcon(QIcon(QStringLiteral(":/qt/qml/Nexvary/RealEstate/assets/nexvary-mark.svg")));
 
     QQuickStyle::setStyle(QStringLiteral("Basic"));
 

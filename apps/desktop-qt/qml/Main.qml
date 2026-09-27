@@ -15,24 +15,24 @@ ApplicationWindow {
 
     property real uiScale: Math.max(0.92, Math.min(1.22, width / 1600.0))
     property var navItems: [
-        {page:"dashboard", key:"dashboard", symbol:"⌂"},
-        {page:"leads", key:"leads", symbol:"◎"},
-        {page:"inventory", key:"inventory", symbol:"▦"},
-        {page:"appointments", key:"appointments", symbol:"◫"},
-        {page:"finance", key:"finance", symbol:"$"},
-        {page:"enterprise", key:"enterpriseCrm", symbol:"▣"},
-        {page:"timeline", key:"customerTimeline", symbol:"↯"},
-        {page:"inbox", key:"inbox", symbol:"✉"},
-        {page:"knowledge", key:"knowledge", symbol:"▤"},
-        {page:"tasks", key:"tasks", symbol:"✓"},
-        {page:"team", key:"team", symbol:"♙"},
-        {page:"settings", key:"settings", symbol:"⚙"},
-        {page:"ai", key:"ai", symbol:"✦"},
-        {page:"seo", key:"seo", symbol:"⌕"},
-        {page:"growth", key:"growth", symbol:"◉"},
-        {page:"automation", key:"automation", symbol:"↻"},
-        {page:"about", key:"about", symbol:"ⓘ"},
-        {page:"company", key:"company", symbol:"◆"}
+        {page:"dashboard", key:"dashboard", icon:"home"},
+        {page:"leads", key:"leads", icon:"leads"},
+        {page:"inventory", key:"inventory", icon:"inventory"},
+        {page:"appointments", key:"appointments", icon:"calendar"},
+        {page:"finance", key:"finance", icon:"finance"},
+        {page:"enterprise", key:"enterpriseCrm", icon:"enterprise"},
+        {page:"timeline", key:"customerTimeline", icon:"timeline"},
+        {page:"inbox", key:"inbox", icon:"inbox"},
+        {page:"knowledge", key:"knowledge", icon:"book"},
+        {page:"tasks", key:"tasks", icon:"tasks"},
+        {page:"team", key:"team", icon:"team"},
+        {page:"settings", key:"settings", icon:"settings"},
+        {page:"ai", key:"ai", icon:"ai"},
+        {page:"seo", key:"seo", icon:"search"},
+        {page:"growth", key:"growth", icon:"growth"},
+        {page:"automation", key:"automation", icon:"automation"},
+        {page:"about", key:"about", icon:"about"},
+        {page:"company", key:"company", icon:"company"}
     ]
 
     RowLayout {
@@ -130,7 +130,7 @@ ApplicationWindow {
                                 required property var modelData
                                 required property int index
                                 label: appState.t(modelData.key)
-                                symbol: modelData.symbol
+                                iconName: modelData.icon
                                 pageId: modelData.page
                                 itemIndex: index
                             }

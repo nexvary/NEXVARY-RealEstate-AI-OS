@@ -17,6 +17,30 @@ APP_DIR_NAME = "NEXVARY-RealEstate-AI-OS"
 SCHEMA_GENERATION = "v1.8"
 
 
+def archive_orphaned_sqlite_sidecars(data_dir: Path) -> list[Path]:
+    """Archive WAL/SHM files left behind after a manual database rename."""
+    database_file = data_dir / "realestate.db"
+    if database_file.exists():
+        return []
+
+    orphaned = [
+        path
+        for path in (Path(str(database_file) + "-wal"), Path(str(database_file) + "-shm"))
+        if path.exists()
+    ]
+    if not orphaned:
+        return []
+
+    backup_dir = data_dir / "recovery-backups" / time.strftime("%Y%m%d-%H%M%S")
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    archived: list[Path] = []
+    for path in orphaned:
+        target = backup_dir / path.name
+        shutil.move(str(path), str(target))
+        archived.append(target)
+    return archived
+
+
 def resource_path(relative: str) -> Path:
     base = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parents[1]))
     return base / relative
@@ -54,6 +78,7 @@ def configure_runtime() -> tuple[Path, Path]:
     local_app_data = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
     data_dir = local_app_data / "NEXVARY" / APP_DIR_NAME
     data_dir.mkdir(parents=True, exist_ok=True)
+    archive_orphaned_sqlite_sidecars(data_dir)
     archive_incompatible_development_database(data_dir)
 
     secrets_file = data_dir / "runtime-secrets.json"

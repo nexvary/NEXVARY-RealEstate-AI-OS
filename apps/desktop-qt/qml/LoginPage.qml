@@ -83,6 +83,7 @@ Item {
                 Layout.preferredHeight: 48
                 placeholderText: appState.t("companyId")
                 horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
+                onTextChanged: apiClient.clearError()
             }
 
             TextField {
@@ -92,6 +93,7 @@ Item {
                 placeholderText: appState.t("email")
                 inputMethodHints: Qt.ImhEmailCharactersOnly
                 horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
+                onTextChanged: apiClient.clearError()
             }
 
             TextField {
@@ -102,6 +104,7 @@ Item {
                 echoMode: TextInput.Password
                 horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
                 onAccepted: loginButton.clicked()
+                onTextChanged: apiClient.clearError()
             }
 
             Rectangle {
@@ -129,7 +132,8 @@ Item {
                 id: loginButton
                 Layout.fillWidth: true
                 Layout.preferredHeight: 50
-                enabled: !apiClient.busy
+                enabled: !apiClient.busy && tenant.text.trim().length > 0
+                    && email.text.trim().length > 0 && password.text.length > 0
                 text: apiClient.busy ? "…" : appState.t("signIn")
                 onClicked: apiClient.login(tenant.text, email.text, password.text)
 
@@ -144,6 +148,31 @@ Item {
                     color: "#02101A"
                     font.bold: true
                     font.pixelSize: 14
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+            }
+
+            Button {
+                id: developmentButton
+                visible: apiClient.developmentWorkspace
+                Layout.fillWidth: true
+                Layout.preferredHeight: 46
+                enabled: !apiClient.busy
+                text: appState.rtl ? "فتح مساحة العمل السابقة" : "Open previous workspace"
+                onClicked: apiClient.resumeDevelopmentWorkspace()
+
+                background: Rectangle {
+                    radius: 11
+                    color: developmentButton.down ? "#122C40" : "#0B1C2A"
+                    border.width: 1
+                    border.color: Theme.gold
+                }
+                contentItem: Text {
+                    text: developmentButton.text
+                    color: Theme.gold
+                    font.bold: true
+                    font.pixelSize: 13
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }

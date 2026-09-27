@@ -58,6 +58,7 @@ QString ApiClient::userRole() const { return m_userRole; }
 QString ApiClient::healthStatus() const { return m_healthStatus; }
 bool ApiClient::setupKnown() const { return m_setupKnown; }
 bool ApiClient::needsSetup() const { return m_needsSetup; }
+bool ApiClient::developmentWorkspace() const { return m_developmentWorkspace; }
 QVariantMap ApiClient::overview() const { return m_overview; }
 QVariantList ApiClient::leads() const { return m_leads; }
 QVariantList ApiClient::units() const { return m_units; }
@@ -142,6 +143,11 @@ void ApiClient::setError(const QString &message)
     emit lastErrorChanged();
 }
 
+void ApiClient::clearError()
+{
+    setError(QString());
+}
+
 void ApiClient::health()
 {
     if (m_healthRequestInFlight)
@@ -191,13 +197,47 @@ void ApiClient::fetchSetupStatus()
         if (reply->error() == QNetworkReply::NoError) {
             const QJsonObject object = QJsonDocument::fromJson(body).object();
             const bool nextNeedsSetup = object.value(QStringLiteral("needs_setup")).toBool(false);
-            const bool changed = !m_setupKnown || m_needsSetup != nextNeedsSetup;
+            const bool nextDevelopmentWorkspace = object.value(QStringLiteral("development_workspace")).toBool(false);
+            const bool changed = !m_setupKnown || m_needsSetup != nextNeedsSetup ||
+                m_developmentWorkspace != nextDevelopmentWorkspace;
             m_setupKnown = true;
             m_needsSetup = nextNeedsSetup;
+            m_developmentWorkspace = nextDevelopmentWorkspace;
             if (changed)
                 emit setupStatusChanged();
         }
         reply->deleteLater();
+    });
+}
+
+void ApiClient::resumeDevelopmentWorkspace()
+{
+    if (!m_developmentWorkspace || m_busy)
+        return;
+
+    setBusy(true);
+    setError(QString());
+    auto *reply = m_network.post(
+        makeRequest(QStringLiteral("/api/v1/auth/development-session"), false),
+        QByteArray());
+
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) {
+            setError(apiErrorMessage(body, reply->errorString()));
+            setBusy(false);
+            reply->deleteLater();
+            return;
+        }
+
+        const QJsonObject object = QJsonDocument::fromJson(body).object();
+        m_token = object.value(QStringLiteral("access_token")).toString();
+        m_userName = object.value(QStringLiteral("user_name")).toString();
+        m_userRole = object.value(QStringLiteral("role")).toString();
+        setBusy(false);
+        emit sessionChanged();
+        reply->deleteLater();
+        refreshAll();
     });
 }
 

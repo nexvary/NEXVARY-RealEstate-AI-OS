@@ -6,7 +6,7 @@ import "Theme.js" as Theme
 Rectangle {
     id: root
     required property string label
-    required property string symbol
+    required property string iconName
     required property string pageId
     required property int itemIndex
     property bool active: appState.currentPage === pageId
@@ -35,12 +35,12 @@ Rectangle {
             border.width: 1
             border.color: Qt.rgba(0.55, 0.70, 0.80, 0.18)
 
-            Text {
+            NavIcon {
                 anchors.centerIn: parent
-                text: root.symbol
-                color: Theme.accentFor(root.itemIndex)
-                font.pixelSize: 16
-                font.bold: true
+                width: 21
+                height: 21
+                iconName: root.iconName
+                accent: Theme.accentFor(root.itemIndex)
             }
         }
 

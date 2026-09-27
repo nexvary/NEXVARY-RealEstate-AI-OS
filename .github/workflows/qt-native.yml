@@ -154,7 +154,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $installer = Resolve-Path "native-installer\NEXVARY-RealEstate-AI-OS-v2.0.0-Windows-Setup.exe"
+          $installer = Resolve-Path "native-installer\NEXVARY-RealEstate-AI-OS-v2.0.1-Windows-Setup.exe"
           $installDir = Join-Path $PWD "native-installed"
           New-Item -ItemType Directory -Force -Path $installDir | Out-Null
 
@@ -192,7 +192,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $file = Get-ChildItem "native-installer\NEXVARY-RealEstate-AI-OS-v2.0.0-Windows-Setup.exe"
+          $file = Get-ChildItem "native-installer\NEXVARY-RealEstate-AI-OS-v2.0.1-Windows-Setup.exe"
           $hash = (Get-FileHash $file.FullName -Algorithm SHA256).Hash.ToLower()
           "$hash  $($file.Name)" | Out-File -Encoding ascii "native-installer\SHA256.txt"
           Get-Content "native-installer\SHA256.txt"
@@ -201,9 +201,9 @@ jobs:
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
         with:
-          name: NEXVARY-RealEstate-AI-OS-v2.0.0-Windows
+          name: NEXVARY-RealEstate-AI-OS-v2.0.1-Windows
           path: |
-            native-installer/NEXVARY-RealEstate-AI-OS-v2.0.0-Windows-Setup.exe
+            native-installer/NEXVARY-RealEstate-AI-OS-v2.0.1-Windows-Setup.exe
             native-installer/SHA256.txt
             native-dist/smoke/*.log
             native-installer/install-smoke/*.log
