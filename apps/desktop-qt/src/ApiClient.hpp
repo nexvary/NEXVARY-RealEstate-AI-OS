@@ -31,6 +31,17 @@ class ApiClient final : public QObject
     Q_PROPERTY(QVariantList commissions READ commissions NOTIFY commissionsChanged)
     Q_PROPERTY(QVariantList appointments READ appointments NOTIFY appointmentsChanged)
     Q_PROPERTY(QVariantMap tenantSettings READ tenantSettings NOTIFY tenantSettingsChanged)
+    Q_PROPERTY(QVariantList users READ users NOTIFY usersChanged)
+    Q_PROPERTY(QVariantList knowledgeDocuments READ knowledgeDocuments NOTIFY knowledgeDocumentsChanged)
+    Q_PROPERTY(QVariantList knowledgeHits READ knowledgeHits NOTIFY knowledgeHitsChanged)
+    Q_PROPERTY(QVariantList conversations READ conversations NOTIFY conversationsChanged)
+    Q_PROPERTY(QVariantList messages READ messages NOTIFY messagesChanged)
+    Q_PROPERTY(QVariantList tasks READ tasks NOTIFY tasksChanged)
+    Q_PROPERTY(QVariantList outbox READ outbox NOTIFY outboxChanged)
+    Q_PROPERTY(QVariantList whatsappChannels READ whatsappChannels NOTIFY whatsappChannelsChanged)
+    Q_PROPERTY(QVariantMap salesState READ salesState NOTIFY salesStateChanged)
+    Q_PROPERTY(QVariantMap groundedReply READ groundedReply NOTIFY groundedReplyChanged)
+    Q_PROPERTY(QString selectedConversationId READ selectedConversationId NOTIFY messagesChanged)
     Q_PROPERTY(QVariantMap enterpriseSummary READ enterpriseSummary NOTIFY enterpriseSummaryChanged)
     Q_PROPERTY(QVariantList proposals READ proposals NOTIFY proposalsChanged)
     Q_PROPERTY(QVariantList invoices READ invoices NOTIFY invoicesChanged)
@@ -61,6 +72,17 @@ public:
     QVariantList commissions() const;
     QVariantList appointments() const;
     QVariantMap tenantSettings() const;
+    QVariantList users() const;
+    QVariantList knowledgeDocuments() const;
+    QVariantList knowledgeHits() const;
+    QVariantList conversations() const;
+    QVariantList messages() const;
+    QVariantList tasks() const;
+    QVariantList outbox() const;
+    QVariantList whatsappChannels() const;
+    QVariantMap salesState() const;
+    QVariantMap groundedReply() const;
+    QString selectedConversationId() const;
     QVariantMap enterpriseSummary() const;
     QVariantList proposals() const;
     QVariantList invoices() const;
@@ -96,6 +118,23 @@ public:
     Q_INVOKABLE void payCommission(const QString &commissionId);
     Q_INVOKABLE void updateTenantSettings(const QString &brandName, const QString &primaryColor, const QString &logoDataUrl, const QString &coverDataUrl, const QString &email, const QString &website, const QString &facebook, const QString &linkedin, const QString &youtube, const QString &xUrl, const QString &tiktok);
     Q_INVOKABLE QString imageFileToDataUrl(const QUrl &fileUrl, int maxBytes);
+    Q_INVOKABLE void refreshWorkspace();
+    Q_INVOKABLE void createUser(const QString &email, const QString &displayName, const QString &password, const QString &role);
+    Q_INVOKABLE void createKnowledgeDocument(const QString &title, const QString &category, const QString &sourceName, const QString &content);
+    Q_INVOKABLE void queryKnowledge(const QString &question);
+    Q_INVOKABLE void createConversation(const QString &leadId, const QString &channel, const QString &externalContact, const QString &displayName);
+    Q_INVOKABLE void loadMessages(const QString &conversationId);
+    Q_INVOKABLE void sendMessage(const QString &conversationId, const QString &direction, const QString &sender, const QString &body);
+    Q_INVOKABLE void createTask(const QString &leadId, const QString &assignedUserId, const QString &title, const QString &notes, const QString &dueAtIso);
+    Q_INVOKABLE void completeTask(const QString &taskId);
+    Q_INVOKABLE void loadSalesState(const QString &conversationId);
+    Q_INVOKABLE void updateSalesState(const QString &conversationId, const QString &replyPreference, const QString &journeyStage, int leadScore, const QString &assignedUserId, bool autoReplyEnabled);
+    Q_INVOKABLE void prepareGroundedReply(const QString &conversationId, const QString &question, const QString &city, double maxPrice, int bedrooms, const QString &unitType, const QString &channelId);
+    Q_INVOKABLE void requestHandoff(const QString &conversationId, const QString &reason, const QString &assignToUserId);
+    Q_INVOKABLE void approveOutbox(const QString &outboxId);
+    Q_INVOKABLE void rejectOutbox(const QString &outboxId);
+    Q_INVOKABLE void dispatchOutbox(const QString &outboxId);
+    Q_INVOKABLE void createWhatsAppChannel(const QString &displayName, const QString &phoneNumberId, const QString &wabaId, const QString &businessPhone, const QString &graphVersion, const QString &accessToken, const QString &appSecret, bool isDefault, bool enabled);
 
 signals:
     void baseUrlChanged();
@@ -113,6 +152,16 @@ signals:
     void commissionsChanged();
     void appointmentsChanged();
     void tenantSettingsChanged();
+    void usersChanged();
+    void knowledgeDocumentsChanged();
+    void knowledgeHitsChanged();
+    void conversationsChanged();
+    void messagesChanged();
+    void tasksChanged();
+    void outboxChanged();
+    void whatsappChannelsChanged();
+    void salesStateChanged();
+    void groundedReplyChanged();
     void enterpriseSummaryChanged();
     void proposalsChanged();
     void invoicesChanged();
@@ -133,6 +182,12 @@ private:
     void fetchCommissions();
     void fetchAppointments();
     void fetchTenantSettings();
+    void fetchUsers();
+    void fetchKnowledgeDocuments();
+    void fetchConversations();
+    void fetchTasks();
+    void fetchOutbox();
+    void fetchWhatsAppChannels();
     void fetchEnterpriseSummary();
     void fetchProposals();
     void fetchInvoices();
@@ -158,6 +213,17 @@ private:
     QVariantList m_commissions;
     QVariantList m_appointments;
     QVariantMap m_tenantSettings;
+    QVariantList m_users;
+    QVariantList m_knowledgeDocuments;
+    QVariantList m_knowledgeHits;
+    QVariantList m_conversations;
+    QVariantList m_messages;
+    QVariantList m_tasks;
+    QVariantList m_outbox;
+    QVariantList m_whatsappChannels;
+    QVariantMap m_salesState;
+    QVariantMap m_groundedReply;
+    QString m_selectedConversationId;
     QVariantMap m_enterpriseSummary;
     QVariantList m_proposals;
     QVariantList m_invoices;
