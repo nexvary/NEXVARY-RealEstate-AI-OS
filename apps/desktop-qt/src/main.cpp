@@ -12,6 +12,9 @@
 #include <QTimer>
 #include <QProcess>
 #include <QFileInfo>
+#include <QFile>
+#include <QTextStream>
+#include <QQmlError>
 #include <QDir>
 #include <QTcpServer>
 #include <QHostAddress>
@@ -105,9 +108,28 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty(QStringLiteral("appState"), &state);
     engine.rootContext()->setContextProperty(QStringLiteral("apiClient"), &api);
 
+    QStringList qmlDiagnostics;
+    QObject::connect(&engine, &QQmlApplicationEngine::warnings, &app, [&qmlDiagnostics](const QList<QQmlError> &warnings) {
+        for (const QQmlError &warning : warnings)
+            qmlDiagnostics.append(warning.toString());
+    });
+
     engine.loadFromModule(QStringLiteral("Nexvary.RealEstate"), QStringLiteral("Main"));
-    if (engine.rootObjects().isEmpty())
+    if (engine.rootObjects().isEmpty()) {
+        const QString logPath = qEnvironmentVariable("NEXVARY_QT_LOG");
+        if (!logPath.isEmpty()) {
+            QFile logFile(logPath);
+            if (logFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+                QTextStream stream(&logFile);
+                stream << "NEXVARY Qt QML startup failure\n";
+                stream << "applicationDir=" << QCoreApplication::applicationDirPath() << "\n";
+                stream << "importPaths=" << engine.importPathList().join(QStringLiteral(";")) << "\n";
+                for (const QString &line : qmlDiagnostics)
+                    stream << line << "\n";
+            }
+        }
         return 2;
+    }
 
     auto *window = qobject_cast<QQuickWindow *>(engine.rootObjects().constFirst());
     if (!window)
