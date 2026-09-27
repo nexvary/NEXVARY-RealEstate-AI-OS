@@ -1018,7 +1018,7 @@ function ControlCenter({
       </main>
 
       <div className="mobileNav">
-        {visibleNavItems.filter((item) => !["systemAbout", "companyAbout"].includes(item.id)).map(({ id, icon: Icon, key }) => (
+        {visibleNavItems.map(({ id, icon: Icon, key }) => (
           <button key={id} className={view === id ? "active" : ""} onClick={() => setView(id)} aria-label={t[key]}>
             <Icon size={20}/>
           </button>
