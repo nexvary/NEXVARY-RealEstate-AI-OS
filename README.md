@@ -62,6 +62,10 @@ The platform separates exact transactional data from probabilistic AI:
 - Separate About the System and About the Company sections.
 - Company logo, social links and custom white-label identity.
 - Integrated White-Label SEO Autopilot workspace copied from the preserved original SEO project.
+- Grounded omnichannel sales inbox with inbound dedupe, customer journey state and human handoff.
+- Approval-aware outbound queue with official WhatsApp Cloud API dispatch when tenant credentials are configured.
+- Persistent text/voice preference and professional female voice reply planning.
+- Campaign/ad attribution from first conversation through commercial events and revenue.
 - Technical audits, bounded crawling, Search Console read-only analytics, opportunities, schema, performance and guarded dry-run SEO planning.
 - Per-tenant WhatsApp channel configuration with encrypted credentials and readiness checks.
 - Transactional SEO page generation for real-estate projects and units, including price and availability sourced directly from the database.
@@ -125,6 +129,7 @@ docker compose up -d postgres redis n8n
 - [Platform Admin & White Label](docs/PLATFORM_ADMIN.md)
 - [White-Label SEO Autopilot integration](docs/SEO_AUTOPILOT_INTEGRATION.md)
 - [Commercial Platform v1.3.0](docs/COMMERCIAL_PLATFORM_V13.md)
+- [Omnichannel Sales v1.7.0](docs/OMNICHANNEL_SALES_V17.md)
 - [Verified Bank Transfer Billing v1.4.0](docs/BANK_TRANSFER_BILLING_V14.md)
 - [UX & Development Release v1.5.0](docs/UX_RELEASE_V15.md)
 - [Automation Studio v1.6.0](docs/AUTOMATION_STUDIO_V16.md)
