@@ -511,6 +511,7 @@ type TenantSettings = {
   brand_name?: string | null;
   primary_color: string;
   logo_data_url?: string | null;
+  cover_data_url?: string | null;
   contact_email?: string | null;
   website_url?: string | null;
   facebook_url?: string | null;
@@ -548,6 +549,7 @@ export function SettingsOps({
   const [error, setError] = useState("");
   const [saved, setSaved] = useState("");
   const [logoData, setLogoData] = useState<string | null>(null);
+  const [coverData, setCoverData] = useState<string | null>(null);
 
   async function load() {
     try {
@@ -557,6 +559,7 @@ export function SettingsOps({
       ]);
       setSettings(s);
       setLogoData(s.logo_data_url || null);
+      setCoverData(s.cover_data_url || null);
       setAudit(a);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Load failed");
@@ -577,6 +580,7 @@ export function SettingsOps({
           brand_name: String(data.get("brand_name") || "").trim(),
           primary_color: String(data.get("primary_color") || "#0B1F33"),
           logo_data_url: logoData,
+          cover_data_url: coverData,
           contact_email: String(data.get("contact_email") || "").trim() || null,
           website_url: String(data.get("website_url") || "").trim() || null,
           facebook_url: String(data.get("facebook_url") || "").trim() || null,
@@ -648,6 +652,26 @@ export function SettingsOps({
             }}/>
           </label>
           {logoData && <button type="button" className="secondaryButton" onClick={() => setLogoData(null)}>{ar ? "إزالة الشعار" : "Remove logo"}</button>}
+        </div>
+        <div className="brandCoverEditor">
+          <div className="brandCoverPreview" style={coverData ? { backgroundImage: `linear-gradient(90deg, rgba(2,8,16,.62), rgba(2,8,16,.22)), url("${coverData}")` } : undefined}>
+            {!coverData && <><span>NEXVARY</span><small>{ar ? "غلاف الشركة" : "Company cover"}</small></>}
+          </div>
+          <label>{ar ? "صورة غلاف الشركة PNG/JPG/WEBP" : "Company cover PNG/JPG/WEBP"}
+            <input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (!file) return;
+              if (file.size > 3_000_000) {
+                setError(ar ? "حجم صورة الغلاف يجب ألا يتجاوز 3 ميجابايت." : "Cover image must be 3 MB or smaller.");
+                event.target.value = "";
+                return;
+              }
+              const reader = new FileReader();
+              reader.onload = () => setCoverData(typeof reader.result === "string" ? reader.result : null);
+              reader.readAsDataURL(file);
+            }}/>
+          </label>
+          {coverData && <button type="button" className="secondaryButton" onClick={() => setCoverData(null)}>{ar ? "إزالة صورة الغلاف" : "Remove cover"}</button>}
         </div>
         <div className="formGrid">
           <label>{ar ? "بريد التواصل" : "Contact email"}<input name="contact_email" type="email" defaultValue={settings?.contact_email || ""}/></label>
