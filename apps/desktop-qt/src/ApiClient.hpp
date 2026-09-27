@@ -42,6 +42,13 @@ class ApiClient final : public QObject
     Q_PROPERTY(QVariantMap salesState READ salesState NOTIFY salesStateChanged)
     Q_PROPERTY(QVariantMap groundedReply READ groundedReply NOTIFY groundedReplyChanged)
     Q_PROPERTY(QString selectedConversationId READ selectedConversationId NOTIFY messagesChanged)
+    Q_PROPERTY(QVariantList growthCampaigns READ growthCampaigns NOTIFY growthCampaignsChanged)
+    Q_PROPERTY(QVariantList growthAttribution READ growthAttribution NOTIFY growthAttributionChanged)
+    Q_PROPERTY(QVariantList growthAudiences READ growthAudiences NOTIFY growthAudiencesChanged)
+    Q_PROPERTY(QVariantList growthMedia READ growthMedia NOTIFY growthMediaChanged)
+    Q_PROPERTY(QVariantList growthPlaybooks READ growthPlaybooks NOTIFY growthPlaybooksChanged)
+    Q_PROPERTY(QVariantList growthFeedback READ growthFeedback NOTIFY growthFeedbackChanged)
+    Q_PROPERTY(QVariantMap growthFeedbackSummary READ growthFeedbackSummary NOTIFY growthFeedbackSummaryChanged)
     Q_PROPERTY(QVariantMap enterpriseSummary READ enterpriseSummary NOTIFY enterpriseSummaryChanged)
     Q_PROPERTY(QVariantList proposals READ proposals NOTIFY proposalsChanged)
     Q_PROPERTY(QVariantList invoices READ invoices NOTIFY invoicesChanged)
@@ -83,6 +90,13 @@ public:
     QVariantMap salesState() const;
     QVariantMap groundedReply() const;
     QString selectedConversationId() const;
+    QVariantList growthCampaigns() const;
+    QVariantList growthAttribution() const;
+    QVariantList growthAudiences() const;
+    QVariantList growthMedia() const;
+    QVariantList growthPlaybooks() const;
+    QVariantList growthFeedback() const;
+    QVariantMap growthFeedbackSummary() const;
     QVariantMap enterpriseSummary() const;
     QVariantList proposals() const;
     QVariantList invoices() const;
@@ -135,6 +149,12 @@ public:
     Q_INVOKABLE void rejectOutbox(const QString &outboxId);
     Q_INVOKABLE void dispatchOutbox(const QString &outboxId);
     Q_INVOKABLE void createWhatsAppChannel(const QString &displayName, const QString &phoneNumberId, const QString &wabaId, const QString &businessPhone, const QString &graphVersion, const QString &accessToken, const QString &appSecret, bool isDefault, bool enabled);
+    Q_INVOKABLE void refreshGrowth();
+    Q_INVOKABLE void createGrowthCampaign(const QString &name, const QString &channel, const QString &objective, double budget, double spend, const QString &currency, const QString &utmSource, const QString &utmMedium, const QString &utmCampaign);
+    Q_INVOKABLE void createGrowthAudience(const QString &name, const QString &description, const QString &source, const QString &status, int minScore, const QString &city, double minBudget, double maxBudget);
+    Q_INVOKABLE void createGrowthMedia(const QString &projectId, const QString &unitId, const QString &title, const QString &mediaType, const QString &url, const QString &sourceKind, bool verified);
+    Q_INVOKABLE void createGrowthPlaybook(const QString &name, const QString &description, const QString &triggerStage, const QString &stepsText);
+    Q_INVOKABLE void createGrowthFeedback(const QString &leadId, const QString &conversationId, const QString &channel, const QString &category, int rating, const QString &comment);
 
 signals:
     void baseUrlChanged();
@@ -162,6 +182,13 @@ signals:
     void whatsappChannelsChanged();
     void salesStateChanged();
     void groundedReplyChanged();
+    void growthCampaignsChanged();
+    void growthAttributionChanged();
+    void growthAudiencesChanged();
+    void growthMediaChanged();
+    void growthPlaybooksChanged();
+    void growthFeedbackChanged();
+    void growthFeedbackSummaryChanged();
     void enterpriseSummaryChanged();
     void proposalsChanged();
     void invoicesChanged();
@@ -188,6 +215,13 @@ private:
     void fetchTasks();
     void fetchOutbox();
     void fetchWhatsAppChannels();
+    void fetchGrowthCampaigns();
+    void fetchGrowthAttribution();
+    void fetchGrowthAudiences();
+    void fetchGrowthMedia();
+    void fetchGrowthPlaybooks();
+    void fetchGrowthFeedback();
+    void fetchGrowthFeedbackSummary();
     void fetchEnterpriseSummary();
     void fetchProposals();
     void fetchInvoices();
@@ -224,6 +258,13 @@ private:
     QVariantMap m_salesState;
     QVariantMap m_groundedReply;
     QString m_selectedConversationId;
+    QVariantList m_growthCampaigns;
+    QVariantList m_growthAttribution;
+    QVariantList m_growthAudiences;
+    QVariantList m_growthMedia;
+    QVariantList m_growthPlaybooks;
+    QVariantList m_growthFeedback;
+    QVariantMap m_growthFeedbackSummary;
     QVariantMap m_enterpriseSummary;
     QVariantList m_proposals;
     QVariantList m_invoices;
