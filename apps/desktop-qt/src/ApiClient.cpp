@@ -51,6 +51,12 @@ QString ApiClient::healthStatus() const { return m_healthStatus; }
 QVariantMap ApiClient::overview() const { return m_overview; }
 QVariantList ApiClient::leads() const { return m_leads; }
 QVariantList ApiClient::units() const { return m_units; }
+QVariantList ApiClient::projects() const { return m_projects; }
+QVariantList ApiClient::reservations() const { return m_reservations; }
+QVariantList ApiClient::contracts() const { return m_contracts; }
+QVariantList ApiClient::installments() const { return m_installments; }
+QVariantList ApiClient::commissions() const { return m_commissions; }
+QVariantList ApiClient::appointments() const { return m_appointments; }
 QVariantMap ApiClient::enterpriseSummary() const { return m_enterpriseSummary; }
 QVariantList ApiClient::proposals() const { return m_proposals; }
 QVariantList ApiClient::invoices() const { return m_invoices; }
@@ -161,6 +167,12 @@ void ApiClient::logout()
     m_overview.clear();
     m_leads.clear();
     m_units.clear();
+    m_projects.clear();
+    m_reservations.clear();
+    m_contracts.clear();
+    m_installments.clear();
+    m_commissions.clear();
+    m_appointments.clear();
     m_enterpriseSummary.clear();
     m_proposals.clear();
     m_invoices.clear();
@@ -173,6 +185,12 @@ void ApiClient::logout()
     emit overviewChanged();
     emit leadsChanged();
     emit unitsChanged();
+    emit projectsChanged();
+    emit reservationsChanged();
+    emit contractsChanged();
+    emit installmentsChanged();
+    emit commissionsChanged();
+    emit appointmentsChanged();
     emit enterpriseSummaryChanged();
     emit proposalsChanged();
     emit invoicesChanged();
@@ -189,6 +207,11 @@ void ApiClient::refreshAll()
     fetchOverview();
     fetchLeads();
     fetchUnits();
+    fetchProjects();
+    fetchReservations();
+    fetchContracts();
+    fetchCommissions();
+    fetchAppointments();
     refreshEnterprise();
 }
 
@@ -374,6 +397,302 @@ void ApiClient::fetchUnits()
             m_units = QJsonDocument::fromJson(body).array().toVariantList();
             emit unitsChanged();
         }
+        reply->deleteLater();
+    });
+}
+
+
+void ApiClient::createLead(const QString &fullName, const QString &phone, const QString &email, const QString &source, const QString &city, double budget, int bedrooms, const QString &notes)
+{
+    QJsonObject payload{
+        {QStringLiteral("full_name"), fullName.trimmed()},
+        {QStringLiteral("phone"), phone.trimmed()},
+        {QStringLiteral("source"), source.trimmed().isEmpty() ? QStringLiteral("manual") : source.trimmed()},
+    };
+    if (!email.trimmed().isEmpty()) payload.insert(QStringLiteral("email"), email.trimmed());
+    if (!city.trimmed().isEmpty()) payload.insert(QStringLiteral("preferred_city"), city.trimmed());
+    if (budget > 0) payload.insert(QStringLiteral("budget"), budget);
+    if (bedrooms >= 0) payload.insert(QStringLiteral("bedrooms"), bedrooms);
+    if (!notes.trimmed().isEmpty()) payload.insert(QStringLiteral("notes"), notes.trimmed());
+
+    setBusy(true);
+    auto *reply = m_network.post(makeRequest(QStringLiteral("/api/v1/leads"), true), QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { setError(QString()); fetchLeads(); fetchOverview(); }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::updateLead(const QString &leadId, const QString &status, const QString &city, double budget, int bedrooms, const QString &notes)
+{
+    QJsonObject payload;
+    if (!status.trimmed().isEmpty()) payload.insert(QStringLiteral("status"), status.trimmed());
+    if (!city.trimmed().isEmpty()) payload.insert(QStringLiteral("preferred_city"), city.trimmed());
+    if (budget >= 0) payload.insert(QStringLiteral("budget"), budget);
+    if (bedrooms >= 0) payload.insert(QStringLiteral("bedrooms"), bedrooms);
+    if (!notes.trimmed().isEmpty()) payload.insert(QStringLiteral("notes"), notes.trimmed());
+
+    setBusy(true);
+    auto *reply = m_network.sendCustomRequest(
+        makeRequest(QStringLiteral("/api/v1/leads/") + leadId, true),
+        QByteArray("PATCH"),
+        QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply, leadId] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else {
+            setError(QString());
+            fetchLeads();
+            fetchOverview();
+            if (m_timelineLeadId == leadId) loadTimeline(leadId);
+        }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::createProject(const QString &name, const QString &city, const QString &developer, const QString &description)
+{
+    QJsonObject payload{
+        {QStringLiteral("name"), name.trimmed()},
+        {QStringLiteral("city"), city.trimmed()},
+    };
+    if (!developer.trimmed().isEmpty()) payload.insert(QStringLiteral("developer"), developer.trimmed());
+    if (!description.trimmed().isEmpty()) payload.insert(QStringLiteral("description"), description.trimmed());
+
+    setBusy(true);
+    auto *reply = m_network.post(makeRequest(QStringLiteral("/api/v1/projects"), true), QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { setError(QString()); fetchProjects(); }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::createUnit(const QString &projectId, const QString &code, const QString &unitType, int bedrooms, double areaSqm, double price, const QString &currency)
+{
+    QJsonObject payload{
+        {QStringLiteral("project_id"), projectId.trimmed()},
+        {QStringLiteral("code"), code.trimmed()},
+        {QStringLiteral("unit_type"), unitType.trimmed()},
+        {QStringLiteral("area_sqm"), areaSqm},
+        {QStringLiteral("price"), price},
+        {QStringLiteral("currency"), currency.trimmed().isEmpty() ? QStringLiteral("EGP") : currency.trimmed().toUpper()},
+    };
+    if (bedrooms >= 0) payload.insert(QStringLiteral("bedrooms"), bedrooms);
+
+    setBusy(true);
+    auto *reply = m_network.post(makeRequest(QStringLiteral("/api/v1/units"), true), QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { setError(QString()); fetchUnits(); fetchOverview(); }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::createReservation(const QString &leadId, const QString &unitId, double reservationAmount)
+{
+    const QJsonObject payload{
+        {QStringLiteral("lead_id"), leadId.trimmed()},
+        {QStringLiteral("unit_id"), unitId.trimmed()},
+        {QStringLiteral("reservation_amount"), reservationAmount},
+    };
+    setBusy(true);
+    auto *reply = m_network.post(makeRequest(QStringLiteral("/api/v1/reservations"), true), QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply, leadId] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else {
+            setError(QString());
+            fetchReservations();
+            fetchUnits();
+            fetchOverview();
+            if (!leadId.isEmpty()) loadTimeline(leadId);
+        }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::cancelReservation(const QString &reservationId)
+{
+    setBusy(true);
+    auto *reply = m_network.post(makeRequest(QStringLiteral("/api/v1/reservations/") + reservationId + QStringLiteral("/cancel"), true), QByteArray());
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { setError(QString()); fetchReservations(); fetchUnits(); fetchOverview(); }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::convertReservationToContract(const QString &reservationId, const QString &contractNumber)
+{
+    const QJsonObject payload{{QStringLiteral("contract_number"), contractNumber.trimmed()}};
+    setBusy(true);
+    auto *reply = m_network.post(
+        makeRequest(QStringLiteral("/api/v1/contracts/from-reservation/") + reservationId, true),
+        QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else {
+            setError(QString());
+            fetchReservations();
+            fetchContracts();
+            fetchUnits();
+            fetchOverview();
+        }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::loadInstallments(const QString &contractId)
+{
+    if (contractId.trimmed().isEmpty())
+        return;
+    auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/contracts/") + contractId + QStringLiteral("/installments"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else {
+            m_installments = QJsonDocument::fromJson(body).array().toVariantList();
+            setError(QString());
+            emit installmentsChanged();
+        }
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::createInstallmentSchedule(const QString &contractId, const QString &firstDueAtIso, int installmentCount, int frequencyMonths)
+{
+    const QJsonObject payload{
+        {QStringLiteral("first_due_at"), firstDueAtIso.trimmed()},
+        {QStringLiteral("installment_count"), installmentCount},
+        {QStringLiteral("frequency_months"), frequencyMonths},
+    };
+    setBusy(true);
+    auto *reply = m_network.post(
+        makeRequest(QStringLiteral("/api/v1/contracts/") + contractId + QStringLiteral("/schedule"), true),
+        QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply, contractId] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { setError(QString()); loadInstallments(contractId); }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::payInstallment(const QString &installmentId)
+{
+    setBusy(true);
+    auto *reply = m_network.post(makeRequest(QStringLiteral("/api/v1/installments/") + installmentId + QStringLiteral("/pay"), true), QByteArray());
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else {
+            setError(QString());
+            const QJsonObject item = QJsonDocument::fromJson(body).object();
+            loadInstallments(item.value(QStringLiteral("contract_id")).toString());
+        }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::createCommission(const QString &contractId, const QString &brokerName, double ratePercent)
+{
+    const QJsonObject payload{
+        {QStringLiteral("broker_name"), brokerName.trimmed()},
+        {QStringLiteral("rate_percent"), ratePercent},
+    };
+    setBusy(true);
+    auto *reply = m_network.post(
+        makeRequest(QStringLiteral("/api/v1/contracts/") + contractId + QStringLiteral("/commissions"), true),
+        QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { setError(QString()); fetchCommissions(); }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::payCommission(const QString &commissionId)
+{
+    setBusy(true);
+    auto *reply = m_network.post(makeRequest(QStringLiteral("/api/v1/commissions/") + commissionId + QStringLiteral("/pay"), true), QByteArray());
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { setError(QString()); fetchCommissions(); }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::fetchProjects()
+{
+    auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/projects"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { m_projects = QJsonDocument::fromJson(body).array().toVariantList(); emit projectsChanged(); }
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::fetchReservations()
+{
+    auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/reservations"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { m_reservations = QJsonDocument::fromJson(body).array().toVariantList(); emit reservationsChanged(); }
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::fetchContracts()
+{
+    auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/contracts"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { m_contracts = QJsonDocument::fromJson(body).array().toVariantList(); emit contractsChanged(); }
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::fetchCommissions()
+{
+    auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/commissions"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { m_commissions = QJsonDocument::fromJson(body).array().toVariantList(); emit commissionsChanged(); }
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::fetchAppointments()
+{
+    auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/appointments"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { m_appointments = QJsonDocument::fromJson(body).array().toVariantList(); emit appointmentsChanged(); }
         reply->deleteLater();
     });
 }
