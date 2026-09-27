@@ -36,6 +36,7 @@ qt_add_executable(nexvary_realestate_native
 set(NEXVARY_QML_FILES
     qml/Main.qml
     qml/LoginPage.qml
+    qml/FirstRunSetupPage.qml
     qml/DashboardPage.qml
     qml/LeadsPage.qml
     qml/InventoryPage.qml
