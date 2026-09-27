@@ -32,9 +32,9 @@ It creates a local development tenant and owner automatically without requiring 
 
 After that, the normal sign-in screen exposes:
 
-**Quick entry to development workspace**
+**One-click development workspace**
 
-This obtains a fresh local desktop session without requiring remembered test credentials.
+This obtains a fresh local desktop session without requiring remembered test credentials. If an older real company already exists locally, the development workspace can still be created alongside it without deleting or replacing that company.
 
 The development shortcut is not available as a production-cloud authentication mechanism.
 
