@@ -970,6 +970,7 @@ function ControlCenter({
               <div className="panel systemDeveloper">
                 <div><span className="eyebrow">DEVELOPER</span><strong>NEXVARY</strong><p>{locale === "ar" ? "الجهة المطورة لنظام NEXVARY RealEstate AI OS." : "Developer of NEXVARY RealEstate AI OS."}</p></div>
                 <div className="aboutLinks">
+                  <a href="https://nexvary.com/" target="_blank" rel="noreferrer">NEXVARY</a>
                   <a href="https://nexvary.com/" target="_blank" rel="noreferrer">Website</a>
                   <a href="https://www.facebook.com/share/14p9krEn5ij/" target="_blank" rel="noreferrer">Facebook</a>
                   <a href="mailto:info@nexvary.com">Email</a>
@@ -1019,7 +1020,7 @@ function ControlCenter({
 
       <div className="mobileNav">
         {visibleNavItems.map(({ id, icon: Icon, key }) => (
-          <button key={id} className={view === id ? "active" : ""} onClick={() => setView(id)} aria-label={t[key]}>
+          <button key={id} className={view === id ? "active" : ""} onClick={() => navigateTo(id)} aria-label={t[key]}>
             <Icon size={20}/>
           </button>
         ))}
