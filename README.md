@@ -4,7 +4,7 @@ AI-first, multi-tenant, white-label operating system for real-estate companies.
 
 ## Current release line
 
-**v1.6.0 — White-Label Automation Studio Release**
+**v1.7.0 — White-Label Growth Intelligence Release**
 
 The product now has two isolated workspaces:
 
@@ -50,7 +50,8 @@ The platform separates exact transactional data from probabilistic AI:
 - Follow-up tasks.
 - Unified conversation/inbox data model.
 - Tenant knowledge base and evidence-oriented retrieval.
-- Grounded AI Sales Copilot.
+- Grounded AI Sales Copilot with tenant-scoped verified property media suggestions.
+- Growth Intelligence: campaigns, customer journeys, Audience 360, last-touch revenue attribution, media library, sales playbooks and Voice of Customer.
 - Users and database-backed RBAC.
 - Company audit log.
 - Safe operational JSON export.
@@ -128,3 +129,4 @@ docker compose up -d postgres redis n8n
 - [Verified Bank Transfer Billing v1.4.0](docs/BANK_TRANSFER_BILLING_V14.md)
 - [UX & Development Release v1.5.0](docs/UX_RELEASE_V15.md)
 - [Automation Studio v1.6.0](docs/AUTOMATION_STUDIO_V16.md)
+- [Growth Intelligence v1.7.0](docs/GROWTH_INTELLIGENCE_V17.md)

@@ -9,6 +9,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from .db import get_db
+from .growth_models import PropertyMediaAsset
 from .models import Project, Unit, UnitStatus
 from .policy import RequestContext, get_request_context
 from .quota import consume_ai_request
@@ -50,9 +51,20 @@ class KnowledgeEvidence(BaseModel):
     score: int
 
 
+class MediaSuggestion(BaseModel):
+    id: str
+    project_id: str | None
+    unit_id: str | None
+    title: str
+    media_type: str
+    url: str
+    verified: bool
+
+
 class SalesAssistResponse(BaseModel):
     answer: str
     units: list[UnitSuggestion]
+    media: list[MediaSuggestion]
     evidence: list[KnowledgeEvidence]
     grounding: list[str]
     mode: str = "grounded-local-copilot"
@@ -108,6 +120,32 @@ def sales_assist(
     evidence.sort(key=lambda item: item.score, reverse=True)
     evidence = evidence[:5]
 
+    unit_ids = [item.id for item in units]
+    project_ids = list({item.project_id for item in units})
+    media_rows = []
+    if unit_ids or project_ids:
+        media_query = select(PropertyMediaAsset).where(PropertyMediaAsset.tenant_id == ctx.tenant_id)
+        if unit_ids and project_ids:
+            media_query = media_query.where(
+                (PropertyMediaAsset.unit_id.in_(unit_ids))
+                | (
+                    PropertyMediaAsset.unit_id.is_(None)
+                    & PropertyMediaAsset.project_id.in_(project_ids)
+                )
+            )
+        elif unit_ids:
+            media_query = media_query.where(PropertyMediaAsset.unit_id.in_(unit_ids))
+        else:
+            media_query = media_query.where(
+                PropertyMediaAsset.unit_id.is_(None),
+                PropertyMediaAsset.project_id.in_(project_ids),
+            )
+        media_rows = list(
+            db.scalars(
+                media_query.order_by(PropertyMediaAsset.is_verified.desc(), PropertyMediaAsset.created_at.desc()).limit(12)
+            ).all()
+        )
+
     arabic = bool(re.search(r"[\u0600-\u06FF]", payload.question))
     if arabic:
         if units:
@@ -139,6 +177,18 @@ def sales_assist(
             )
             for item in units
         ],
+        media=[
+            MediaSuggestion(
+                id=item.id,
+                project_id=item.project_id,
+                unit_id=item.unit_id,
+                title=item.title,
+                media_type=item.media_type.value,
+                url=item.url,
+                verified=bool(item.is_verified),
+            )
+            for item in media_rows
+        ],
         evidence=evidence,
-        grounding=["transactional_inventory", "tenant_scoped_knowledge"],
+        grounding=["transactional_inventory", "tenant_scoped_knowledge", "tenant_scoped_media"],
     )
