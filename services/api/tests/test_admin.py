@@ -17,6 +17,7 @@ def test_white_label_settings_and_safe_export(admin_headers):
             "brand_name": "Company A Properties",
             "primary_color": "#123456",
             "logo_data_url": "data:image/png;base64,aGVsbG8=",
+            "cover_data_url": "data:image/webp;base64,Y292ZXI=",
             "contact_email": "hello@companya.test",
             "website_url": "https://company-a.test",
             "facebook_url": "https://facebook.com/company-a",
@@ -26,6 +27,7 @@ def test_white_label_settings_and_safe_export(admin_headers):
     assert updated.json()["brand_name"] == "Company A Properties"
     assert updated.json()["primary_color"] == "#123456"
     assert updated.json()["logo_data_url"].startswith("data:image/png;base64,")
+    assert updated.json()["cover_data_url"].startswith("data:image/webp;base64,")
     assert updated.json()["contact_email"] == "hello@companya.test"
     assert updated.json()["website_url"] == "https://company-a.test"
     assert updated.json()["plan"] == "professional"
