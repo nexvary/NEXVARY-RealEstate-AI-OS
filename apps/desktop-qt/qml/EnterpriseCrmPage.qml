@@ -19,6 +19,19 @@ Flickable {
         return n.toLocaleString(Qt.locale(appState.rtl ? "ar_EG" : "en_US"), "f", 0) + " EGP"
     }
 
+    CrmQuickAddDialog { id: quickAdd }
+
+    Menu {
+        id: quickMenu
+        MenuItem { text: appState.rtl ? "عرض عقاري جديد" : "New Proposal"; onTriggered: quickAdd.openFor("proposal") }
+        MenuItem { text: appState.rtl ? "فاتورة جديدة" : "New Invoice"; onTriggered: quickAdd.openFor("invoice") }
+        MenuItem { text: appState.rtl ? "تسجيل دفعة" : "Record Payment"; enabled: apiClient.invoices.length > 0; onTriggered: quickAdd.openFor("payment") }
+        MenuSeparator {}
+        MenuItem { text: appState.rtl ? "تذكرة دعم" : "Support Ticket"; onTriggered: quickAdd.openFor("ticket") }
+        MenuItem { text: appState.rtl ? "تذكير" : "Reminder"; onTriggered: quickAdd.openFor("reminder") }
+        MenuItem { text: appState.rtl ? "مصروف" : "Expense"; onTriggered: quickAdd.openFor("expense") }
+    }
+
     ColumnLayout {
         id: content
         width: root.width
@@ -46,6 +59,11 @@ Flickable {
                     color: Theme.muted
                     font.pixelSize: 12
                 }
+            }
+
+            Button {
+                text: appState.rtl ? "+ إضافة" : "+ Quick Add"
+                onClicked: quickMenu.open()
             }
 
             Button {
