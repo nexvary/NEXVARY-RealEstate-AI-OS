@@ -290,7 +290,9 @@ ApplicationWindow {
                                                                 ? teamComponent
                                                                 : appState.currentPage === "growth"
                                                                     ? growthComponent
-                                                                    : appState.currentPage === "settings"
+                                                                    : appState.currentPage === "seo"
+                                                                        ? seoComponent
+                                                                        : appState.currentPage === "settings"
                                                                         ? settingsComponent
                                                                     : appState.currentPage === "company"
                                                                         ? companyComponent
@@ -363,6 +365,11 @@ ApplicationWindow {
     Component {
         id: growthComponent
         GrowthPage {}
+    }
+
+    Component {
+        id: seoComponent
+        SeoPage {}
     }
 
     Component {
