@@ -33,32 +33,51 @@ qt_add_executable(nexvary_realestate_native
     src/main.cpp
 )
 
+set(NEXVARY_QML_FILES
+    qml/Main.qml
+    qml/LoginPage.qml
+    qml/DashboardPage.qml
+    qml/LeadsPage.qml
+    qml/InventoryPage.qml
+    qml/AppointmentsPage.qml
+    qml/FinancePage.qml
+    qml/EnterpriseCrmPage.qml
+    qml/CustomerTimelinePage.qml
+    qml/CrmQuickAddDialog.qml
+    qml/SettingsPage.qml
+    qml/CompanyPage.qml
+    qml/KnowledgePage.qml
+    qml/TasksPage.qml
+    qml/TeamPage.qml
+    qml/OmnichannelPage.qml
+    qml/GrowthPage.qml
+    qml/SeoPage.qml
+    qml/AutomationStudioPage.qml
+    qml/AiSalesPage.qml
+    qml/AboutSystemPage.qml
+    qml/SidebarItem.qml
+)
+
+# Keep every QML type at the URI root. Without explicit aliases, an installed
+# build can register the files below a nested "qml/" namespace and
+# QQmlApplicationEngine::loadFromModule() cannot resolve the Main type.
+foreach(qml_file IN LISTS NEXVARY_QML_FILES)
+    get_filename_component(qml_alias "${qml_file}" NAME)
+    set_source_files_properties("${qml_file}" PROPERTIES QT_RESOURCE_ALIAS "${qml_alias}")
+endforeach()
+
+set_source_files_properties(qml/Theme.js PROPERTIES QT_RESOURCE_ALIAS "Theme.js")
+set_source_files_properties(
+    assets/nexvary-mark.svg
+    PROPERTIES QT_RESOURCE_ALIAS "assets/nexvary-mark.svg"
+)
+
 qt_add_qml_module(nexvary_realestate_native
     URI Nexvary.RealEstate
     VERSION 1.0
+    RESOURCE_PREFIX "/qt/qml"
     QML_FILES
-        qml/Main.qml
-        qml/LoginPage.qml
-        qml/DashboardPage.qml
-        qml/LeadsPage.qml
-        qml/InventoryPage.qml
-        qml/AppointmentsPage.qml
-        qml/FinancePage.qml
-        qml/EnterpriseCrmPage.qml
-        qml/CustomerTimelinePage.qml
-        qml/CrmQuickAddDialog.qml
-        qml/SettingsPage.qml
-        qml/CompanyPage.qml
-        qml/KnowledgePage.qml
-        qml/TasksPage.qml
-        qml/TeamPage.qml
-        qml/OmnichannelPage.qml
-        qml/GrowthPage.qml
-        qml/SeoPage.qml
-        qml/AutomationStudioPage.qml
-        qml/AiSalesPage.qml
-        qml/AboutSystemPage.qml
-        qml/SidebarItem.qml
+        ${NEXVARY_QML_FILES}
     RESOURCES
         qml/Theme.js
         assets/nexvary-mark.svg
