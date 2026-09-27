@@ -7,6 +7,7 @@
 #include <QVariantList>
 #include <QVariantMap>
 #include <QUrl>
+#include <QTimer>
 
 class QJsonObject;
 
@@ -21,6 +22,8 @@ class ApiClient final : public QObject
     Q_PROPERTY(QString userName READ userName NOTIFY sessionChanged)
     Q_PROPERTY(QString userRole READ userRole NOTIFY sessionChanged)
     Q_PROPERTY(QString healthStatus READ healthStatus NOTIFY healthChanged)
+    Q_PROPERTY(bool setupKnown READ setupKnown NOTIFY setupStatusChanged)
+    Q_PROPERTY(bool needsSetup READ needsSetup NOTIFY setupStatusChanged)
     Q_PROPERTY(QVariantMap overview READ overview NOTIFY overviewChanged)
     Q_PROPERTY(QVariantList leads READ leads NOTIFY leadsChanged)
     Q_PROPERTY(QVariantList units READ units NOTIFY unitsChanged)
@@ -82,6 +85,8 @@ public:
     QString userName() const;
     QString userRole() const;
     QString healthStatus() const;
+    bool setupKnown() const;
+    bool needsSetup() const;
     QVariantMap overview() const;
     QVariantList leads() const;
     QVariantList units() const;
@@ -133,6 +138,7 @@ public:
 
     Q_INVOKABLE void health();
     Q_INVOKABLE void login(const QString &tenantSlug, const QString &email, const QString &password);
+    Q_INVOKABLE void bootstrapFirstOwner(const QString &companyName, const QString &companySlug, const QString &brandName, const QString &ownerName, const QString &ownerEmail, const QString &ownerPassword);
     Q_INVOKABLE void logout();
     Q_INVOKABLE void refreshAll();
     Q_INVOKABLE void refreshEnterprise();
@@ -203,6 +209,7 @@ signals:
     void busyChanged();
     void lastErrorChanged();
     void healthChanged();
+    void setupStatusChanged();
     void overviewChanged();
     void leadsChanged();
     void unitsChanged();
@@ -252,6 +259,7 @@ private:
     QNetworkRequest makeRequest(const QString &path, bool authenticated) const;
     void setBusy(bool value);
     void setError(const QString &message);
+    void fetchSetupStatus();
     void fetchOverview();
     void fetchLeads();
     void fetchUnits();
@@ -297,6 +305,10 @@ private:
     QString m_userName;
     QString m_userRole;
     QString m_healthStatus{"unknown"};
+    bool m_setupKnown{false};
+    bool m_needsSetup{false};
+    bool m_healthRequestInFlight{false};
+    QTimer m_healthTimer;
     QVariantMap m_overview;
     QVariantList m_leads;
     QVariantList m_units;
