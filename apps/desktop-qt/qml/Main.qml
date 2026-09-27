@@ -280,7 +280,11 @@ ApplicationWindow {
                                             ? enterpriseComponent
                                             : appState.currentPage === "timeline"
                                                 ? timelineComponent
-                                                : migrationComponent
+                                                : appState.currentPage === "settings"
+                                                    ? settingsComponent
+                                                    : appState.currentPage === "company"
+                                                        ? companyComponent
+                                                        : migrationComponent
                 }
             }
         }
@@ -324,6 +328,16 @@ ApplicationWindow {
     Component {
         id: timelineComponent
         CustomerTimelinePage {}
+    }
+
+    Component {
+        id: settingsComponent
+        SettingsPage {}
+    }
+
+    Component {
+        id: companyComponent
+        CompanyPage {}
     }
 
     Component {
