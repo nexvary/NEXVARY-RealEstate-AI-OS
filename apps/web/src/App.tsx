@@ -1022,7 +1022,7 @@ function ControlCenter({
                 </div>
                 <div className="companyCoverText">
                   <span className="eyebrow">{locale === "ar" ? "هوية الشركة" : "COMPANY IDENTITY"}</span>
-                  <h2>{tenantSettings?.brand_name || tenantSettings?.name || t.brand}</h2>
+                  <div className="companyCoverTitle">{tenantSettings?.brand_name || tenantSettings?.name || t.brand}</div>
                   <p>{locale === "ar" ? "منصة تشغيل عقاري ذكية · مبيعات · أتمتة · نمو" : "Intelligent real-estate operations · Sales · Automation · Growth"}</p>
                 </div>
               </div>
