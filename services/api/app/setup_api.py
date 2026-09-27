@@ -250,7 +250,7 @@ def bootstrap_development_workspace(db: Session = Depends(get_db)) -> BootstrapR
 @router.post("/auth/development-session", response_model=BootstrapResponse)
 def development_session(db: Session = Depends(get_db)) -> BootstrapResponse:
     settings = get_settings()
-    if settings.app_env != "desktop":
+    if settings.app_env not in {"desktop", "test"}:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Desktop development session is not available")
     tenant = db.scalar(select(Tenant).where(Tenant.slug == "nexvary-dev"))
     if tenant is None:
