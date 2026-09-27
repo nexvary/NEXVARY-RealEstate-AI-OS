@@ -952,18 +952,18 @@ function ControlCenter({
               </div>
               <div className="systemFeatureGrid">
                 {[
-                  [locale === "ar" ? "CRM والمبيعات" : "CRM & Sales", locale === "ar" ? "العملاء المحتملون، التقييم، مسار البيع، المعاينات والمتابعة." : "Leads, scoring, pipeline, viewings and follow-up."],
-                  [locale === "ar" ? "المخزون العقاري" : "Real-estate Inventory", locale === "ar" ? "المشروعات والمباني والوحدات والأسعار والتوافر وخطط السداد." : "Projects, buildings, units, pricing, availability and payment plans."],
-                  [locale === "ar" ? "الحجوزات والعقود" : "Reservations & Contracts", locale === "ar" ? "حجز الوحدات، التحويل إلى عقود، الأقساط والعمولات." : "Unit reservations, contract conversion, installments and commissions."],
-                  [locale === "ar" ? "الفوترة البنكية" : "Bank-transfer Billing", locale === "ar" ? "اشتراكات وفواتير وتحويلات بنكية مع اعتماد يدوي قبل تسجيل السداد." : "Subscriptions, invoices and bank transfers with manual verification before payment."],
-                  [locale === "ar" ? "WhatsApp والقنوات" : "WhatsApp & Channels", locale === "ar" ? "إعداد قنوات منفصلة لكل شركة مع تشفير بيانات الاعتماد." : "Per-company channel configuration with encrypted credentials."],
-                  [locale === "ar" ? "SEO Autopilot" : "SEO Autopilot", locale === "ar" ? "فحص SEO والزحف وSearch Console وصفحات المشروعات والوحدات المبنية من قاعدة البيانات." : "SEO audit, crawl, Search Console and database-grounded project/unit pages."],
-                  [locale === "ar" ? "الذكاء الاصطناعي" : "Grounded AI", locale === "ar" ? "مساعد مبيعات يعتمد على السعر والتوافر الحقيقيين وقاعدة المعرفة دون اختلاق البيانات." : "Sales copilot grounded in real pricing, availability and tenant knowledge."],
-                  [locale === "ar" ? "White-Label وSaaS" : "White-Label & SaaS", locale === "ar" ? "هوية مستقلة، قوالب شركات، خطط وحدود، Custom Domain وPlatform Admin." : "Independent branding, tenant templates, plans, limits, custom domains and Platform Admin."],
-                  [locale === "ar" ? "الأمان والتدقيق" : "Security & Audit", locale === "ar" ? "RBAC، عزل الشركات، مفاتيح مشفرة، Audit Log ونسخ تشغيلية." : "RBAC, tenant isolation, encrypted secrets, audit log and operational exports."],
-                ].map(([featureTitle, text]) => (
+                  { title: locale === "ar" ? "CRM والمبيعات" : "CRM & Sales", text: locale === "ar" ? "العملاء المحتملون، التقييم، مسار البيع، المعاينات والمتابعة." : "Leads, scoring, pipeline, viewings and follow-up.", Icon: Users },
+                  { title: locale === "ar" ? "المخزون العقاري" : "Real-estate Inventory", text: locale === "ar" ? "المشروعات والمباني والوحدات والأسعار والتوافر وخطط السداد." : "Projects, buildings, units, pricing, availability and payment plans.", Icon: Building2 },
+                  { title: locale === "ar" ? "الحجوزات والعقود" : "Reservations & Contracts", text: locale === "ar" ? "حجز الوحدات، التحويل إلى عقود، الأقساط والعمولات." : "Unit reservations, contract conversion, installments and commissions.", Icon: CircleDollarSign },
+                  { title: locale === "ar" ? "الفوترة البنكية" : "Bank-transfer Billing", text: locale === "ar" ? "اشتراكات وفواتير وتحويلات بنكية مع اعتماد يدوي قبل تسجيل السداد." : "Subscriptions, invoices and bank transfers with manual verification before payment.", Icon: Landmark },
+                  { title: locale === "ar" ? "WhatsApp والقنوات" : "WhatsApp & Channels", text: locale === "ar" ? "إعداد قنوات منفصلة لكل شركة مع تشفير بيانات الاعتماد." : "Per-company channel configuration with encrypted credentials.", Icon: MessageCircle },
+                  { title: "SEO Autopilot", text: locale === "ar" ? "فحص SEO والزحف وSearch Console وصفحات المشروعات والوحدات المبنية من قاعدة البيانات." : "SEO audit, crawl, Search Console and database-grounded project/unit pages.", Icon: Search },
+                  { title: locale === "ar" ? "الذكاء الاصطناعي" : "Grounded AI", text: locale === "ar" ? "مساعد مبيعات يعتمد على السعر والتوافر الحقيقيين وقاعدة المعرفة دون اختلاق البيانات." : "Sales copilot grounded in real pricing, availability and tenant knowledge.", Icon: Bot },
+                  { title: locale === "ar" ? "White-Label وSaaS" : "White-Label & SaaS", text: locale === "ar" ? "هوية مستقلة، قوالب شركات، خطط وحدود، Custom Domain وPlatform Admin." : "Independent branding, tenant templates, plans, limits, custom domains and Platform Admin.", Icon: Settings2 },
+                  { title: locale === "ar" ? "الأمان والتدقيق" : "Security & Audit", text: locale === "ar" ? "RBAC، عزل الشركات، مفاتيح مشفرة، Audit Log ونسخ تشغيلية." : "RBAC, tenant isolation, encrypted secrets, audit log and operational exports.", Icon: ShieldCheck },
+                ].map(({ title: featureTitle, text, Icon }) => (
                   <article className="systemFeatureCard" key={featureTitle}>
-                    <ShieldCheck size={20}/><strong>{featureTitle}</strong><p>{text}</p>
+                    <Icon size={20}/><strong>{featureTitle}</strong><p>{text}</p>
                   </article>
                 ))}
               </div>
