@@ -728,10 +728,11 @@ def record_attribution(
         tenant_record(db, Lead, payload.lead_id, ctx.tenant_id)
     if payload.conversation_id:
         tenant_record(db, InboxConversation, payload.conversation_id, ctx.tenant_id)
+    values = payload.model_dump()
+    values["currency"] = payload.currency.upper()
     row = MarketingAttributionEvent(
         tenant_id=ctx.tenant_id,
-        **payload.model_dump(),
-        currency=payload.currency.upper(),
+        **values,
     )
     db.add(row)
     db.commit()
