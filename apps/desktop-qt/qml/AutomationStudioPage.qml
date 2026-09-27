@@ -193,23 +193,27 @@ Item {
                             Repeater{
                                 model:draftNodes
                                 Rectangle{
-                                    required property var model
-                                    x:model.position_x;y:model.position_y
+                                    required property string node_key
+                                    required property string node_type
+                                    required property string title
+                                    required property real position_x
+                                    required property real position_y
+                                    x:position_x;y:position_y
                                     width:205;height:92;radius:12
                                     color:"#0B1D2C"
                                     border.width:2
-                                    border.color:model.node_type.indexOf("approval.")===0?Theme.gold:model.node_type.indexOf("trigger.")===0?Theme.emerald:model.node_type.indexOf("condition.")===0?Theme.violet:Theme.electricBlue
+                                    border.color:node_type.indexOf("approval.")===0?Theme.gold:node_type.indexOf("trigger.")===0?Theme.emerald:node_type.indexOf("condition.")===0?Theme.violet:Theme.electricBlue
                                     ColumnLayout{
                                         anchors.fill:parent;anchors.margins:10;spacing:3
-                                        Text{Layout.fillWidth:true;text:model.title;color:Theme.platinum;font.pixelSize:12;font.bold:true;elide:Text.ElideRight}
-                                        Text{Layout.fillWidth:true;text:model.node_type;color:Theme.muted;font.pixelSize:8;elide:Text.ElideRight}
+                                        Text{Layout.fillWidth:true;text:title;color:Theme.platinum;font.pixelSize:12;font.bold:true;elide:Text.ElideRight}
+                                        Text{Layout.fillWidth:true;text:node_type;color:Theme.muted;font.pixelSize:8;elide:Text.ElideRight}
                                         Item{Layout.fillHeight:true}
-                                        Text{text:"#"+model.node_key.slice(-8);color:Theme.silver;font.pixelSize:8}
+                                        Text{text:"#"+node_key.slice(-8);color:Theme.silver;font.pixelSize:8}
                                     }
                                     MouseArea{
                                         anchors.fill:parent;cursorShape:Qt.PointingHandCursor
                                         drag.target:parent;drag.minimumX:0;drag.minimumY:0;drag.maximumX:canvas.contentWidth-parent.width;drag.maximumY:canvas.contentHeight-parent.height
-                                        onClicked:root.selectedNode=model
+                                        onClicked:root.selectedNode={node_key:node_key,node_type:node_type,title:title}
                                         onReleased:{
                                             draftNodes.setProperty(index,"position_x",Math.round(parent.x))
                                             draftNodes.setProperty(index,"position_y",Math.round(parent.y))
