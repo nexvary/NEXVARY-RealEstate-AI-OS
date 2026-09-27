@@ -4,7 +4,7 @@ AI-first, multi-tenant, white-label operating system for real-estate companies.
 
 ## Current release line
 
-**v1.7.0 — White-Label Growth Intelligence Release**
+**v1.8.0 — White-Label Omnichannel Growth Intelligence Release**
 
 The product now has two isolated workspaces:
 
@@ -63,6 +63,10 @@ The platform separates exact transactional data from probabilistic AI:
 - Separate About the System and About the Company sections.
 - Company logo, social links and custom white-label identity.
 - Integrated White-Label SEO Autopilot workspace copied from the preserved original SEO project.
+- Grounded omnichannel sales inbox with inbound dedupe, persistent customer sales state and human handoff.
+- Approval-aware outbound queue with official WhatsApp Cloud API dispatch when tenant credentials are configured.
+- Persistent text/voice preference with a professional female voice reply plan of up to three concise segments.
+- Campaign/ad attribution from first conversation through qualification, viewing, reservation, contract and revenue.
 - Technical audits, bounded crawling, Search Console read-only analytics, opportunities, schema, performance and guarded dry-run SEO planning.
 - Per-tenant WhatsApp channel configuration with encrypted credentials and readiness checks.
 - Transactional SEO page generation for real-estate projects and units, including price and availability sourced directly from the database.
@@ -130,3 +134,4 @@ docker compose up -d postgres redis n8n
 - [UX & Development Release v1.5.0](docs/UX_RELEASE_V15.md)
 - [Automation Studio v1.6.0](docs/AUTOMATION_STUDIO_V16.md)
 - [Growth Intelligence v1.7.0](docs/GROWTH_INTELLIGENCE_V17.md)
+- [Omnichannel Sales v1.7.0](docs/OMNICHANNEL_SALES_V17.md)
