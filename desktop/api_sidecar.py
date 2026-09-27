@@ -49,6 +49,8 @@ def main() -> None:
         port=args.port,
         log_level="warning",
         access_log=False,
+        use_colors=False,
+        log_config=None,
     )
     server = uvicorn.Server(config)
     write_diagnostic(f"sidecar: serving {args.host}:{args.port}")
