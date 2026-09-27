@@ -60,6 +60,17 @@ QVariantList ApiClient::installments() const { return m_installments; }
 QVariantList ApiClient::commissions() const { return m_commissions; }
 QVariantList ApiClient::appointments() const { return m_appointments; }
 QVariantMap ApiClient::tenantSettings() const { return m_tenantSettings; }
+QVariantList ApiClient::users() const { return m_users; }
+QVariantList ApiClient::knowledgeDocuments() const { return m_knowledgeDocuments; }
+QVariantList ApiClient::knowledgeHits() const { return m_knowledgeHits; }
+QVariantList ApiClient::conversations() const { return m_conversations; }
+QVariantList ApiClient::messages() const { return m_messages; }
+QVariantList ApiClient::tasks() const { return m_tasks; }
+QVariantList ApiClient::outbox() const { return m_outbox; }
+QVariantList ApiClient::whatsappChannels() const { return m_whatsappChannels; }
+QVariantMap ApiClient::salesState() const { return m_salesState; }
+QVariantMap ApiClient::groundedReply() const { return m_groundedReply; }
+QString ApiClient::selectedConversationId() const { return m_selectedConversationId; }
 QVariantMap ApiClient::enterpriseSummary() const { return m_enterpriseSummary; }
 QVariantList ApiClient::proposals() const { return m_proposals; }
 QVariantList ApiClient::invoices() const { return m_invoices; }
@@ -177,6 +188,17 @@ void ApiClient::logout()
     m_commissions.clear();
     m_appointments.clear();
     m_tenantSettings.clear();
+    m_users.clear();
+    m_knowledgeDocuments.clear();
+    m_knowledgeHits.clear();
+    m_conversations.clear();
+    m_messages.clear();
+    m_tasks.clear();
+    m_outbox.clear();
+    m_whatsappChannels.clear();
+    m_salesState.clear();
+    m_groundedReply.clear();
+    m_selectedConversationId.clear();
     m_enterpriseSummary.clear();
     m_proposals.clear();
     m_invoices.clear();
@@ -196,6 +218,16 @@ void ApiClient::logout()
     emit commissionsChanged();
     emit appointmentsChanged();
     emit tenantSettingsChanged();
+    emit usersChanged();
+    emit knowledgeDocumentsChanged();
+    emit knowledgeHitsChanged();
+    emit conversationsChanged();
+    emit messagesChanged();
+    emit tasksChanged();
+    emit outboxChanged();
+    emit whatsappChannelsChanged();
+    emit salesStateChanged();
+    emit groundedReplyChanged();
     emit enterpriseSummaryChanged();
     emit proposalsChanged();
     emit invoicesChanged();
@@ -218,6 +250,7 @@ void ApiClient::refreshAll()
     fetchCommissions();
     fetchAppointments();
     fetchTenantSettings();
+    refreshWorkspace();
     refreshEnterprise();
 }
 
@@ -813,6 +846,400 @@ void ApiClient::fetchTenantSettings()
             m_tenantSettings = QJsonDocument::fromJson(body).object().toVariantMap();
             emit tenantSettingsChanged();
         }
+        reply->deleteLater();
+    });
+}
+
+
+void ApiClient::refreshWorkspace()
+{
+    if (!loggedIn())
+        return;
+    fetchUsers();
+    fetchKnowledgeDocuments();
+    fetchConversations();
+    fetchTasks();
+    fetchOutbox();
+    fetchWhatsAppChannels();
+}
+
+void ApiClient::createUser(const QString &email, const QString &displayName, const QString &password, const QString &role)
+{
+    const QJsonObject payload{
+        {QStringLiteral("email"), email.trimmed()},
+        {QStringLiteral("display_name"), displayName.trimmed()},
+        {QStringLiteral("password"), password},
+        {QStringLiteral("role"), role.trimmed().isEmpty() ? QStringLiteral("sales_agent") : role.trimmed()},
+    };
+    setBusy(true);
+    auto *reply = m_network.post(makeRequest(QStringLiteral("/api/v1/users"), true), QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { setError(QString()); fetchUsers(); }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::createKnowledgeDocument(const QString &title, const QString &category, const QString &sourceName, const QString &content)
+{
+    QJsonObject payload{
+        {QStringLiteral("title"), title.trimmed()},
+        {QStringLiteral("category"), category.trimmed().isEmpty() ? QStringLiteral("general") : category.trimmed()},
+        {QStringLiteral("content"), content},
+    };
+    if (!sourceName.trimmed().isEmpty()) payload.insert(QStringLiteral("source_name"), sourceName.trimmed());
+    setBusy(true);
+    auto *reply = m_network.post(makeRequest(QStringLiteral("/api/v1/knowledge/documents"), true), QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { setError(QString()); fetchKnowledgeDocuments(); }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::queryKnowledge(const QString &question)
+{
+    const QJsonObject payload{
+        {QStringLiteral("question"), question.trimmed()},
+        {QStringLiteral("limit"), 8},
+    };
+    setBusy(true);
+    auto *reply = m_network.post(makeRequest(QStringLiteral("/api/v1/knowledge/query"), true), QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) {
+            setError(apiErrorMessage(body, reply->errorString()));
+        } else {
+            const QJsonObject object = QJsonDocument::fromJson(body).object();
+            m_knowledgeHits = object.value(QStringLiteral("hits")).toArray().toVariantList();
+            setError(QString());
+            emit knowledgeHitsChanged();
+        }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::createConversation(const QString &leadId, const QString &channel, const QString &externalContact, const QString &displayName)
+{
+    QJsonObject payload{
+        {QStringLiteral("channel"), channel.trimmed().isEmpty() ? QStringLiteral("manual") : channel.trimmed()},
+        {QStringLiteral("external_contact"), externalContact.trimmed()},
+    };
+    if (!leadId.trimmed().isEmpty()) payload.insert(QStringLiteral("lead_id"), leadId.trimmed());
+    if (!displayName.trimmed().isEmpty()) payload.insert(QStringLiteral("display_name"), displayName.trimmed());
+    setBusy(true);
+    auto *reply = m_network.post(makeRequest(QStringLiteral("/api/v1/inbox/conversations"), true), QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { setError(QString()); fetchConversations(); }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::loadMessages(const QString &conversationId)
+{
+    if (conversationId.trimmed().isEmpty())
+        return;
+    m_selectedConversationId = conversationId.trimmed();
+    auto *reply = m_network.get(makeRequest(
+        QStringLiteral("/api/v1/inbox/conversations/") + m_selectedConversationId + QStringLiteral("/messages"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) {
+            setError(apiErrorMessage(body, reply->errorString()));
+        } else {
+            m_messages = QJsonDocument::fromJson(body).array().toVariantList();
+            setError(QString());
+            emit messagesChanged();
+        }
+        reply->deleteLater();
+    });
+    loadSalesState(m_selectedConversationId);
+}
+
+void ApiClient::sendMessage(const QString &conversationId, const QString &direction, const QString &sender, const QString &body)
+{
+    const QJsonObject payload{
+        {QStringLiteral("direction"), direction.trimmed().isEmpty() ? QStringLiteral("outbound") : direction.trimmed()},
+        {QStringLiteral("sender"), sender.trimmed().isEmpty() ? m_userName : sender.trimmed()},
+        {QStringLiteral("body"), body},
+    };
+    setBusy(true);
+    auto *reply = m_network.post(
+        makeRequest(QStringLiteral("/api/v1/inbox/conversations/") + conversationId + QStringLiteral("/messages"), true),
+        QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply, conversationId] {
+        const QByteArray response = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(response, reply->errorString()));
+        else {
+            setError(QString());
+            loadMessages(conversationId);
+            fetchConversations();
+        }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::createTask(const QString &leadId, const QString &assignedUserId, const QString &title, const QString &notes, const QString &dueAtIso)
+{
+    QJsonObject payload{{QStringLiteral("title"), title.trimmed()}};
+    if (!leadId.trimmed().isEmpty()) payload.insert(QStringLiteral("lead_id"), leadId.trimmed());
+    if (!assignedUserId.trimmed().isEmpty()) payload.insert(QStringLiteral("assigned_user_id"), assignedUserId.trimmed());
+    if (!notes.trimmed().isEmpty()) payload.insert(QStringLiteral("notes"), notes.trimmed());
+    if (!dueAtIso.trimmed().isEmpty()) payload.insert(QStringLiteral("due_at"), dueAtIso.trimmed());
+    setBusy(true);
+    auto *reply = m_network.post(makeRequest(QStringLiteral("/api/v1/tasks"), true), QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { setError(QString()); fetchTasks(); }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::completeTask(const QString &taskId)
+{
+    setBusy(true);
+    auto *reply = m_network.post(makeRequest(QStringLiteral("/api/v1/tasks/") + taskId + QStringLiteral("/complete"), true), QByteArray());
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { setError(QString()); fetchTasks(); }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::loadSalesState(const QString &conversationId)
+{
+    if (conversationId.trimmed().isEmpty())
+        return;
+    auto *reply = m_network.get(makeRequest(
+        QStringLiteral("/api/v1/omnichannel/conversations/") + conversationId + QStringLiteral("/sales-state"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) {
+            setError(apiErrorMessage(body, reply->errorString()));
+        } else {
+            m_salesState = QJsonDocument::fromJson(body).object().toVariantMap();
+            emit salesStateChanged();
+        }
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::updateSalesState(const QString &conversationId, const QString &replyPreference, const QString &journeyStage, int leadScore, const QString &assignedUserId, bool autoReplyEnabled)
+{
+    QJsonObject payload{
+        {QStringLiteral("reply_preference"), replyPreference.trimmed()},
+        {QStringLiteral("journey_stage"), journeyStage.trimmed()},
+        {QStringLiteral("lead_score"), leadScore},
+        {QStringLiteral("auto_reply_enabled"), autoReplyEnabled},
+    };
+    if (!assignedUserId.trimmed().isEmpty()) payload.insert(QStringLiteral("assigned_user_id"), assignedUserId.trimmed());
+
+    setBusy(true);
+    auto *reply = m_network.sendCustomRequest(
+        makeRequest(QStringLiteral("/api/v1/omnichannel/conversations/") + conversationId + QStringLiteral("/sales-state"), true),
+        QByteArray("PATCH"),
+        QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else {
+            m_salesState = QJsonDocument::fromJson(body).object().toVariantMap();
+            setError(QString());
+            emit salesStateChanged();
+        }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::prepareGroundedReply(const QString &conversationId, const QString &question, const QString &city, double maxPrice, int bedrooms, const QString &unitType, const QString &channelId)
+{
+    QJsonObject payload{
+        {QStringLiteral("question"), question.trimmed()},
+        {QStringLiteral("source_confidence"), 1.0},
+    };
+    if (!city.trimmed().isEmpty()) payload.insert(QStringLiteral("city"), city.trimmed());
+    if (maxPrice > 0) payload.insert(QStringLiteral("max_price"), maxPrice);
+    if (bedrooms >= 0) payload.insert(QStringLiteral("bedrooms"), bedrooms);
+    if (!unitType.trimmed().isEmpty()) payload.insert(QStringLiteral("unit_type"), unitType.trimmed());
+    if (!channelId.trimmed().isEmpty()) payload.insert(QStringLiteral("channel_id"), channelId.trimmed());
+
+    setBusy(true);
+    auto *reply = m_network.post(
+        makeRequest(QStringLiteral("/api/v1/omnichannel/conversations/") + conversationId + QStringLiteral("/grounded-reply"), true),
+        QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) {
+            setError(apiErrorMessage(body, reply->errorString()));
+        } else {
+            m_groundedReply = QJsonDocument::fromJson(body).object().toVariantMap();
+            setError(QString());
+            emit groundedReplyChanged();
+            fetchOutbox();
+            fetchTasks();
+        }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::requestHandoff(const QString &conversationId, const QString &reason, const QString &assignToUserId)
+{
+    QJsonObject payload{{QStringLiteral("reason"), reason.trimmed()}};
+    if (!assignToUserId.trimmed().isEmpty()) payload.insert(QStringLiteral("assign_to_user_id"), assignToUserId.trimmed());
+    setBusy(true);
+    auto *reply = m_network.post(
+        makeRequest(QStringLiteral("/api/v1/omnichannel/conversations/") + conversationId + QStringLiteral("/handoff"), true),
+        QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply, conversationId] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { setError(QString()); loadSalesState(conversationId); fetchTasks(); }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::approveOutbox(const QString &outboxId)
+{
+    setBusy(true);
+    auto *reply = m_network.post(makeRequest(QStringLiteral("/api/v1/omnichannel/outbox/") + outboxId + QStringLiteral("/approve"), true), QByteArray());
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { setError(QString()); fetchOutbox(); }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::rejectOutbox(const QString &outboxId)
+{
+    setBusy(true);
+    auto *reply = m_network.post(makeRequest(QStringLiteral("/api/v1/omnichannel/outbox/") + outboxId + QStringLiteral("/reject"), true), QByteArray());
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { setError(QString()); fetchOutbox(); }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::dispatchOutbox(const QString &outboxId)
+{
+    setBusy(true);
+    auto *reply = m_network.post(makeRequest(QStringLiteral("/api/v1/omnichannel/outbox/") + outboxId + QStringLiteral("/dispatch"), true), QByteArray());
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { setError(QString()); fetchOutbox(); }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::createWhatsAppChannel(const QString &displayName, const QString &phoneNumberId, const QString &wabaId, const QString &businessPhone, const QString &graphVersion, const QString &accessToken, const QString &appSecret, bool isDefault, bool enabled)
+{
+    QJsonObject payload{
+        {QStringLiteral("display_name"), displayName.trimmed()},
+        {QStringLiteral("phone_number_id"), phoneNumberId.trimmed()},
+        {QStringLiteral("graph_api_version"), graphVersion.trimmed().isEmpty() ? QStringLiteral("v23.0") : graphVersion.trimmed()},
+        {QStringLiteral("is_default"), isDefault},
+        {QStringLiteral("enabled"), enabled},
+    };
+    if (!wabaId.trimmed().isEmpty()) payload.insert(QStringLiteral("waba_id"), wabaId.trimmed());
+    if (!businessPhone.trimmed().isEmpty()) payload.insert(QStringLiteral("business_phone"), businessPhone.trimmed());
+    if (!accessToken.trimmed().isEmpty()) payload.insert(QStringLiteral("access_token"), accessToken);
+    if (!appSecret.trimmed().isEmpty()) payload.insert(QStringLiteral("app_secret"), appSecret);
+
+    setBusy(true);
+    auto *reply = m_network.post(makeRequest(QStringLiteral("/api/v1/whatsapp/channels"), true), QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { setError(QString()); fetchWhatsAppChannels(); }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::fetchUsers()
+{
+    auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/users"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { m_users = QJsonDocument::fromJson(body).array().toVariantList(); emit usersChanged(); }
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::fetchKnowledgeDocuments()
+{
+    auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/knowledge/documents"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { m_knowledgeDocuments = QJsonDocument::fromJson(body).array().toVariantList(); emit knowledgeDocumentsChanged(); }
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::fetchConversations()
+{
+    auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/inbox/conversations"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { m_conversations = QJsonDocument::fromJson(body).array().toVariantList(); emit conversationsChanged(); }
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::fetchTasks()
+{
+    auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/tasks"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { m_tasks = QJsonDocument::fromJson(body).array().toVariantList(); emit tasksChanged(); }
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::fetchOutbox()
+{
+    auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/omnichannel/outbox"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { m_outbox = QJsonDocument::fromJson(body).array().toVariantList(); emit outboxChanged(); }
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::fetchWhatsAppChannels()
+{
+    auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/whatsapp/channels"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { m_whatsappChannels = QJsonDocument::fromJson(body).array().toVariantList(); emit whatsappChannelsChanged(); }
         reply->deleteLater();
     });
 }
