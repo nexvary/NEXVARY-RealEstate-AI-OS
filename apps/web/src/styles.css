@@ -1540,3 +1540,61 @@ button:disabled { opacity: .6; cursor: wait; }
   .attributionRows article b,.attributionRows article small { grid-column:2 / -1; }
   .copilotMedia { grid-template-columns:1fr; }
 }
+
+/* Omnichannel Sales v1.7 */
+.salesInbox { display:flex; flex-direction:column; gap:14px; }
+.salesSafety { display:flex; gap:10px; align-items:flex-start; border-color:rgba(75,199,155,.2); background:rgba(36,145,105,.06); }
+.salesSafety svg { color:#6fe0b4; flex:0 0 auto; }
+.salesSafety > div { display:flex; flex-direction:column; gap:4px; }
+.salesSafety strong { font-size:11px; color:#e9f8f2; }
+.salesSafety span { color:#759487; font-size:9px; line-height:1.6; }
+.salesInboxLayout { display:grid; grid-template-columns:minmax(260px,.55fr) minmax(0,1.45fr); gap:14px; min-height:460px; }
+.salesConversationRail { overflow:hidden; }
+.salesConversationRail .conversationList { max-height:600px; overflow:auto; }
+.salesConversationMain { min-height:460px; display:flex; flex-direction:column; gap:12px; }
+.salesStateBar { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
+.salesStateBar label { display:flex; flex-direction:column; gap:5px; color:#7891a6; font-size:9px; }
+.salesStateBar select, .salesStateBar input { width:100%; min-height:38px; border:1px solid #1c3851; border-radius:9px; background:#06111c; color:#edf7ff; padding:8px; }
+.autoReplyToggle { flex-direction:row !important; align-items:center; align-self:end; min-height:38px; border:1px solid #1a3a50; border-radius:9px; padding:0 9px; background:#071622; }
+.autoReplyToggle input { width:auto; min-height:0; }
+.campaignContext { display:flex; align-items:center; gap:7px; color:#7dccff; background:rgba(35,132,192,.07); border:1px solid rgba(53,160,221,.18); border-radius:9px; padding:8px 10px; font-size:9px; }
+.handoffBadge { display:inline-flex; align-items:center; gap:6px; width:max-content; max-width:100%; border:1px solid rgba(255,157,91,.25); background:rgba(192,96,34,.08); color:#ffc28d; border-radius:999px; padding:6px 9px; font-size:9px; }
+.salesMessages { flex:1; display:flex; flex-direction:column; gap:8px; overflow:auto; max-height:520px; padding:4px; }
+.salesToolsGrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; align-items:start; }
+.voicePlan { display:flex; gap:9px; align-items:flex-start; border:1px solid rgba(168,115,255,.2); background:rgba(110,67,176,.07); border-radius:11px; padding:11px; }
+.voicePlan svg { color:#be98ff; flex:0 0 auto; }
+.voicePlan > div { display:flex; flex-direction:column; gap:4px; }
+.voicePlan strong { font-size:10px; }
+.voicePlan p { margin:0; color:#879bb1; font-size:9px; line-height:1.55; }
+.outboxPanel { min-height:350px; }
+.outboxList { display:flex; flex-direction:column; gap:8px; }
+.outboxList article { display:grid; grid-template-columns:28px minmax(0,1fr) auto; gap:9px; align-items:start; border:1px solid #173047; background:#071522; border-radius:10px; padding:10px; }
+.outboxList article > div:nth-child(1) { color:#6bcaff; padding-top:2px; }
+.outboxList article > div:nth-child(2) { min-width:0; display:flex; flex-direction:column; gap:4px; }
+.outboxList strong { font-size:10px; color:#ecf6ff; }
+.outboxList p { margin:0; color:#8aa1b4; font-size:9px; line-height:1.5; max-height:72px; overflow:auto; }
+.outboxList small { color:#6d8397; font-size:8px; }
+.outboxError { color:#ff9ca6 !important; }
+.outboxActions { display:flex; flex-wrap:wrap; gap:5px; justify-content:flex-end; }
+.outboxActions .secondaryButton, .outboxActions .primaryButton { min-height:30px; padding:0 8px; font-size:9px; }
+.attributionPanel { min-height:280px; }
+.attributionCards { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.attributionCards article { border:1px solid #183149; background:#071522; border-radius:10px; padding:10px; display:flex; flex-direction:column; gap:7px; }
+.attributionCards strong { font-size:10px; color:#eaf5ff; overflow-wrap:anywhere; }
+.attributionCards article > div { display:flex; flex-wrap:wrap; gap:5px; }
+.attributionCards span { font-size:8px; color:#7892a6; border:1px solid #1a3348; border-radius:999px; padding:4px 6px; }
+.attributionCards b { font-size:10px; color:#6ed0ff; }
+@media (max-width:1100px) {
+  .salesInboxLayout, .salesToolsGrid { grid-template-columns:1fr; }
+  .salesStateBar { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media (max-width:680px) {
+  .salesStateBar { grid-template-columns:1fr; }
+  .attributionCards { grid-template-columns:1fr; }
+  .outboxList article { grid-template-columns:24px minmax(0,1fr); }
+  .outboxActions { grid-column:2; justify-content:flex-start; }
+}
+
+.salesConversationCreate { display:grid; grid-template-columns:1fr; gap:6px; padding:8px 0 10px; border-bottom:1px solid #15283b; margin-bottom:8px; }
+.salesConversationCreate input, .salesConversationCreate select { width:100%; min-height:36px; border:1px solid #1b374f; border-radius:8px; background:#06111c; color:#eef7ff; padding:7px 9px; }
+.salesConversationCreate .secondaryButton { min-height:34px; justify-content:center; }
