@@ -949,7 +949,7 @@ function ControlCenter({
               <div className="panel systemHero">
                 <div className="logoMark">N</div>
                 <div>
-                  <span className="eyebrow">NEXVARY REALESTATE AI OS · v1.5</span>
+                  <span className="eyebrow">NEXVARY REALESTATE AI OS · v1.6</span>
                   <h2>{locale === "ar" ? "عن النظام" : "About the System"}</h2>
                   <p>{locale === "ar"
                     ? "منصة White-Label متعددة الشركات لإدارة دورة العمل العقاري كاملة، من العميل والمخزون حتى العقود والتحصيل والتسويق والذكاء الاصطناعي."
@@ -966,6 +966,7 @@ function ControlCenter({
                   { title: "SEO Autopilot", text: locale === "ar" ? "فحص SEO والزحف وSearch Console وصفحات المشروعات والوحدات المبنية من قاعدة البيانات." : "SEO audit, crawl, Search Console and database-grounded project/unit pages.", Icon: Search },
                   { title: locale === "ar" ? "الذكاء الاصطناعي" : "Grounded AI", text: locale === "ar" ? "مساعد مبيعات يعتمد على السعر والتوافر الحقيقيين وقاعدة المعرفة دون اختلاق البيانات." : "Sales copilot grounded in real pricing, availability and tenant knowledge.", Icon: Bot },
                   { title: locale === "ar" ? "White-Label وSaaS" : "White-Label & SaaS", text: locale === "ar" ? "هوية مستقلة، قوالب شركات، خطط وحدود، Custom Domain وPlatform Admin." : "Independent branding, tenant templates, plans, limits, custom domains and Platform Admin.", Icon: Settings2 },
+                  { title: "Automation Studio", text: locale === "ar" ? "مصمم Workflow مرئي يربط CRM والمخزون والمهام وSEO والاعتماد البشري دون تشغيل Shell أو PowerShell مخفي." : "Visual workflow builder connecting CRM, inventory, tasks, SEO and human approvals without hidden shell or PowerShell execution.", Icon: Workflow },
                   { title: locale === "ar" ? "الأمان والتدقيق" : "Security & Audit", text: locale === "ar" ? "RBAC، عزل الشركات، مفاتيح مشفرة، Audit Log ونسخ تشغيلية." : "RBAC, tenant isolation, encrypted secrets, audit log and operational exports.", Icon: ShieldCheck },
                 ].map(({ title: featureTitle, text, Icon }) => (
                   <article className="systemFeatureCard" key={featureTitle}>
