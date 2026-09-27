@@ -1,6 +1,7 @@
 #include "ApiClient.hpp"
 
 #include <QByteArray>
+#include <QDateTime>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -222,6 +223,114 @@ void ApiClient::loadTimeline(const QString &leadId)
         }
         reply->deleteLater();
     });
+}
+
+
+void ApiClient::postEnterprise(const QString &path, const QJsonObject &payload)
+{
+    if (!loggedIn())
+        return;
+
+    setBusy(true);
+    setError(QString());
+    auto *reply = m_network.post(
+        makeRequest(path, true),
+        QJsonDocument(payload).toJson(QJsonDocument::Compact));
+
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) {
+            setError(apiErrorMessage(body, reply->errorString()));
+        } else {
+            setError(QString());
+            refreshEnterprise();
+            if (!m_timelineLeadId.isEmpty())
+                loadTimeline(m_timelineLeadId);
+        }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::createProposal(const QString &leadId, const QString &unitId, const QString &number, const QString &title, double amount, const QString &currency)
+{
+    QJsonObject payload{
+        {QStringLiteral("lead_id"), leadId},
+        {QStringLiteral("proposal_number"), number.trimmed()},
+        {QStringLiteral("title"), title.trimmed()},
+        {QStringLiteral("amount"), amount},
+        {QStringLiteral("currency"), currency.trimmed().isEmpty() ? QStringLiteral("EGP") : currency.trimmed().toUpper()},
+    };
+    if (!unitId.trimmed().isEmpty())
+        payload.insert(QStringLiteral("unit_id"), unitId.trimmed());
+    postEnterprise(QStringLiteral("/api/v1/enterprise-crm/proposals"), payload);
+}
+
+void ApiClient::createInvoice(const QString &leadId, const QString &contractId, const QString &number, const QString &title, double amount, const QString &currency)
+{
+    QJsonObject payload{
+        {QStringLiteral("lead_id"), leadId},
+        {QStringLiteral("invoice_number"), number.trimmed()},
+        {QStringLiteral("title"), title.trimmed()},
+        {QStringLiteral("total_amount"), amount},
+        {QStringLiteral("currency"), currency.trimmed().isEmpty() ? QStringLiteral("EGP") : currency.trimmed().toUpper()},
+    };
+    if (!contractId.trimmed().isEmpty())
+        payload.insert(QStringLiteral("contract_id"), contractId.trimmed());
+    postEnterprise(QStringLiteral("/api/v1/enterprise-crm/invoices"), payload);
+}
+
+void ApiClient::recordPayment(const QString &invoiceId, double amount, const QString &method, const QString &reference)
+{
+    const QJsonObject payload{
+        {QStringLiteral("amount"), amount},
+        {QStringLiteral("method"), method.trimmed().isEmpty() ? QStringLiteral("bank_transfer") : method.trimmed()},
+        {QStringLiteral("reference"), reference.trimmed()},
+    };
+    postEnterprise(QStringLiteral("/api/v1/enterprise-crm/invoices/") + invoiceId + QStringLiteral("/payments"), payload);
+}
+
+void ApiClient::createTicket(const QString &leadId, const QString &contractId, const QString &subject, const QString &description, const QString &priority)
+{
+    QJsonObject payload{
+        {QStringLiteral("subject"), subject.trimmed()},
+        {QStringLiteral("description"), description.trimmed()},
+        {QStringLiteral("priority"), priority.trimmed().isEmpty() ? QStringLiteral("normal") : priority.trimmed()},
+    };
+    if (!leadId.trimmed().isEmpty())
+        payload.insert(QStringLiteral("lead_id"), leadId.trimmed());
+    if (!contractId.trimmed().isEmpty())
+        payload.insert(QStringLiteral("contract_id"), contractId.trimmed());
+    postEnterprise(QStringLiteral("/api/v1/enterprise-crm/tickets"), payload);
+}
+
+void ApiClient::createReminder(const QString &leadId, const QString &entityType, const QString &entityId, const QString &title, const QString &dueAtIso)
+{
+    QJsonObject payload{
+        {QStringLiteral("title"), title.trimmed()},
+        {QStringLiteral("due_at"), dueAtIso.trimmed()},
+    };
+    if (!leadId.trimmed().isEmpty())
+        payload.insert(QStringLiteral("lead_id"), leadId.trimmed());
+    if (!entityType.trimmed().isEmpty())
+        payload.insert(QStringLiteral("entity_type"), entityType.trimmed());
+    if (!entityId.trimmed().isEmpty())
+        payload.insert(QStringLiteral("entity_id"), entityId.trimmed());
+    postEnterprise(QStringLiteral("/api/v1/enterprise-crm/reminders"), payload);
+}
+
+void ApiClient::createExpense(const QString &projectId, const QString &category, const QString &description, double amount, const QString &currency)
+{
+    QJsonObject payload{
+        {QStringLiteral("category"), category.trimmed()},
+        {QStringLiteral("description"), description.trimmed()},
+        {QStringLiteral("amount"), amount},
+        {QStringLiteral("currency"), currency.trimmed().isEmpty() ? QStringLiteral("EGP") : currency.trimmed().toUpper()},
+        {QStringLiteral("incurred_at"), QDateTime::currentDateTimeUtc().toString(Qt::ISODate)},
+    };
+    if (!projectId.trimmed().isEmpty())
+        payload.insert(QStringLiteral("project_id"), projectId.trimmed());
+    postEnterprise(QStringLiteral("/api/v1/enterprise-crm/expenses"), payload);
 }
 
 void ApiClient::fetchOverview()
