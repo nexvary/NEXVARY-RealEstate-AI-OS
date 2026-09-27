@@ -19,6 +19,7 @@ from .seo_api import router as seo_router
 from .setup_api import router as setup_router
 from .finance_api import router as finance_router
 from .growth_api import router as growth_router
+from .omnichannel_api import router as omnichannel_router
 from .platform_api import router as platform_router
 from .workspace_api import router as workspace_router
 
@@ -34,7 +35,7 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(
     title=settings.app_name,
-    version="1.7.0",
+    version="1.8.0",
     description="Transactional real-estate core with grounded AI/RAG orchestration boundaries.",
     lifespan=lifespan,
 )
@@ -49,7 +50,7 @@ app.add_middleware(
 
 @app.get("/health")
 def health() -> dict[str, str]:
-    return {"status": "ok", "service": "nexvary-realestate-api", "version": "1.7.0"}
+    return {"status": "ok", "service": "nexvary-realestate-api", "version": "1.8.0"}
 
 
 app.include_router(setup_router)
@@ -57,6 +58,7 @@ app.include_router(router)
 app.include_router(workspace_router)
 app.include_router(finance_router)
 app.include_router(growth_router)
+app.include_router(omnichannel_router)
 app.include_router(ai_router)
 app.include_router(automation_router)
 app.include_router(admin_router)
