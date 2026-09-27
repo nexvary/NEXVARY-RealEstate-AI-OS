@@ -61,6 +61,7 @@ class ApiClient final : public QObject
     Q_PROPERTY(QVariantMap automationGraph READ automationGraph NOTIFY automationGraphChanged)
     Q_PROPERTY(QVariantList automationRuns READ automationRuns NOTIFY automationRunsChanged)
     Q_PROPERTY(QString selectedAutomationWorkflowId READ selectedAutomationWorkflowId NOTIFY automationGraphChanged)
+    Q_PROPERTY(QVariantMap aiSalesResult READ aiSalesResult NOTIFY aiSalesResultChanged)
     Q_PROPERTY(QVariantMap enterpriseSummary READ enterpriseSummary NOTIFY enterpriseSummaryChanged)
     Q_PROPERTY(QVariantList proposals READ proposals NOTIFY proposalsChanged)
     Q_PROPERTY(QVariantList invoices READ invoices NOTIFY invoicesChanged)
@@ -121,6 +122,7 @@ public:
     QVariantMap automationGraph() const;
     QVariantList automationRuns() const;
     QString selectedAutomationWorkflowId() const;
+    QVariantMap aiSalesResult() const;
     QVariantMap enterpriseSummary() const;
     QVariantList proposals() const;
     QVariantList invoices() const;
@@ -193,6 +195,7 @@ public:
     Q_INVOKABLE void replaceAutomationGraph(const QString &workflowId, const QVariantList &nodes, const QVariantList &edges);
     Q_INVOKABLE void runAutomationWorkflow(const QString &workflowId, const QString &leadId);
     Q_INVOKABLE void decideAutomationApproval(const QString &approvalId, const QString &decision, const QString &note);
+    Q_INVOKABLE void runAiSalesAssist(const QString &question, const QString &city, double minPrice, double maxPrice, int bedrooms, const QString &unitType);
 
 signals:
     void baseUrlChanged();
@@ -237,6 +240,7 @@ signals:
     void automationWorkflowsChanged();
     void automationGraphChanged();
     void automationRunsChanged();
+    void aiSalesResultChanged();
     void enterpriseSummaryChanged();
     void proposalsChanged();
     void invoicesChanged();
@@ -333,6 +337,7 @@ private:
     QVariantMap m_automationGraph;
     QVariantList m_automationRuns;
     QString m_selectedAutomationWorkflowId;
+    QVariantMap m_aiSalesResult;
     QVariantMap m_enterpriseSummary;
     QVariantList m_proposals;
     QVariantList m_invoices;
