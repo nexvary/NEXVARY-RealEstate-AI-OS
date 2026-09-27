@@ -23,6 +23,12 @@ class ApiClient final : public QObject
     Q_PROPERTY(QVariantMap overview READ overview NOTIFY overviewChanged)
     Q_PROPERTY(QVariantList leads READ leads NOTIFY leadsChanged)
     Q_PROPERTY(QVariantList units READ units NOTIFY unitsChanged)
+    Q_PROPERTY(QVariantList projects READ projects NOTIFY projectsChanged)
+    Q_PROPERTY(QVariantList reservations READ reservations NOTIFY reservationsChanged)
+    Q_PROPERTY(QVariantList contracts READ contracts NOTIFY contractsChanged)
+    Q_PROPERTY(QVariantList installments READ installments NOTIFY installmentsChanged)
+    Q_PROPERTY(QVariantList commissions READ commissions NOTIFY commissionsChanged)
+    Q_PROPERTY(QVariantList appointments READ appointments NOTIFY appointmentsChanged)
     Q_PROPERTY(QVariantMap enterpriseSummary READ enterpriseSummary NOTIFY enterpriseSummaryChanged)
     Q_PROPERTY(QVariantList proposals READ proposals NOTIFY proposalsChanged)
     Q_PROPERTY(QVariantList invoices READ invoices NOTIFY invoicesChanged)
@@ -46,6 +52,12 @@ public:
     QVariantMap overview() const;
     QVariantList leads() const;
     QVariantList units() const;
+    QVariantList projects() const;
+    QVariantList reservations() const;
+    QVariantList contracts() const;
+    QVariantList installments() const;
+    QVariantList commissions() const;
+    QVariantList appointments() const;
     QVariantMap enterpriseSummary() const;
     QVariantList proposals() const;
     QVariantList invoices() const;
@@ -66,6 +78,18 @@ public:
     Q_INVOKABLE void createTicket(const QString &leadId, const QString &contractId, const QString &subject, const QString &description, const QString &priority);
     Q_INVOKABLE void createReminder(const QString &leadId, const QString &entityType, const QString &entityId, const QString &title, const QString &dueAtIso);
     Q_INVOKABLE void createExpense(const QString &projectId, const QString &category, const QString &description, double amount, const QString &currency);
+    Q_INVOKABLE void createLead(const QString &fullName, const QString &phone, const QString &email, const QString &source, const QString &city, double budget, int bedrooms, const QString &notes);
+    Q_INVOKABLE void updateLead(const QString &leadId, const QString &status, const QString &city, double budget, int bedrooms, const QString &notes);
+    Q_INVOKABLE void createProject(const QString &name, const QString &city, const QString &developer, const QString &description);
+    Q_INVOKABLE void createUnit(const QString &projectId, const QString &code, const QString &unitType, int bedrooms, double areaSqm, double price, const QString &currency);
+    Q_INVOKABLE void createReservation(const QString &leadId, const QString &unitId, double reservationAmount);
+    Q_INVOKABLE void cancelReservation(const QString &reservationId);
+    Q_INVOKABLE void convertReservationToContract(const QString &reservationId, const QString &contractNumber);
+    Q_INVOKABLE void loadInstallments(const QString &contractId);
+    Q_INVOKABLE void createInstallmentSchedule(const QString &contractId, const QString &firstDueAtIso, int installmentCount, int frequencyMonths);
+    Q_INVOKABLE void payInstallment(const QString &installmentId);
+    Q_INVOKABLE void createCommission(const QString &contractId, const QString &brokerName, double ratePercent);
+    Q_INVOKABLE void payCommission(const QString &commissionId);
 
 signals:
     void baseUrlChanged();
@@ -76,6 +100,12 @@ signals:
     void overviewChanged();
     void leadsChanged();
     void unitsChanged();
+    void projectsChanged();
+    void reservationsChanged();
+    void contractsChanged();
+    void installmentsChanged();
+    void commissionsChanged();
+    void appointmentsChanged();
     void enterpriseSummaryChanged();
     void proposalsChanged();
     void invoicesChanged();
@@ -90,6 +120,11 @@ private:
     void fetchOverview();
     void fetchLeads();
     void fetchUnits();
+    void fetchProjects();
+    void fetchReservations();
+    void fetchContracts();
+    void fetchCommissions();
+    void fetchAppointments();
     void fetchEnterpriseSummary();
     void fetchProposals();
     void fetchInvoices();
@@ -108,6 +143,12 @@ private:
     QVariantMap m_overview;
     QVariantList m_leads;
     QVariantList m_units;
+    QVariantList m_projects;
+    QVariantList m_reservations;
+    QVariantList m_contracts;
+    QVariantList m_installments;
+    QVariantList m_commissions;
+    QVariantList m_appointments;
     QVariantMap m_enterpriseSummary;
     QVariantList m_proposals;
     QVariantList m_invoices;
