@@ -497,6 +497,31 @@ void ApiClient::createUnit(const QString &projectId, const QString &code, const 
     });
 }
 
+void ApiClient::createAppointment(const QString &leadId, const QString &projectId, const QString &startsAtIso, const QString &notes)
+{
+    QJsonObject payload{
+        {QStringLiteral("lead_id"), leadId.trimmed()},
+        {QStringLiteral("starts_at"), startsAtIso.trimmed()},
+    };
+    if (!projectId.trimmed().isEmpty()) payload.insert(QStringLiteral("project_id"), projectId.trimmed());
+    if (!notes.trimmed().isEmpty()) payload.insert(QStringLiteral("notes"), notes.trimmed());
+
+    setBusy(true);
+    auto *reply = m_network.post(makeRequest(QStringLiteral("/api/v1/appointments"), true), QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply, leadId] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else {
+            setError(QString());
+            fetchAppointments();
+            fetchOverview();
+            if (!leadId.isEmpty()) loadTimeline(leadId);
+        }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
 void ApiClient::createReservation(const QString &leadId, const QString &unitId, double reservationAmount)
 {
     const QJsonObject payload{
