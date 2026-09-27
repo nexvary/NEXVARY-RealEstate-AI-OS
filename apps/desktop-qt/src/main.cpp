@@ -44,6 +44,9 @@ int main(int argc, char *argv[])
         QStringList{QStringLiteral("screenshot")},
         QStringLiteral("Capture the native shell then exit."),
         QStringLiteral("path"));
+    QCommandLineOption smokeTestOption(
+        QStringList{QStringLiteral("smoke-test")},
+        QStringLiteral("Load the packaged QML runtime, wait briefly, then exit successfully."));
     QCommandLineOption widthOption(
         QStringList{QStringLiteral("width")},
         QStringLiteral("Window width."),
@@ -58,6 +61,7 @@ int main(int argc, char *argv[])
     parser.addOption(languageOption);
     parser.addOption(apiUrlOption);
     parser.addOption(screenshotOption);
+    parser.addOption(smokeTestOption);
     parser.addOption(widthOption);
     parser.addOption(heightOption);
     parser.process(app);
@@ -128,7 +132,11 @@ int main(int argc, char *argv[])
         }
     });
 
-    if (parser.isSet(screenshotOption)) {
+    if (parser.isSet(smokeTestOption)) {
+        QTimer::singleShot(1800, &app, [&app] {
+            app.exit(0);
+        });
+    } else if (parser.isSet(screenshotOption)) {
         const QString path = parser.value(screenshotOption);
         QTimer::singleShot(1500, &app, [window, path, &app] {
             const QImage image = window->grabWindow();
