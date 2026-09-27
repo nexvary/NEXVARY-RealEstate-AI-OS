@@ -411,6 +411,15 @@ type CopilotResult = {
     price: number;
     currency: string;
   }>;
+  media: Array<{
+    id: string;
+    project_id?: string | null;
+    unit_id?: string | null;
+    title: string;
+    media_type: string;
+    url: string;
+    verified: boolean;
+  }>;
   evidence: Array<{
     document_title: string;
     source_name?: string | null;
@@ -472,7 +481,7 @@ export function AICopilotOps({ token, locale }: { token: string; locale: Locale 
           {busy ? <RefreshCw size={17} className="spin"/> : <Bot size={17}/>}
           {ar ? "تحليل البيانات" : "Analyze live data"}
         </button>
-        <div className="truthRules"><span>DB → Price</span><span>DB → Availability</span><span>Knowledge → Evidence</span></div>
+        <div className="truthRules"><span>DB → Price</span><span>DB → Availability</span><span>Knowledge → Evidence</span><span>Media → Verified assets</span></div>
       </form>
 
       <section className="panel copilotResult">
@@ -484,6 +493,8 @@ export function AICopilotOps({ token, locale }: { token: string; locale: Locale 
           <div className="groundingRow">{result.grounding.map(item=><span key={item}>{item}</span>)}</div>
           <h3>{ar ? "الوحدات المطابقة" : "Matching units"}</h3>
           <div className="copilotUnits">{result.units.map(unit=><article key={unit.id}><strong>{unit.code}</strong><span>{unit.unit_type} · {unit.bedrooms ?? "—"} BR · {Number(unit.area_sqm).toLocaleString()} m²</span><b>{money(Number(unit.price), unit.currency, locale)}</b></article>)}</div>
+          <h3>{ar ? "الوسائط المرتبطة" : "Related media"}</h3>
+          <div className="copilotMedia">{result.media.map(item=><a key={item.id} href={item.url} target="_blank" rel="noreferrer"><strong>{item.title}</strong><span>{item.media_type}{item.verified ? " · verified" : ""}</span></a>)}</div>
           <h3>{ar ? "المصادر" : "Sources"}</h3>
           <div className="hitList">{result.evidence.map((hit,index)=><article key={hit.document_title+"-"+hit.chunk_position}><span className="eyebrow">#{index+1} · score {hit.score}</span><strong>{hit.document_title}</strong><p>{hit.text}</p><small>{hit.source_name || "internal"}</small></article>)}</div>
         </>}
