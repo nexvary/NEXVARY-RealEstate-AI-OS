@@ -180,10 +180,6 @@ def bootstrap_development_workspace(db: Session = Depends(get_db)) -> BootstrapR
             role=owner.role.value,
         )
 
-    count = db.scalar(select(func.count()).select_from(Tenant)) or 0
-    if count != 0:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Development skip is available only before initial setup")
-
     tenant = Tenant(
         name="NEXVARY Development Workspace",
         slug="nexvary-dev",
