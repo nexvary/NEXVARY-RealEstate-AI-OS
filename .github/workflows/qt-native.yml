@@ -1,0 +1,87 @@
+name: Qt Native Migration
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches: ["migration/**"]
+    paths:
+      - "apps/desktop-qt/**"
+      - ".github/workflows/qt-native.yml"
+  pull_request:
+    paths:
+      - "apps/desktop-qt/**"
+      - ".github/workflows/qt-native.yml"
+      - "services/api/**"
+
+permissions:
+  contents: read
+
+jobs:
+  native-build:
+    name: Qt 6 C++20 (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt 6
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.8.3"
+          cache: true
+
+      - name: Configure
+        shell: bash
+        run: cmake -S apps/desktop-qt -B build-qt -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        shell: bash
+        run: cmake --build build-qt --config Release --parallel 2
+
+      - name: Test
+        shell: bash
+        run: ctest --test-dir build-qt -C Release --output-on-failure
+
+      - name: QML Arabic RTL screenshot gate
+        if: runner.os == 'Linux'
+        shell: bash
+        env:
+          QT_QPA_PLATFORM: offscreen
+          QT_QUICK_BACKEND: software
+        run: |
+          mkdir -p build-qt/ui-gate
+          ./build-qt/nexvary_realestate_native \
+            --language ar \
+            --width 1600 \
+            --height 900 \
+            --screenshot build-qt/ui-gate/native-ar-1600x900.png
+          test -s build-qt/ui-gate/native-ar-1600x900.png
+
+      - name: QML English screenshot gate
+        if: runner.os == 'Linux'
+        shell: bash
+        env:
+          QT_QPA_PLATFORM: offscreen
+          QT_QUICK_BACKEND: software
+        run: |
+          ./build-qt/nexvary_realestate_native \
+            --language en \
+            --width 1600 \
+            --height 900 \
+            --screenshot build-qt/ui-gate/native-en-1600x900.png
+          test -s build-qt/ui-gate/native-en-1600x900.png
+
+      - name: Upload native UI gate
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: qt-native-ui-gate
+          path: build-qt/ui-gate/*.png
+          if-no-files-found: error
