@@ -1,5 +1,5 @@
 import { CSSProperties, FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
-import { AICopilotOps, FinanceOps, InventoryOps, InboxOps, KnowledgeOps, SettingsOps, TasksOps, TeamOps } from "./Operations";
+import { AICopilotOps, FinanceOps, InventoryOps, KnowledgeOps, SettingsOps, TasksOps, TeamOps } from "./Operations";
 import PlatformAdminCenter from "./PlatformAdmin";
 import SEOAutopilot from "./SEOAutopilot";
 import WhatsAppOps from "./CommercialOps";
