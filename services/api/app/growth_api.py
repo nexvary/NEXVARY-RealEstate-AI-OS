@@ -272,11 +272,12 @@ def create_campaign(
 ) -> MarketingCampaign:
     if payload.ends_at and payload.starts_at and payload.ends_at < payload.starts_at:
         raise HTTPException(status_code=422, detail="Campaign end must be after start")
+    values = payload.model_dump()
+    values["currency"] = payload.currency.upper()
     row = MarketingCampaign(
         tenant_id=ctx.tenant_id,
         created_by_user_id=ctx.user_id,
-        **payload.model_dump(),
-        currency=payload.currency.upper(),
+        **values,
     )
     db.add(row)
     try:
