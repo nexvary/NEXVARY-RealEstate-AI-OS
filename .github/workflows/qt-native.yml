@@ -65,7 +65,7 @@ jobs:
           pip install -r services/api/requirements.txt
           pip install -r desktop/requirements-desktop.txt
 
-      - name: Build NEXVARY icon
+      - name: Build FG Machines icon
         if: runner.os == 'Windows'
         shell: pwsh
         run: python desktop/build_icon.py
@@ -80,9 +80,9 @@ jobs:
         shell: pwsh
         run: |
           cmake --install build-qt --config Release --prefix native-dist
-          $exe = Resolve-Path "native-dist/bin/nexvary_realestate_native.exe"
+          $exe = Resolve-Path "native-dist/bin/fg_machines_realestate.exe"
           windeployqt --release --qmldir apps/desktop-qt/qml $exe
-          Copy-Item "dist/NEXVARY-RealEstate-API.exe" "native-dist/bin/NEXVARY-RealEstate-API.exe" -Force
+          Copy-Item "dist/FG-Machines-RealEstate-Service.exe" "native-dist/bin/FG-Machines-RealEstate-Service.exe" -Force
 
       - name: Smoke-test packaged API sidecar
         if: runner.os == 'Windows'
@@ -90,7 +90,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path native-dist/smoke | Out-Null
           $env:NEXVARY_SIDECAR_LOG = (Resolve-Path "native-dist/smoke").Path + "\sidecar-standalone.log"
-          $api = Start-Process -FilePath "native-dist/bin/NEXVARY-RealEstate-API.exe" -ArgumentList "--port","8765" -PassThru
+          $api = Start-Process -FilePath "native-dist/bin/FG-Machines-RealEstate-Service.exe" -ArgumentList "--port","8765" -PassThru
           try {
             $ready = $false
             for ($i = 0; $i -lt 60; $i++) {
@@ -124,7 +124,7 @@ jobs:
           $env:QT_QPA_PLATFORM = "minimal"
           $env:QT_QUICK_BACKEND = "software"
 
-          & "native-dist/bin/nexvary_realestate_native.exe" --language ar --width 1600 --height 900 --smoke-test
+          & "native-dist/bin/fg_machines_realestate.exe" --language ar --width 1600 --height 900 --smoke-test
           if ($LASTEXITCODE -ne 0) {
             if (Test-Path $env:NEXVARY_SIDECAR_LOG) {
               Write-Host "===== Auto sidecar log ====="
@@ -154,7 +154,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $installer = Resolve-Path "native-installer\NEXVARY-RealEstate-AI-OS-v2.0.1-Windows-Setup.exe"
+          $installer = Resolve-Path "native-installer\FG-Machines-Real-Estate-OS-v2.0.2-Windows-Setup.exe"
           $installDir = Join-Path $PWD "native-installed"
           New-Item -ItemType Directory -Force -Path $installDir | Out-Null
 
@@ -169,8 +169,8 @@ jobs:
             throw "Native release installer failed with exit code $($installProcess.ExitCode)"
           }
 
-          $client = Join-Path $installDir "nexvary_realestate_native.exe"
-          $sidecar = Join-Path $installDir "NEXVARY-RealEstate-API.exe"
+          $client = Join-Path $installDir "fg_machines_realestate.exe"
+          $sidecar = Join-Path $installDir "FG-Machines-RealEstate-Service.exe"
           if (-not (Test-Path $client)) { throw "Installed Qt client is missing" }
           if (-not (Test-Path $sidecar)) { throw "Installed API sidecar is missing" }
 
@@ -192,7 +192,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $file = Get-ChildItem "native-installer\NEXVARY-RealEstate-AI-OS-v2.0.1-Windows-Setup.exe"
+          $file = Get-ChildItem "native-installer\FG-Machines-Real-Estate-OS-v2.0.2-Windows-Setup.exe"
           $hash = (Get-FileHash $file.FullName -Algorithm SHA256).Hash.ToLower()
           "$hash  $($file.Name)" | Out-File -Encoding ascii "native-installer\SHA256.txt"
           Get-Content "native-installer\SHA256.txt"
@@ -201,9 +201,9 @@ jobs:
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
         with:
-          name: NEXVARY-RealEstate-AI-OS-v2.0.1-Windows
+          name: FG-Machines-Real-Estate-OS-v2.0.2-Windows
           path: |
-            native-installer/NEXVARY-RealEstate-AI-OS-v2.0.1-Windows-Setup.exe
+            native-installer/FG-Machines-Real-Estate-OS-v2.0.2-Windows-Setup.exe
             native-installer/SHA256.txt
             native-dist/smoke/*.log
             native-installer/install-smoke/*.log
@@ -215,17 +215,17 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $tag = "v2.0.1"
+          $tag = "v2.0.2"
           gh release view $tag --repo "${{ github.repository }}" *> $null
           if ($LASTEXITCODE -ne 0) {
             gh release create $tag `
               --repo "${{ github.repository }}" `
               --target "${{ github.sha }}" `
-              --title "NEXVARY RealEstate AI OS v2.0.1" `
-              --notes "Corrected native Windows release: first-run recovery, previous-workspace access, redesigned NX identity, and vector navigation icons."
+              --title "FG Machines Real Estate OS v2.0.2" `
+              --notes "White-label Windows release: FG Machines identity, complete live language switching, editable social links, and redesigned company page."
           }
           gh release upload $tag `
-            "native-installer\NEXVARY-RealEstate-AI-OS-v2.0.1-Windows-Setup.exe" `
+            "native-installer\FG-Machines-Real-Estate-OS-v2.0.2-Windows-Setup.exe" `
             "native-installer\SHA256.txt" `
             --repo "${{ github.repository }}" `
             --clobber
@@ -238,7 +238,7 @@ jobs:
           QT_QUICK_BACKEND: software
         run: |
           mkdir -p build-qt/ui-gate
-          ./build-qt/nexvary_realestate_native \
+          ./build-qt/fg_machines_realestate \
             --language ar \
             --width 1600 \
             --height 900 \
@@ -253,7 +253,7 @@ jobs:
           QT_QPA_PLATFORM: offscreen
           QT_QUICK_BACKEND: software
         run: |
-          ./build-qt/nexvary_realestate_native \
+          ./build-qt/fg_machines_realestate \
             --language en \
             --width 1600 \
             --height 900 \

@@ -42,11 +42,11 @@ Item {
             Layout.fillWidth: true; layoutDirection: appState.rtl ? Qt.RightToLeft : Qt.LeftToRight
             ColumnLayout {
                 Layout.fillWidth: true
-                Text { text: appState.t("tasks"); color: Theme.platinum; font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"; font.pixelSize: 29; font.bold: true }
+                Text { text: (appState.language, appState.t("tasks")); color: Theme.platinum; font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"; font.pixelSize: 29; font.bold: true }
                 Text { text: appState.rtl ? "متابعة المبيعات والتسليم والتحويل البشري" : "Sales follow-up, delivery and human-handoff tasks"; color: Theme.muted; font.pixelSize: 12 }
             }
             Button { text: appState.rtl ? "+ مهمة" : "+ Task"; onClicked: taskDialog.open() }
-            Button { text: appState.t("refresh"); onClicked: apiClient.refreshWorkspace() }
+            Button { text: (appState.language, appState.t("refresh")); onClicked: apiClient.refreshWorkspace() }
         }
 
         GridLayout {

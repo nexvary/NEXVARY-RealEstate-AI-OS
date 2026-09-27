@@ -67,7 +67,7 @@ Item {
             ColumnLayout {
                 Layout.fillWidth: true
                 Text {
-                    text: appState.t("appointments")
+                    text: (appState.language, appState.t("appointments"))
                     color: Theme.platinum
                     font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"
                     font.pixelSize: 29
@@ -80,7 +80,7 @@ Item {
                 }
             }
             Button { text: appState.rtl ? "+ موعد" : "+ Appointment"; enabled: apiClient.leads.length > 0; onClicked: appointmentDialog.open() }
-            Button { text: appState.t("refresh"); onClicked: apiClient.refreshAll() }
+            Button { text: (appState.language, appState.t("refresh")); onClicked: apiClient.refreshAll() }
         }
 
         Rectangle {

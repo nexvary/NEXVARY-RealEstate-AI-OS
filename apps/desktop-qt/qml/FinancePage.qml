@@ -96,11 +96,11 @@ Item {
             layoutDirection:appState.rtl?Qt.RightToLeft:Qt.LeftToRight
             ColumnLayout {
                 Layout.fillWidth:true
-                Text { text:appState.t("finance");color:Theme.platinum;font.family:appState.rtl?"Noto Kufi Arabic":"Segoe UI";font.pixelSize:29;font.bold:true }
+                Text { text:(appState.language, appState.t("finance"));color:Theme.platinum;font.family:appState.rtl?"Noto Kufi Arabic":"Segoe UI";font.pixelSize:29;font.bold:true }
                 Text { text:appState.rtl?"الحجوزات والعقود والأقساط والعمولات":"Reservations, contracts, installments and commissions";color:Theme.muted;font.pixelSize:12 }
             }
             Button{text:appState.rtl?"+ حجز":"+ Reservation";enabled:apiClient.leads.length>0&&apiClient.units.length>0;onClicked:reserveDialog.open()}
-            Button{text:appState.t("refresh");onClicked:apiClient.refreshAll()}
+            Button{text:(appState.language, appState.t("refresh"));onClicked:apiClient.refreshAll()}
         }
 
         GridLayout {

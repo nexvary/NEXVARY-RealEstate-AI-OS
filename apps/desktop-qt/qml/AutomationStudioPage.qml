@@ -112,11 +112,11 @@ Item {
             layoutDirection:appState.rtl?Qt.RightToLeft:Qt.LeftToRight
             ColumnLayout{
                 Layout.fillWidth:true
-                Text{text:appState.t("automation");color:Theme.platinum;font.family:appState.rtl?"Noto Kufi Arabic":"Segoe UI";font.pixelSize:29;font.bold:true}
+                Text{text:(appState.language, appState.t("automation"));color:Theme.platinum;font.family:appState.rtl?"Noto Kufi Arabic":"Segoe UI";font.pixelSize:29;font.bold:true}
                 Text{text:appState.rtl?"Workflow Editor أصلي · تنفيذ داخلي آمن · اعتماد بشري":"Native workflow editor · safe internal actions · human approvals";color:Theme.muted;font.pixelSize:12}
             }
             Button{visible:root.canEdit;text:appState.rtl?"+ Workflow":"+ Workflow";onClicked:createDialog.open()}
-            Button{text:appState.t("refresh");onClicked:apiClient.refreshAutomation()}
+            Button{text:(appState.language, appState.t("refresh"));onClicked:apiClient.refreshAutomation()}
         }
 
         Rectangle {

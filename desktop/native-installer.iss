@@ -1,8 +1,8 @@
-#define MyAppName "NEXVARY RealEstate AI OS"
-#define MyAppVersion "2.0.1"
-#define MyAppPublisher "NEXVARY"
-#define MyAppURL "https://nexvary.com/"
-#define MyAppExeName "nexvary_realestate_native.exe"
+#define MyAppName "FG Machines Real Estate OS"
+#define MyAppVersion "2.0.2"
+#define MyAppPublisher "FG Machines"
+#define MyAppURL ""
+#define MyAppExeName "fg_machines_realestate.exe"
 
 [Setup]
 AppId={{8E7D0B3C-6E8A-4C2E-8E85-A872C7C90850}
@@ -11,11 +11,11 @@ AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
-DefaultDirName={autopf}\NEXVARY\RealEstate AI OS Native
-DefaultGroupName=NEXVARY RealEstate AI OS Native
+DefaultDirName={autopf}\FG Machines\Real Estate OS
+DefaultGroupName=FG Machines Real Estate OS
 DisableProgramGroupPage=yes
 OutputDir=..\native-installer
-OutputBaseFilename=NEXVARY-RealEstate-AI-OS-v2.0.1-Windows-Setup
+OutputBaseFilename=FG-Machines-Real-Estate-OS-v2.0.2-Windows-Setup
 SetupIconFile=nexvary-realestate.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 Compression=lzma2/ultra64
@@ -37,12 +37,18 @@ Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription:
 [Files]
 Source: "..\native-dist\bin\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
+[InstallDelete]
+Type: files; Name: "{app}\nexvary_realestate_native.exe"
+Type: files; Name: "{app}\NEXVARY-RealEstate-API.exe"
+Type: files; Name: "{autodesktop}\NEXVARY RealEstate AI OS Native.lnk"
+Type: files; Name: "{autoprograms}\NEXVARY RealEstate AI OS Native.lnk"
+
 [Icons]
-Name: "{autoprograms}\NEXVARY RealEstate AI OS Native"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"
-Name: "{autodesktop}\NEXVARY RealEstate AI OS Native"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{autoprograms}\FG Machines Real Estate OS"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"
+Name: "{autodesktop}\FG Machines Real Estate OS"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "Launch NEXVARY RealEstate AI OS Native"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#MyAppExeName}"; Description: "Launch FG Machines Real Estate OS"; Flags: nowait postinstall skipifsilent
 
 [Code]
 procedure CurInstallProgressChanged(CurProgress, MaxProgress: Integer);
@@ -62,5 +68,5 @@ begin
   else if Pct < 88 then
     WizardForm.StatusLabel.Caption := 'Preparing white-label branding, company cover and RTL interface...'
   else
-    WizardForm.StatusLabel.Caption := 'Finalizing secure local API sidecar and NEXVARY runtime...';
+    WizardForm.StatusLabel.Caption := 'Finalizing FG Machines secure local services...';
 end;

@@ -55,7 +55,7 @@ Flickable {
                     Layout.fillWidth: true
                     spacing: 5
                     Text {
-                        text: "NEXVARY RealEstate AI OS"
+                        text: "FG Machines Real Estate OS"
                         color: Theme.platinum
                         font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"
                         font.pixelSize: 31

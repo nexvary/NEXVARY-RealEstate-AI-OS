@@ -48,7 +48,7 @@ Item {
 
             Text {
                 Layout.fillWidth: true
-                text: appState.t("secureWorkspace")
+                text: (appState.language, appState.t("secureWorkspace"))
                 color: Theme.electricCyan
                 font.pixelSize: 11
                 font.bold: true
@@ -58,7 +58,7 @@ Item {
 
             Text {
                 Layout.fillWidth: true
-                text: appState.t("loginTitle")
+                text: (appState.language, appState.t("loginTitle"))
                 color: Theme.platinum
                 font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"
                 font.pixelSize: 27
@@ -68,7 +68,7 @@ Item {
 
             Text {
                 Layout.fillWidth: true
-                text: appState.t("loginText")
+                text: (appState.language, appState.t("loginText"))
                 color: Theme.muted
                 font.pixelSize: 13
                 wrapMode: Text.WordWrap
@@ -81,7 +81,7 @@ Item {
                 id: tenant
                 Layout.fillWidth: true
                 Layout.preferredHeight: 48
-                placeholderText: appState.t("companyId")
+                placeholderText: (appState.language, appState.t("companyId"))
                 horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
                 onTextChanged: apiClient.clearError()
             }
@@ -90,7 +90,7 @@ Item {
                 id: email
                 Layout.fillWidth: true
                 Layout.preferredHeight: 48
-                placeholderText: appState.t("email")
+                placeholderText: (appState.language, appState.t("email"))
                 inputMethodHints: Qt.ImhEmailCharactersOnly
                 horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
                 onTextChanged: apiClient.clearError()
@@ -100,7 +100,7 @@ Item {
                 id: password
                 Layout.fillWidth: true
                 Layout.preferredHeight: 48
-                placeholderText: appState.t("password")
+                placeholderText: (appState.language, appState.t("password"))
                 echoMode: TextInput.Password
                 horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
                 onAccepted: loginButton.clicked()
@@ -134,7 +134,7 @@ Item {
                 Layout.preferredHeight: 50
                 enabled: !apiClient.busy && tenant.text.trim().length > 0
                     && email.text.trim().length > 0 && password.text.length > 0
-                text: apiClient.busy ? "…" : appState.t("signIn")
+                text: apiClient.busy ? "…" : (appState.language, appState.t("signIn"))
                 onClicked: apiClient.login(tenant.text, email.text, password.text)
 
                 background: Rectangle {

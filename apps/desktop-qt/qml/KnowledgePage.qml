@@ -54,11 +54,11 @@ Item {
             layoutDirection: appState.rtl ? Qt.RightToLeft : Qt.LeftToRight
             ColumnLayout {
                 Layout.fillWidth: true
-                Text { text: appState.t("knowledge"); color: Theme.platinum; font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"; font.pixelSize: 29; font.bold: true }
+                Text { text: (appState.language, appState.t("knowledge")); color: Theme.platinum; font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"; font.pixelSize: 29; font.bold: true }
                 Text { text: appState.rtl ? "مصادر موثوقة للبحث والردود المبنية على الأدلة" : "Verified sources for grounded search and sales replies"; color: Theme.muted; font.pixelSize: 12 }
             }
             Button { text: appState.rtl ? "+ مستند" : "+ Document"; onClicked: addDialog.open() }
-            Button { text: appState.t("refresh"); onClicked: apiClient.refreshWorkspace() }
+            Button { text: (appState.language, appState.t("refresh")); onClicked: apiClient.refreshWorkspace() }
         }
 
         Rectangle {

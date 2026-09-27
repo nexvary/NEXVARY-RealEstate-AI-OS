@@ -12,8 +12,8 @@ import urllib.request
 from pathlib import Path
 
 
-APP_NAME = "NEXVARY RealEstate AI OS"
-APP_DIR_NAME = "NEXVARY-RealEstate-AI-OS"
+APP_NAME = "FG Machines Real Estate OS"
+APP_DIR_NAME = "Real Estate OS"
 SCHEMA_GENERATION = "v1.8"
 
 
@@ -76,7 +76,14 @@ def archive_incompatible_development_database(data_dir: Path) -> None:
 
 def configure_runtime() -> tuple[Path, Path]:
     local_app_data = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
-    data_dir = local_app_data / "NEXVARY" / APP_DIR_NAME
+    data_dir = local_app_data / "FG Machines" / APP_DIR_NAME
+    legacy_data_dir = local_app_data / "NEXVARY" / "NEXVARY-RealEstate-AI-OS"
+    if legacy_data_dir.exists() and not data_dir.exists():
+        data_dir.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            shutil.move(str(legacy_data_dir), str(data_dir))
+        except OSError:
+            data_dir = legacy_data_dir
     data_dir.mkdir(parents=True, exist_ok=True)
     archive_orphaned_sqlite_sidecars(data_dir)
     archive_incompatible_development_database(data_dir)

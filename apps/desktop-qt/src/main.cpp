@@ -23,16 +23,16 @@
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
-    QGuiApplication::setOrganizationName(QStringLiteral("NEXVARY"));
-    QGuiApplication::setOrganizationDomain(QStringLiteral("nexvary.com"));
-    QGuiApplication::setApplicationName(QStringLiteral("NEXVARY RealEstate AI OS"));
-    QGuiApplication::setApplicationVersion(QStringLiteral("2.0.1"));
+    QGuiApplication::setOrganizationName(QStringLiteral("FG Machines"));
+    QGuiApplication::setOrganizationDomain(QStringLiteral("fgmachines.local"));
+    QGuiApplication::setApplicationName(QStringLiteral("FG Machines Real Estate OS"));
+    QGuiApplication::setApplicationVersion(QStringLiteral("2.0.2"));
     QGuiApplication::setWindowIcon(QIcon(QStringLiteral(":/qt/qml/Nexvary/RealEstate/assets/nexvary-mark.svg")));
 
     QQuickStyle::setStyle(QStringLiteral("Basic"));
 
     QCommandLineParser parser;
-    parser.setApplicationDescription(QStringLiteral("NEXVARY RealEstate AI OS — Qt 6 native desktop"));
+    parser.setApplicationDescription(QStringLiteral("FG Machines Real Estate OS — native desktop"));
     parser.addHelpOption();
     parser.addVersionOption();
 
@@ -83,9 +83,9 @@ int main(int argc, char *argv[])
     } else {
         const QString sidecarName =
 #ifdef Q_OS_WIN
-            QStringLiteral("NEXVARY-RealEstate-API.exe");
+            QStringLiteral("FG-Machines-RealEstate-Service.exe");
 #else
-            QStringLiteral("NEXVARY-RealEstate-API");
+            QStringLiteral("FG-Machines-RealEstate-Service");
 #endif
         const QString sidecarPath = QDir(QCoreApplication::applicationDirPath()).filePath(sidecarName);
         if (QFileInfo::exists(sidecarPath)) {
@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
             QFile logFile(logPath);
             if (logFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
                 QTextStream stream(&logFile);
-                stream << "NEXVARY Qt QML startup failure\n";
+                stream << "FG Machines Qt QML startup failure\n";
                 stream << "applicationDir=" << QCoreApplication::applicationDirPath() << "\n";
                 stream << "importPaths=" << engine.importPathList().join(QStringLiteral(";")) << "\n";
                 for (const QString &line : qmlDiagnostics)

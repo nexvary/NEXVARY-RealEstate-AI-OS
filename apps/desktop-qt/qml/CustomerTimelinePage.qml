@@ -19,14 +19,14 @@ Item {
                 Layout.fillWidth: true
                 spacing: 3
                 Text {
-                    text: appState.t("customerTimeline")
+                    text: (appState.language, appState.t("customerTimeline"))
                     color: Theme.platinum
                     font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"
                     font.pixelSize: 29
                     font.bold: true
                 }
                 Text {
-                    text: appState.t("timelineSelectLead")
+                    text: (appState.language, appState.t("timelineSelectLead"))
                     color: Theme.muted
                     font.pixelSize: 12
                 }

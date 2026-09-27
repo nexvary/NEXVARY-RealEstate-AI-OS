@@ -28,7 +28,7 @@ Flickable {
                 Layout.fillWidth: true
                 spacing: 3
                 Text {
-                    text: appState.t("ai")
+                    text: (appState.language, appState.t("ai"))
                     color: Theme.platinum
                     font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"
                     font.pixelSize: 29

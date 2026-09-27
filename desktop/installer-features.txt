@@ -1,4 +1,4 @@
-NEXVARY RealEstate AI OS — White-Label v1.8.0
+FG Machines Real Estate OS — White-Label v2.0.2
 
 A complete operating platform for modern real-estate teams.
 
@@ -29,4 +29,4 @@ A complete operating platform for modern real-estate teams.
 • Security & Governance
   RBAC, tenant isolation, encrypted integration secrets, audit trail and safe exports.
 
-NEXVARY — Secure Today, Protect Tomorrow.
+FG Machines — Smarter Real Estate Operations.

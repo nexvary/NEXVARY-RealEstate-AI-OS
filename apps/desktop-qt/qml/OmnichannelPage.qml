@@ -96,12 +96,12 @@ Item {
             Layout.fillWidth:true; layoutDirection:appState.rtl?Qt.RightToLeft:Qt.LeftToRight
             ColumnLayout {
                 Layout.fillWidth:true
-                Text{text:appState.t("inbox");color:Theme.platinum;font.family:appState.rtl?"Noto Kufi Arabic":"Segoe UI";font.pixelSize:29;font.bold:true}
+                Text{text:(appState.language, appState.t("inbox"));color:Theme.platinum;font.family:appState.rtl?"Noto Kufi Arabic":"Segoe UI";font.pixelSize:29;font.bold:true}
                 Text{text:appState.rtl?"صندوق موحد · WhatsApp · AI Sales · موافقات · تحويل بشري":"Unified inbox · WhatsApp · AI Sales · approvals · human handoff";color:Theme.muted;font.pixelSize:12}
             }
             Button{text:appState.rtl?"+ محادثة":"+ Conversation";onClicked:conversationDialog.open()}
             Button{visible:apiClient.userRole==="owner"||apiClient.userRole==="admin";text:"WhatsApp +";onClicked:whatsappDialog.open()}
-            Button{text:appState.t("refresh");onClicked:apiClient.refreshWorkspace()}
+            Button{text:(appState.language, appState.t("refresh"));onClicked:apiClient.refreshWorkspace()}
         }
 
         GridLayout {

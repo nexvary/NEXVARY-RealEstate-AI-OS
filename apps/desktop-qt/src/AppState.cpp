@@ -7,7 +7,7 @@ namespace {
 using TranslationPair = QPair<QString, QString>;
 
 const QHash<QString, TranslationPair> kTranslations{
-    {"appTitle", {"NEXVARY RealEstate AI OS", "NEXVARY RealEstate AI OS"}},
+    {"appTitle", {"FG Machines لإدارة العقارات", "FG Machines Real Estate OS"}},
     {"dashboard", {"لوحة التحكم", "Dashboard"}},
     {"leads", {"العملاء المحتملون", "Leads"}},
     {"inventory", {"الوحدات والمخزون", "Inventory"}},

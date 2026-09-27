@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(NEXVARYRealEstateNative VERSION 2.0.0 LANGUAGES CXX)
+project(FGMachinesRealEstateNative VERSION 2.0.2 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -32,6 +32,7 @@ endif()
 qt_add_executable(nexvary_realestate_native
     src/main.cpp
 )
+set_target_properties(nexvary_realestate_native PROPERTIES OUTPUT_NAME "fg_machines_realestate")
 
 set(NEXVARY_QML_FILES
     qml/Main.qml

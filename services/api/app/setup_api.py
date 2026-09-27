@@ -19,6 +19,9 @@ from .security import create_access_token, hash_password
 
 router = APIRouter(prefix="/api/v1")
 
+WHITE_LABEL_SLUG = "fg-machines"
+LEGACY_DEVELOPMENT_SLUG = "nexvary-dev"
+
 
 class SetupStatus(BaseModel):
     needs_setup: bool
@@ -54,7 +57,9 @@ def setup_status(db: Session = Depends(get_db)) -> SetupStatus:
     count = db.scalar(select(func.count()).select_from(Tenant)) or 0
     settings = get_settings()
     development_workspace = db.scalar(
-        select(func.count()).select_from(Tenant).where(Tenant.slug == "nexvary-dev")
+        select(func.count()).select_from(Tenant).where(
+            Tenant.slug.in_((WHITE_LABEL_SLUG, LEGACY_DEVELOPMENT_SLUG))
+        )
     ) or 0
     return SetupStatus(
         needs_setup=count == 0,
@@ -142,12 +147,47 @@ def _write_development_marker() -> None:
             {
                 "enabled": True,
                 "schema_generation": os.getenv("NEXVARY_SCHEMA_GENERATION", "v1.5"),
-                "workspace_slug": "nexvary-dev",
+                "workspace_slug": WHITE_LABEL_SLUG,
             },
             indent=2,
         ),
         encoding="utf-8",
     )
+
+
+def _apply_fg_machines_identity(db: Session, tenant: Tenant, owner: User) -> None:
+    """Upgrade the bundled desktop workspace without exposing the upstream brand."""
+    legacy_identity = (
+        tenant.slug == LEGACY_DEVELOPMENT_SLUG
+        or "nexvary" in (tenant.name or "").lower()
+        or "nexvary" in (tenant.brand_name or "").lower()
+    )
+    tenant.name = "FG Machines"
+    tenant.brand_name = "FG Machines"
+    tenant.slug = WHITE_LABEL_SLUG
+    if owner.display_name in {"Development Owner", "NEXVARY Development Owner"}:
+        owner.display_name = "FG Machines Owner"
+
+    profile = db.scalar(
+        select(TenantSaaSProfile).where(TenantSaaSProfile.tenant_id == tenant.id)
+    )
+    if profile is not None:
+        profile.powered_by_nexvary = 0
+        for field in (
+            "contact_email",
+            "website_url",
+            "facebook_url",
+            "linkedin_url",
+            "youtube_url",
+            "x_url",
+            "tiktok_url",
+        ):
+            value = getattr(profile, field, None)
+            if legacy_identity or (value and "nexvary" in value.lower()):
+                setattr(profile, field, None)
+    db.commit()
+    db.refresh(tenant)
+    db.refresh(owner)
 
 
 @router.post("/auth/bootstrap-development", response_model=BootstrapResponse, status_code=201)
@@ -156,7 +196,9 @@ def bootstrap_development_workspace(db: Session = Depends(get_db)) -> BootstrapR
     if settings.app_env not in {"desktop", "development", "test"}:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Development setup is not available")
 
-    existing = db.scalar(select(Tenant).where(Tenant.slug == "nexvary-dev"))
+    existing = db.scalar(
+        select(Tenant).where(Tenant.slug.in_((WHITE_LABEL_SLUG, LEGACY_DEVELOPMENT_SLUG)))
+    )
     if existing is not None:
         owner = db.scalar(
             select(User).where(
@@ -167,6 +209,7 @@ def bootstrap_development_workspace(db: Session = Depends(get_db)) -> BootstrapR
         )
         if owner is None:
             raise HTTPException(status_code=409, detail="Development workspace owner is missing")
+        _apply_fg_machines_identity(db, existing, owner)
         token = create_access_token(user_id=owner.id, tenant_id=existing.id, role=owner.role.value)
         _write_development_marker()
         return BootstrapResponse(
@@ -181,9 +224,9 @@ def bootstrap_development_workspace(db: Session = Depends(get_db)) -> BootstrapR
         )
 
     tenant = Tenant(
-        name="NEXVARY Development Workspace",
-        slug="nexvary-dev",
-        brand_name="NEXVARY Development",
+        name="FG Machines",
+        slug=WHITE_LABEL_SLUG,
+        brand_name="FG Machines",
         primary_color="#128FE7",
     )
     db.add(tenant)
@@ -192,8 +235,8 @@ def bootstrap_development_workspace(db: Session = Depends(get_db)) -> BootstrapR
         generated_password = secrets.token_urlsafe(48)
         owner = User(
             tenant_id=tenant.id,
-            email="developer@nexvary.local",
-            display_name="Development Owner",
+            email="owner@fgmachines.local",
+            display_name="FG Machines Owner",
             role=UserRole.owner,
             password_hash=hash_password(generated_password),
         )
@@ -211,11 +254,7 @@ def bootstrap_development_workspace(db: Session = Depends(get_db)) -> BootstrapR
                 tenant_id=tenant.id,
                 plan=TenantPlan.professional,
                 lifecycle=TenantLifecycle.active,
-                contact_email="info@nexvary.com",
-                website_url="https://nexvary.com/",
-                facebook_url="https://www.facebook.com/share/14p9krEn5ij/",
-                youtube_url="https://www.youtube.com/@NexvaryInc",
-                x_url="https://x.com/Nexvary",
+                powered_by_nexvary=0,
                 **PLAN_DEFAULTS[TenantPlan.professional],
             )
         )
@@ -253,7 +292,9 @@ def development_session(db: Session = Depends(get_db)) -> BootstrapResponse:
     settings = get_settings()
     if settings.app_env not in {"desktop", "test"}:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Desktop development session is not available")
-    tenant = db.scalar(select(Tenant).where(Tenant.slug == "nexvary-dev"))
+    tenant = db.scalar(
+        select(Tenant).where(Tenant.slug.in_((WHITE_LABEL_SLUG, LEGACY_DEVELOPMENT_SLUG)))
+    )
     if tenant is None:
         raise HTTPException(status_code=404, detail="Development workspace not found")
     owner = db.scalar(
@@ -265,6 +306,7 @@ def development_session(db: Session = Depends(get_db)) -> BootstrapResponse:
     )
     if owner is None:
         raise HTTPException(status_code=404, detail="Development owner not found")
+    _apply_fg_machines_identity(db, tenant, owner)
     _write_development_marker()
     token = create_access_token(user_id=owner.id, tenant_id=tenant.id, role=owner.role.value)
     return BootstrapResponse(

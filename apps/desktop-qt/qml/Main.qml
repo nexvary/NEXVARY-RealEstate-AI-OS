@@ -10,7 +10,7 @@ ApplicationWindow {
     minimumWidth: 1180
     minimumHeight: 720
     visible: true
-    title: appState.t("appTitle")
+    title: (appState.language, appState.t("appTitle"))
     color: Theme.bg
 
     property real uiScale: Math.max(0.92, Math.min(1.22, width / 1600.0))
@@ -85,7 +85,7 @@ ApplicationWindow {
                         spacing: 2
                         Text {
                             Layout.fillWidth: true
-                            text: "NEXVARY"
+                            text: apiClient.tenantSettings.brand_name || apiClient.tenantSettings.name || "FG Machines"
                             color: Theme.platinum
                             font.pixelSize: 19
                             font.bold: true
@@ -94,7 +94,7 @@ ApplicationWindow {
                         }
                         Text {
                             Layout.fillWidth: true
-                            text: "REALESTATE AI OS"
+                            text: appState.rtl ? "نظام إدارة العقارات" : "REAL ESTATE OS"
                             color: Theme.electricCyan
                             font.pixelSize: 9
                             font.bold: true
@@ -103,7 +103,7 @@ ApplicationWindow {
                         }
                         Text {
                             Layout.fillWidth: true
-                            text: "QT 6 · C++20 · QML"
+                            text: appState.rtl ? "إدارة · مبيعات · نمو" : "OPERATIONS · SALES · GROWTH"
                             color: Theme.gold
                             font.pixelSize: 9
                             horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
@@ -129,7 +129,7 @@ ApplicationWindow {
                             delegate: SidebarItem {
                                 required property var modelData
                                 required property int index
-                                label: appState.t(modelData.key)
+                                label: (appState.language, appState.t(modelData.key))
                                 iconName: modelData.icon
                                 pageId: modelData.page
                                 itemIndex: index
@@ -206,7 +206,7 @@ ApplicationWindow {
 
                     Button {
                         visible: apiClient.loggedIn && appState.currentPage !== "dashboard"
-                        text: (appState.rtl ? "→ " : "← ") + appState.t("back")
+                        text: (appState.rtl ? "→ " : "← ") + (appState.language, appState.t("back"))
                         onClicked: appState.goBack()
                     }
 
@@ -495,7 +495,7 @@ ApplicationWindow {
 
                 Text {
                     Layout.fillWidth: true
-                    text: appState.t("nativeMigration") + " · " + appState.t(appState.currentPage)
+                    text: (appState.language, appState.t("nativeMigration")) + " · " + (appState.language, appState.t(appState.currentPage))
                     color: Theme.platinum
                     font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"
                     font.pixelSize: 26
@@ -505,7 +505,7 @@ ApplicationWindow {
 
                 Text {
                     Layout.fillWidth: true
-                    text: appState.t("migrationNotice")
+                    text: (appState.language, appState.t("migrationNotice"))
                     color: Theme.muted
                     font.pixelSize: 13
                     wrapMode: Text.WordWrap

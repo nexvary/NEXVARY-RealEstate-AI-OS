@@ -6,7 +6,7 @@
   </defs>
   <rect x="10" y="10" width="236" height="236" rx="55" fill="url(#bg)" stroke="url(#silver)" stroke-width="6"/>
   <rect x="22" y="22" width="212" height="212" rx="45" fill="none" stroke="#28c8ff" stroke-width="4"/>
-  <path d="M61 178V76L126 178V76" fill="none" stroke="url(#silver)" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M143 78L199 178M199 78L143 178" fill="none" stroke="url(#blue)" stroke-width="17" stroke-linecap="round"/>
+  <path d="M62 180V76H132M62 126H119" fill="none" stroke="url(#silver)" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M199 98C188 80 170 72 150 78C123 87 119 122 122 145C126 176 145 188 168 184C182 182 193 175 201 164V139H169" fill="none" stroke="url(#blue)" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M58 201H202" stroke="#4bdcff" stroke-width="5" stroke-linecap="round" opacity=".78"/>
 </svg>

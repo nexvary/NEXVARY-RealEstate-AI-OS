@@ -12,10 +12,12 @@ Flickable {
 
     property string logoData: ""
     property string coverData: ""
+    property bool saveRequested: false
+    property bool savedSuccessfully: false
 
     function loadSettings() {
         var s = apiClient.tenantSettings
-        brandField.text = s.brand_name || s.name || "NEXVARY"
+        brandField.text = s.brand_name || s.name || "FG Machines"
         colorField.text = s.primary_color || "#128FE7"
         emailField.text = s.contact_email || ""
         websiteField.text = s.website_url || ""
@@ -31,8 +33,21 @@ Flickable {
     Component.onCompleted: loadSettings()
     Connections {
         target: apiClient
-        function onTenantSettingsChanged() { root.loadSettings() }
+        function onTenantSettingsChanged() {
+            root.loadSettings()
+            if (root.saveRequested) {
+                root.savedSuccessfully = true
+                root.saveRequested = false
+                savedTimer.restart()
+            }
+        }
+        function onLastErrorChanged() {
+            if (apiClient.lastError.length > 0)
+                root.saveRequested = false
+        }
     }
+
+    Timer { id: savedTimer; interval: 3500; onTriggered: root.savedSuccessfully = false }
 
     FileDialog {
         id: logoDialog
@@ -65,7 +80,7 @@ Flickable {
             ColumnLayout {
                 Layout.fillWidth: true
                 Text {
-                    text: appState.t("settings")
+                    text: (appState.language, appState.t("settings"))
                     color: Theme.platinum
                     font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"
                     font.pixelSize: 29
@@ -80,18 +95,22 @@ Flickable {
             Button {
                 text: appState.rtl ? "حفظ التغييرات" : "Save Changes"
                 enabled: !apiClient.busy
-                onClicked: apiClient.updateTenantSettings(
-                    brandField.text,
-                    colorField.text,
-                    root.logoData,
-                    root.coverData,
-                    emailField.text,
-                    websiteField.text,
-                    facebookField.text,
-                    linkedinField.text,
-                    youtubeField.text,
-                    xField.text,
-                    tiktokField.text)
+                onClicked: {
+                    root.savedSuccessfully = false
+                    root.saveRequested = true
+                    apiClient.updateTenantSettings(
+                        brandField.text,
+                        colorField.text,
+                        root.logoData,
+                        root.coverData,
+                        emailField.text,
+                        websiteField.text,
+                        facebookField.text,
+                        linkedinField.text,
+                        youtubeField.text,
+                        xField.text,
+                        tiktokField.text)
+                }
             }
         }
 
@@ -140,7 +159,7 @@ Flickable {
 
                 ColumnLayout {
                     Layout.fillWidth: true
-                    Text { text: brandField.text || "NEXVARY"; color: Theme.platinum; font.pixelSize: 25; font.bold: true }
+                    Text { text: brandField.text || "FG Machines"; color: Theme.platinum; font.pixelSize: 25; font.bold: true }
                     Text { text: appState.rtl ? "معاينة الهوية داخل النظام" : "In-app brand preview"; color: Theme.electricCyan; font.pixelSize: 11 }
                     Text { text: appState.rtl ? "يمكن لكل شركة رفع شعار وغلاف مستقلين." : "Each white-label company can use its own logo and cover."; color: Theme.silver; font.pixelSize: 10 }
                 }
@@ -160,7 +179,7 @@ Flickable {
 
             Rectangle {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 270
+                Layout.preferredHeight: 405
                 radius: 15
                 color: Theme.panel
                 border.width: 1
@@ -171,10 +190,14 @@ Flickable {
                     anchors.margins: 15
                     spacing: 9
                     Text { text: appState.rtl ? "هوية الشركة" : "Company Identity"; color: Theme.platinum; font.pixelSize: 16; font.bold: true }
-                    TextField { id: brandField; Layout.fillWidth: true; placeholderText: appState.rtl ? "اسم العلامة التجارية" : "Brand name" }
-                    TextField { id: colorField; Layout.fillWidth: true; placeholderText: "#128FE7" }
-                    TextField { id: emailField; Layout.fillWidth: true; placeholderText: "info@example.com" }
-                    TextField { id: websiteField; Layout.fillWidth: true; placeholderText: "https://example.com" }
+                    Text { text: appState.rtl ? "اسم الشركة" : "Company name"; color: Theme.muted; font.pixelSize: 10 }
+                    TextField { id: brandField; Layout.fillWidth: true; placeholderText: appState.rtl ? "اسم العلامة التجارية" : "Brand name"; selectByMouse: true }
+                    Text { text: appState.rtl ? "اللون الرئيسي" : "Primary color"; color: Theme.muted; font.pixelSize: 10 }
+                    TextField { id: colorField; Layout.fillWidth: true; placeholderText: "#128FE7"; selectByMouse: true }
+                    Text { text: appState.rtl ? "البريد الإلكتروني" : "Contact email"; color: Theme.muted; font.pixelSize: 10 }
+                    TextField { id: emailField; Layout.fillWidth: true; placeholderText: "info@example.com"; selectByMouse: true }
+                    Text { text: appState.rtl ? "الموقع الإلكتروني" : "Website"; color: Theme.muted; font.pixelSize: 10 }
+                    TextField { id: websiteField; Layout.fillWidth: true; placeholderText: "https://example.com"; selectByMouse: true }
                     RowLayout {
                         Layout.fillWidth: true
                         Button { text: appState.rtl ? "إزالة الشعار" : "Remove Logo"; onClicked: root.logoData = "" }
@@ -185,7 +208,7 @@ Flickable {
 
             Rectangle {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 270
+                Layout.preferredHeight: 405
                 radius: 15
                 color: Theme.panel
                 border.width: 1
@@ -195,14 +218,28 @@ Flickable {
                     anchors.fill: parent
                     anchors.margins: 15
                     spacing: 9
-                    Text { text: appState.rtl ? "حسابات الشركة" : "Company Social Links"; color: Theme.platinum; font.pixelSize: 16; font.bold: true }
-                    TextField { id: facebookField; Layout.fillWidth: true; placeholderText: "Facebook" }
-                    TextField { id: linkedinField; Layout.fillWidth: true; placeholderText: "LinkedIn" }
-                    TextField { id: youtubeField; Layout.fillWidth: true; placeholderText: "YouTube" }
-                    TextField { id: xField; Layout.fillWidth: true; placeholderText: "X" }
-                    TextField { id: tiktokField; Layout.fillWidth: true; placeholderText: "TikTok" }
+                    Text { text: appState.rtl ? "روابط السوشيال ميديا — قابلة للتحرير" : "Editable social media links"; color: Theme.platinum; font.pixelSize: 16; font.bold: true }
+                    Text { text: "Facebook"; color: Theme.muted; font.pixelSize: 10 }
+                    TextField { id: facebookField; Layout.fillWidth: true; placeholderText: "https://facebook.com/..."; selectByMouse: true; inputMethodHints: Qt.ImhUrlCharactersOnly }
+                    Text { text: "LinkedIn"; color: Theme.muted; font.pixelSize: 10 }
+                    TextField { id: linkedinField; Layout.fillWidth: true; placeholderText: "https://linkedin.com/..."; selectByMouse: true; inputMethodHints: Qt.ImhUrlCharactersOnly }
+                    Text { text: "YouTube"; color: Theme.muted; font.pixelSize: 10 }
+                    TextField { id: youtubeField; Layout.fillWidth: true; placeholderText: "https://youtube.com/..."; selectByMouse: true; inputMethodHints: Qt.ImhUrlCharactersOnly }
+                    Text { text: "X / Twitter"; color: Theme.muted; font.pixelSize: 10 }
+                    TextField { id: xField; Layout.fillWidth: true; placeholderText: "https://x.com/..."; selectByMouse: true; inputMethodHints: Qt.ImhUrlCharactersOnly }
+                    Text { text: "TikTok"; color: Theme.muted; font.pixelSize: 10 }
+                    TextField { id: tiktokField; Layout.fillWidth: true; placeholderText: "https://tiktok.com/@..."; selectByMouse: true; inputMethodHints: Qt.ImhUrlCharactersOnly }
                 }
             }
+        }
+
+        Text {
+            visible: root.savedSuccessfully
+            Layout.fillWidth: true
+            text: appState.rtl ? "تم حفظ بيانات الشركة وروابط السوشيال ميديا." : "Company details and social links were saved."
+            color: Theme.emerald
+            font.pixelSize: 11
+            font.bold: true
         }
 
         Text {

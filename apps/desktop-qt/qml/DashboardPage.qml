@@ -22,21 +22,21 @@ Flickable {
                 Layout.fillWidth: true
                 spacing: 3
                 Text {
-                    text: appState.t("dashboard")
+                    text: (appState.language, appState.t("dashboard"))
                     color: Theme.platinum
                     font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"
                     font.pixelSize: 30
                     font.bold: true
                 }
                 Text {
-                    text: appState.t("liveData") + " · FastAPI / C++ Qt Network"
+                    text: (appState.language, appState.t("liveData")) + " · FastAPI / C++ Qt Network"
                     color: Theme.muted
                     font.pixelSize: 12
                 }
             }
 
             Button {
-                text: appState.t("refresh")
+                text: (appState.language, appState.t("refresh"))
                 onClicked: apiClient.refreshAll()
             }
         }
@@ -49,11 +49,11 @@ Flickable {
 
             Repeater {
                 model: [
-                    {key:"leads_total", label:appState.t("totalLeads"), accent:Theme.electricBlue},
-                    {key:"leads_hot", label:appState.t("hotLeads"), accent:Theme.emerald},
-                    {key:"units_available", label:appState.t("availableUnits"), accent:Theme.violet},
-                    {key:"appointments_total", label:appState.t("viewings"), accent:Theme.gold},
-                    {key:"active_reservations", label:appState.t("reservations"), accent:Theme.electricCyan}
+                    {key:"leads_total", label:(appState.language, appState.t("totalLeads")), accent:Theme.electricBlue},
+                    {key:"leads_hot", label:(appState.language, appState.t("hotLeads")), accent:Theme.emerald},
+                    {key:"units_available", label:(appState.language, appState.t("availableUnits")), accent:Theme.violet},
+                    {key:"appointments_total", label:(appState.language, appState.t("viewings")), accent:Theme.gold},
+                    {key:"active_reservations", label:(appState.language, appState.t("reservations")), accent:Theme.electricCyan}
                 ]
 
                 Rectangle {
@@ -119,7 +119,7 @@ Flickable {
                     spacing: 9
 
                     Text {
-                        text: appState.t("leads")
+                        text: (appState.language, appState.t("leads"))
                         color: Theme.platinum
                         font.pixelSize: 17
                         font.bold: true
@@ -183,7 +183,7 @@ Flickable {
                     spacing: 9
 
                     Text {
-                        text: appState.t("inventory")
+                        text: (appState.language, appState.t("inventory"))
                         color: Theme.platinum
                         font.pixelSize: 17
                         font.bold: true

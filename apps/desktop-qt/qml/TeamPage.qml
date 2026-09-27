@@ -43,11 +43,11 @@ Item {
             Layout.fillWidth: true; layoutDirection: appState.rtl ? Qt.RightToLeft : Qt.LeftToRight
             ColumnLayout {
                 Layout.fillWidth: true
-                Text { text: appState.t("team"); color: Theme.platinum; font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"; font.pixelSize: 29; font.bold: true }
+                Text { text: (appState.language, appState.t("team")); color: Theme.platinum; font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"; font.pixelSize: 29; font.bold: true }
                 Text { text: appState.rtl ? "الفريق والأدوار والصلاحيات المعتمدة على RBAC" : "Team, roles and RBAC permissions"; color: Theme.muted; font.pixelSize: 12 }
             }
             Button { visible: root.canManage; text: appState.rtl ? "+ مستخدم" : "+ User"; onClicked: userDialog.open() }
-            Button { text: appState.t("refresh"); onClicked: apiClient.refreshWorkspace() }
+            Button { text: (appState.language, appState.t("refresh")); onClicked: apiClient.refreshWorkspace() }
         }
 
         Rectangle {

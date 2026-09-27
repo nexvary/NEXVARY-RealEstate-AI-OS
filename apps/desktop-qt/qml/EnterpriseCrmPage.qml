@@ -46,7 +46,7 @@ Flickable {
                 Layout.fillWidth: true
                 spacing: 3
                 Text {
-                    text: appState.t("enterpriseCrm")
+                    text: (appState.language, appState.t("enterpriseCrm"))
                     color: Theme.platinum
                     font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"
                     font.pixelSize: 29
@@ -67,7 +67,7 @@ Flickable {
             }
 
             Button {
-                text: appState.t("customerTimeline")
+                text: (appState.language, appState.t("customerTimeline"))
                 enabled: apiClient.leads.length > 0
                 onClicked: {
                     if (apiClient.leads.length > 0)
@@ -77,7 +77,7 @@ Flickable {
             }
 
             Button {
-                text: appState.t("refresh")
+                text: (appState.language, appState.t("refresh"))
                 onClicked: apiClient.refreshEnterprise()
             }
         }
@@ -90,11 +90,11 @@ Flickable {
 
             Repeater {
                 model: [
-                    {key:"proposals_accepted", label:appState.t("acceptedProposals"), color:Theme.emerald, icon:"✓"},
-                    {key:"invoices_open", label:appState.t("openInvoices"), color:Theme.electricBlue, icon:"▤"},
-                    {key:"receivables", label:appState.t("receivables"), color:Theme.gold, icon:"$"},
-                    {key:"tickets_open", label:appState.t("openTickets"), color:Theme.violet, icon:"!"},
-                    {key:"reminders_pending", label:appState.t("pendingReminders"), color:Theme.electricCyan, icon:"◷"}
+                    {key:"proposals_accepted", label:(appState.language, appState.t("acceptedProposals")), color:Theme.emerald, icon:"✓"},
+                    {key:"invoices_open", label:(appState.language, appState.t("openInvoices")), color:Theme.electricBlue, icon:"▤"},
+                    {key:"receivables", label:(appState.language, appState.t("receivables")), color:Theme.gold, icon:"$"},
+                    {key:"tickets_open", label:(appState.language, appState.t("openTickets")), color:Theme.violet, icon:"!"},
+                    {key:"reminders_pending", label:(appState.language, appState.t("pendingReminders")), color:Theme.electricCyan, icon:"◷"}
                 ]
 
                 Rectangle {
@@ -171,7 +171,7 @@ Flickable {
                     spacing: 7
                     RowLayout {
                         Layout.fillWidth: true
-                        Text { text: appState.t("proposals"); color: Theme.platinum; font.pixelSize: 17; font.bold: true }
+                        Text { text: (appState.language, appState.t("proposals")); color: Theme.platinum; font.pixelSize: 17; font.bold: true }
                         Item { Layout.fillWidth: true }
                         Text { text: String(apiClient.proposals.length); color: Theme.emerald; font.pixelSize: 11 }
                     }
@@ -219,7 +219,7 @@ Flickable {
                     spacing: 7
                     RowLayout {
                         Layout.fillWidth: true
-                        Text { text: appState.t("invoices"); color: Theme.platinum; font.pixelSize: 17; font.bold: true }
+                        Text { text: (appState.language, appState.t("invoices")); color: Theme.platinum; font.pixelSize: 17; font.bold: true }
                         Item { Layout.fillWidth: true }
                         Text { text: String(apiClient.invoices.length); color: Theme.electricBlue; font.pixelSize: 11 }
                     }
@@ -265,7 +265,7 @@ Flickable {
                     anchors.fill: parent
                     anchors.margins: 14
                     spacing: 7
-                    Text { text: appState.t("tickets"); color: Theme.platinum; font.pixelSize: 17; font.bold: true }
+                    Text { text: (appState.language, appState.t("tickets")); color: Theme.platinum; font.pixelSize: 17; font.bold: true }
                     ListView {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
@@ -304,7 +304,7 @@ Flickable {
                     anchors.fill: parent
                     anchors.margins: 14
                     spacing: 7
-                    Text { text: appState.t("reminders"); color: Theme.platinum; font.pixelSize: 17; font.bold: true }
+                    Text { text: (appState.language, appState.t("reminders")); color: Theme.platinum; font.pixelSize: 17; font.bold: true }
                     ListView {
                         Layout.fillWidth: true
                         Layout.fillHeight: true

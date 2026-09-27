@@ -152,7 +152,7 @@ Item {
             ColumnLayout {
                 Layout.fillWidth: true
                 Text {
-                    text: appState.t("leads")
+                    text: (appState.language, appState.t("leads"))
                     color: Theme.platinum
                     font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"
                     font.pixelSize: 29
@@ -177,7 +177,7 @@ Item {
                 }
             }
             Button { text: appState.rtl ? "+ عميل جديد" : "+ New Lead"; onClicked: leadDialog.openNew() }
-            Button { text: appState.t("refresh"); onClicked: apiClient.refreshAll() }
+            Button { text: (appState.language, appState.t("refresh")); onClicked: apiClient.refreshAll() }
         }
 
         Rectangle {

@@ -84,12 +84,12 @@ Item {
             layoutDirection: appState.rtl ? Qt.RightToLeft : Qt.LeftToRight
             ColumnLayout {
                 Layout.fillWidth: true
-                Text { text: appState.t("inventory"); color: Theme.platinum; font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"; font.pixelSize: 29; font.bold: true }
+                Text { text: (appState.language, appState.t("inventory")); color: Theme.platinum; font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"; font.pixelSize: 29; font.bold: true }
                 Text { text: appState.rtl ? "المشروعات والوحدات والمخزون المتاح" : "Projects, units and live inventory"; color: Theme.muted; font.pixelSize: 12 }
             }
             Button { text: appState.rtl ? "+ مشروع" : "+ Project"; onClicked: projectDialog.open() }
             Button { text: appState.rtl ? "+ وحدة" : "+ Unit"; enabled: apiClient.projects.length > 0; onClicked: unitDialog.open() }
-            Button { text: appState.t("refresh"); onClicked: apiClient.refreshAll() }
+            Button { text: (appState.language, appState.t("refresh")); onClicked: apiClient.refreshAll() }
         }
 
         GridLayout {
