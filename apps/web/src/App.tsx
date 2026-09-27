@@ -4,6 +4,7 @@ import PlatformAdminCenter from "./PlatformAdmin";
 import SEOAutopilot from "./SEOAutopilot";
 import WhatsAppOps from "./CommercialOps";
 import TenantBilling from "./TenantBilling";
+import AutomationStudio from "./AutomationStudio";
 
 import {
   ArrowLeft,
@@ -35,10 +36,11 @@ import {
   ShieldCheck,
   Sparkles,
   Users,
+  Workflow,
 } from "lucide-react";
 
 type Locale = "ar" | "en";
-type View = "dashboard" | "leads" | "inventory" | "manage" | "appointments" | "finance" | "billing" | "inbox" | "whatsapp" | "knowledge" | "tasks" | "team" | "settings" | "ai" | "seo" | "systemAbout" | "companyAbout";
+type View = "dashboard" | "leads" | "inventory" | "manage" | "appointments" | "finance" | "billing" | "inbox" | "whatsapp" | "knowledge" | "tasks" | "team" | "settings" | "ai" | "seo" | "automation" | "systemAbout" | "companyAbout";
 
 type User = {
   id: string;
@@ -174,6 +176,7 @@ const copy = {
     settings: "إعدادات الشركة",
     ai: "مساعد الذكاء الاصطناعي",
     seo: "SEO Autopilot",
+    automation: "Automation Studio",
     systemAbout: "عن النظام",
     companyAbout: "عن الشركة",
     search: "ابحث داخل الصفحة الحالية...",
@@ -240,6 +243,7 @@ const copy = {
     settings: "Company Settings",
     ai: "AI Assistant",
     seo: "SEO Autopilot",
+    automation: "Automation Studio",
     systemAbout: "About the System",
     companyAbout: "About the Company",
     search: "Search the current view...",
@@ -306,6 +310,7 @@ const navItems = [
   { id: "settings" as View, icon: Settings2, key: "settings" as const },
   { id: "ai" as View, icon: Bot, key: "ai" as const },
   { id: "seo" as View, icon: Search, key: "seo" as const },
+  { id: "automation" as View, icon: Workflow, key: "automation" as const },
   { id: "systemAbout" as View, icon: Info, key: "systemAbout" as const },
   { id: "companyAbout" as View, icon: Building2, key: "companyAbout" as const },
 ];
@@ -937,6 +942,7 @@ function ControlCenter({
 
           {view === "ai" && <AICopilotOps token={session.access_token} locale={locale} />}
           {view === "seo" && <SEOAutopilot token={session.access_token} locale={locale} />}
+          {view === "automation" && <AutomationStudio token={session.access_token} locale={locale} />}
 
           {view === "systemAbout" && (
             <section className="aboutSystem">
