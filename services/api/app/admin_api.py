@@ -13,6 +13,7 @@ from .automation_models import AutomationApproval, AutomationEdge, AutomationNod
 from .commercial_models import BankTransferSubmission, BillingInvoice, SaaSSubscription, SEOEntityPage, TenantTemplate, WhatsAppChannel
 from .db import get_db
 from .finance_models import BrokerCommission, Contract, Installment
+from .omnichannel_models import ConversationSalesState, InboundMessageReceipt, MarketingAttributionEvent, OmnichannelOutbox
 from .models import (
     Appointment,
     AuditEvent,
@@ -215,6 +216,10 @@ def export_backup(
         "knowledge_documents": (KnowledgeDocument, {"content"}),
         "inbox_conversations": (InboxConversation, set()),
         "inbox_messages": (InboxMessage, set()),
+        "conversation_sales_states": (ConversationSalesState, set()),
+        "inbound_message_receipts": (InboundMessageReceipt, set()),
+        "omnichannel_outbox": (OmnichannelOutbox, set()),
+        "marketing_attribution_events": (MarketingAttributionEvent, set()),
         "followup_tasks": (FollowUpTask, set()),
         "automation_workflows": (AutomationWorkflow, set()),
         "automation_nodes": (AutomationNode, set()),
@@ -241,7 +246,7 @@ def export_backup(
 
     data: dict[str, Any] = {
         "format": "NEXVARY-RealEstate-AI-OS-backup",
-        "version": "1.6.0",
+        "version": "1.7.0",
         "exported_at": datetime.now(timezone.utc).isoformat(),
         "tenant": row_dict(tenant),
         "tables": {},
