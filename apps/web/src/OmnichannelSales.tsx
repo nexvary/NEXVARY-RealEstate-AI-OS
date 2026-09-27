@@ -201,5 +201,19 @@ export default function OmnichannelSales({token,locale}:{token:string;locale:Loc
 
       <section className="panel attributionPanel"><div className="panelHead"><h3>{ar?"نسب الحملات":"Campaign attribution"}</h3><span>{campaigns.length}</span></div><div className="attributionCards">{campaigns.map((c)=><article key={c.campaign_id}><strong>{c.campaign_id}</strong><div>{Object.entries(c.events).map(([k,v])=><span key={k}>{k+": "+v}</span>)}</div><b>{"Revenue: "+Number(c.revenue).toLocaleString()}</b></article>)}</div></section>
     </div>}
+
+    <section className="panel referralManager">
+      <div className="panelHead"><div><span className="eyebrow">WHATSAPP AD → PROPERTY</span><h3>{ar?"ربط إعلانات واتساب بالمشروعات والوحدات":"Map WhatsApp ads to projects & units"}</h3></div><span>{referrals.length}</span></div>
+      <form className="referralForm" onSubmit={createReferral}>
+        <label>{ar?"Ad ID":"Ad ID"}<input name="ad_id" required placeholder="2385..."/></label>
+        <label>{ar?"Campaign ID":"Campaign ID"}<input name="campaign_id"/></label>
+        <label>{ar?"المشروع":"Project"}<select name="project_id" required defaultValue=""><option value="" disabled>{ar?"اختر المشروع":"Select project"}</option>{projects.map((p)=><option key={p.id} value={p.id}>{p.name+" · "+p.city}</option>)}</select></label>
+        <label>{ar?"الوحدة (اختياري)":"Unit (optional)"}<select name="unit_id" defaultValue=""><option value="">{ar?"المشروع فقط":"Project only"}</option>{units.map((u)=><option key={u.id} value={u.id}>{u.code+" · "+u.unit_type}</option>)}</select></label>
+        <label>{ar?"وصف الإعلان":"Label"}<input name="label"/></label>
+        <label>{ar?"رابط مصدر الإعلان":"Source URL"}<input name="source_url" type="url"/></label>
+        <button className="primaryButton"><Plus size={15}/>{ar?"حفظ الربط":"Save mapping"}</button>
+      </form>
+      {referrals.length>0&&<div className="referralList">{referrals.slice(0,8).map((r)=><article key={r.id}><strong>{r.label||r.ad_id}</strong><span>{r.project_name+(r.unit_code?" · "+r.unit_code:"")}</span><small>{r.ad_id+(r.campaign_id?" · "+r.campaign_id:"")}</small></article>)}</div>}
+    </section>
   </div>;
 }
