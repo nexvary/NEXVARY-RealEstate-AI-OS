@@ -56,6 +56,11 @@ class ApiClient final : public QObject
     Q_PROPERTY(QVariantList seoSnapshots READ seoSnapshots NOTIFY seoSnapshotsChanged)
     Q_PROPERTY(QVariantMap seoLastResult READ seoLastResult NOTIFY seoLastResultChanged)
     Q_PROPERTY(QString selectedSeoProjectId READ selectedSeoProjectId NOTIFY seoDashboardChanged)
+    Q_PROPERTY(QVariantList automationCatalog READ automationCatalog NOTIFY automationCatalogChanged)
+    Q_PROPERTY(QVariantList automationWorkflows READ automationWorkflows NOTIFY automationWorkflowsChanged)
+    Q_PROPERTY(QVariantMap automationGraph READ automationGraph NOTIFY automationGraphChanged)
+    Q_PROPERTY(QVariantList automationRuns READ automationRuns NOTIFY automationRunsChanged)
+    Q_PROPERTY(QString selectedAutomationWorkflowId READ selectedAutomationWorkflowId NOTIFY automationGraphChanged)
     Q_PROPERTY(QVariantMap enterpriseSummary READ enterpriseSummary NOTIFY enterpriseSummaryChanged)
     Q_PROPERTY(QVariantList proposals READ proposals NOTIFY proposalsChanged)
     Q_PROPERTY(QVariantList invoices READ invoices NOTIFY invoicesChanged)
@@ -111,6 +116,11 @@ public:
     QVariantList seoSnapshots() const;
     QVariantMap seoLastResult() const;
     QString selectedSeoProjectId() const;
+    QVariantList automationCatalog() const;
+    QVariantList automationWorkflows() const;
+    QVariantMap automationGraph() const;
+    QVariantList automationRuns() const;
+    QString selectedAutomationWorkflowId() const;
     QVariantMap enterpriseSummary() const;
     QVariantList proposals() const;
     QVariantList invoices() const;
@@ -176,6 +186,13 @@ public:
     Q_INVOKABLE void runSeoCrawl(const QString &projectId, int maxPages, int concurrency);
     Q_INVOKABLE void loadSeoOpportunities(const QString &projectId);
     Q_INVOKABLE void planSeoChange(const QString &projectId, const QString &targetUrl, const QString &action, const QString &reason);
+    Q_INVOKABLE void refreshAutomation();
+    Q_INVOKABLE void selectAutomationWorkflow(const QString &workflowId);
+    Q_INVOKABLE void createAutomationWorkflow(const QString &name, const QString &description);
+    Q_INVOKABLE void duplicateAutomationWorkflow(const QString &workflowId);
+    Q_INVOKABLE void replaceAutomationGraph(const QString &workflowId, const QVariantList &nodes, const QVariantList &edges);
+    Q_INVOKABLE void runAutomationWorkflow(const QString &workflowId, const QString &leadId);
+    Q_INVOKABLE void decideAutomationApproval(const QString &approvalId, const QString &decision, const QString &note);
 
 signals:
     void baseUrlChanged();
@@ -216,6 +233,10 @@ signals:
     void seoPlansChanged();
     void seoSnapshotsChanged();
     void seoLastResultChanged();
+    void automationCatalogChanged();
+    void automationWorkflowsChanged();
+    void automationGraphChanged();
+    void automationRunsChanged();
     void enterpriseSummaryChanged();
     void proposalsChanged();
     void invoicesChanged();
@@ -253,6 +274,10 @@ private:
     void fetchSeoDashboard(const QString &projectId);
     void fetchSeoPlans(const QString &projectId);
     void fetchSeoSnapshots(const QString &projectId);
+    void fetchAutomationCatalog();
+    void fetchAutomationWorkflows();
+    void fetchAutomationGraph(const QString &workflowId);
+    void fetchAutomationRuns(const QString &workflowId);
     void fetchEnterpriseSummary();
     void fetchProposals();
     void fetchInvoices();
@@ -303,6 +328,11 @@ private:
     QVariantList m_seoSnapshots;
     QVariantMap m_seoLastResult;
     QString m_selectedSeoProjectId;
+    QVariantList m_automationCatalog;
+    QVariantList m_automationWorkflows;
+    QVariantMap m_automationGraph;
+    QVariantList m_automationRuns;
+    QString m_selectedAutomationWorkflowId;
     QVariantMap m_enterpriseSummary;
     QVariantList m_proposals;
     QVariantList m_invoices;
