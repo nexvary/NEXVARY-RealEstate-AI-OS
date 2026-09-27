@@ -40,10 +40,36 @@ test("desktop first-run, navigation, lead flow and back button", async ({ page, 
   await expect(page.locator('select[name="project_id"]').first()).toContainText("بوابة القاهرة");
 
   await page.getByRole("button", { name: "رجوع" }).click();
+  await expect(page.getByRole("heading", { name: "العملاء المحتملون" })).toBeVisible();
+
+  await page.getByRole("button", { name: "رجوع" }).click();
   await expect(page.getByText("مركز قيادة المبيعات")).toBeVisible();
 
   await page.getByTitle("Language").click();
   await expect(page.getByText("Sales Command Center")).toBeVisible();
+});
+
+test("system and company about sections are separate and reachable with internal back navigation", async ({ page, isMobile }) => {
+  if (isMobile) test.skip();
+
+  await page.goto("/");
+  await page.getByLabel("معرّف الشركة").fill("nexvary-test");
+  await page.getByLabel("البريد الإلكتروني").fill("owner@nexvary.test");
+  await page.getByLabel("كلمة المرور").fill("ReleaseGate123!");
+  await page.getByRole("button", { name: "تسجيل الدخول" }).click();
+
+  await page.getByRole("button", { name: "عن النظام" }).click();
+  await expect(page.getByRole("heading", { name: "عن النظام" })).toBeVisible();
+  await expect(page.getByText("CRM والمبيعات")).toBeVisible();
+  await expect(page.getByText("White-Label وSaaS")).toBeVisible();
+  await expect(page.getByRole("link", { name: "NEXVARY" })).toBeVisible();
+
+  await page.getByRole("button", { name: "عن الشركة" }).click();
+  await expect(page.getByRole("heading", { name: "NEXVARY Realty" })).toBeVisible();
+  await expect(page.getByText("بيانات وهوية الشركة الحالية داخل منصة NEXVARY White-Label.")).toBeVisible();
+
+  await page.getByRole("button", { name: "رجوع" }).click();
+  await expect(page.getByRole("heading", { name: "عن النظام" })).toBeVisible();
 });
 
 test("platform admin creates and manages a second white-label company", async ({ page, isMobile }) => {
