@@ -87,6 +87,7 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path native-dist/smoke | Out-Null
+          $env:NEXVARY_SIDECAR_LOG = (Resolve-Path "native-dist/smoke").Path + "\sidecar-boot.log"
           $api = Start-Process -FilePath "native-dist/bin/NEXVARY-RealEstate-API.exe" -ArgumentList "--port","8765" -PassThru
           try {
             $ready = $false
@@ -97,7 +98,14 @@ jobs:
               } catch {}
               Start-Sleep -Milliseconds 500
             }
-            if (-not $ready) { throw "Packaged API sidecar did not become healthy" }
+            if (-not $ready) {
+              if (Test-Path $env:NEXVARY_SIDECAR_LOG) {
+                Write-Host "===== Packaged sidecar boot log ====="
+                Get-Content $env:NEXVARY_SIDECAR_LOG
+              }
+              if ($api.HasExited) { Write-Host "Sidecar exit code: $($api.ExitCode)" }
+              throw "Packaged API sidecar did not become healthy"
+            }
 
             $env:QT_QPA_PLATFORM = "offscreen"
             $env:QT_QUICK_BACKEND = "software"
