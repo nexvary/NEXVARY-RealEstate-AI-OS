@@ -41,6 +41,11 @@ ApiClient::ApiClient(QObject *parent)
         QProcessEnvironment::systemEnvironment().value(
             QStringLiteral("NEXVARY_API_URL"),
             QStringLiteral("http://127.0.0.1:8000")));
+
+    m_healthTimer.setInterval(2500);
+    m_healthTimer.setSingleShot(false);
+    connect(&m_healthTimer, &QTimer::timeout, this, &ApiClient::health);
+    m_healthTimer.start();
 }
 
 QString ApiClient::baseUrl() const { return m_baseUrl; }
@@ -51,6 +56,8 @@ QString ApiClient::lastError() const { return m_lastError; }
 QString ApiClient::userName() const { return m_userName; }
 QString ApiClient::userRole() const { return m_userRole; }
 QString ApiClient::healthStatus() const { return m_healthStatus; }
+bool ApiClient::setupKnown() const { return m_setupKnown; }
+bool ApiClient::needsSetup() const { return m_needsSetup; }
 QVariantMap ApiClient::overview() const { return m_overview; }
 QVariantList ApiClient::leads() const { return m_leads; }
 QVariantList ApiClient::units() const { return m_units; }
@@ -137,18 +144,119 @@ void ApiClient::setError(const QString &message)
 
 void ApiClient::health()
 {
-    auto *reply = m_network.get(makeRequest(QStringLiteral("/health"), false));
+    if (m_healthRequestInFlight)
+        return;
+
+    m_healthRequestInFlight = true;
+    QNetworkRequest request = makeRequest(QStringLiteral("/health"), false);
+    request.setTransferTimeout(2200);
+    auto *reply = m_network.get(request);
+
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        m_healthRequestInFlight = false;
+
+        if (reply->error() != QNetworkReply::NoError) {
+            if (m_healthStatus != QStringLiteral("offline")) {
+                m_healthStatus = QStringLiteral("offline");
+                emit healthChanged();
+            }
+            if (!loggedIn())
+                setError(QString());
+        } else {
+            const QString nextStatus = QJsonDocument::fromJson(body)
+                .object()
+                .value(QStringLiteral("status"))
+                .toString(QStringLiteral("ok"));
+            if (m_healthStatus != nextStatus) {
+                m_healthStatus = nextStatus;
+                emit healthChanged();
+            }
+            if (!loggedIn() && !m_setupKnown)
+                fetchSetupStatus();
+            setError(QString());
+        }
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::fetchSetupStatus()
+{
+    QNetworkRequest request = makeRequest(QStringLiteral("/api/v1/setup/status"), false);
+    request.setTransferTimeout(3000);
+    auto *reply = m_network.get(request);
+
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() == QNetworkReply::NoError) {
+            const QJsonObject object = QJsonDocument::fromJson(body).object();
+            const bool nextNeedsSetup = object.value(QStringLiteral("needs_setup")).toBool(false);
+            const bool changed = !m_setupKnown || m_needsSetup != nextNeedsSetup;
+            m_setupKnown = true;
+            m_needsSetup = nextNeedsSetup;
+            if (changed)
+                emit setupStatusChanged();
+        }
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::bootstrapFirstOwner(
+    const QString &companyName,
+    const QString &companySlug,
+    const QString &brandName,
+    const QString &ownerName,
+    const QString &ownerEmail,
+    const QString &ownerPassword)
+{
+    if (companyName.trimmed().size() < 2 ||
+        companySlug.trimmed().size() < 3 ||
+        ownerName.trimmed().size() < 2 ||
+        ownerEmail.trimmed().size() < 5 ||
+        ownerPassword.size() < 10) {
+        setError(QStringLiteral("Please complete the required first-owner fields."));
+        return;
+    }
+
+    setBusy(true);
+    setError(QString());
+
+    QJsonObject payload{
+        {QStringLiteral("company_name"), companyName.trimmed()},
+        {QStringLiteral("company_slug"), companySlug.trimmed().toLower()},
+        {QStringLiteral("owner_name"), ownerName.trimmed()},
+        {QStringLiteral("owner_email"), ownerEmail.trimmed()},
+        {QStringLiteral("owner_password"), ownerPassword},
+    };
+    if (!brandName.trimmed().isEmpty())
+        payload.insert(QStringLiteral("brand_name"), brandName.trimmed());
+
+    auto *reply = m_network.post(
+        makeRequest(QStringLiteral("/api/v1/auth/bootstrap"), false),
+        QJsonDocument(payload).toJson(QJsonDocument::Compact));
+
     connect(reply, &QNetworkReply::finished, this, [this, reply] {
         const QByteArray body = reply->readAll();
         if (reply->error() != QNetworkReply::NoError) {
-            m_healthStatus = QStringLiteral("offline");
             setError(apiErrorMessage(body, reply->errorString()));
-        } else {
-            m_healthStatus = QJsonDocument::fromJson(body).object().value(QStringLiteral("status")).toString(QStringLiteral("ok"));
-            setError(QString());
+            setBusy(false);
+            reply->deleteLater();
+            return;
         }
-        emit healthChanged();
+
+        const QJsonObject object = QJsonDocument::fromJson(body).object();
+        m_token = object.value(QStringLiteral("access_token")).toString();
+        m_userName = object.value(QStringLiteral("user_name")).toString();
+        m_userRole = object.value(QStringLiteral("role")).toString();
+        m_setupKnown = true;
+        m_needsSetup = false;
+
+        setBusy(false);
+        setError(QString());
+        emit setupStatusChanged();
+        emit sessionChanged();
         reply->deleteLater();
+        refreshAll();
     });
 }
 
