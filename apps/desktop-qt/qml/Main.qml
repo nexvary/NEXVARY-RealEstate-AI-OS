@@ -288,8 +288,10 @@ ApplicationWindow {
                                                             ? tasksComponent
                                                             : appState.currentPage === "team"
                                                                 ? teamComponent
-                                                                : appState.currentPage === "settings"
-                                                                    ? settingsComponent
+                                                                : appState.currentPage === "growth"
+                                                                    ? growthComponent
+                                                                    : appState.currentPage === "settings"
+                                                                        ? settingsComponent
                                                                     : appState.currentPage === "company"
                                                                         ? companyComponent
                                                                         : migrationComponent
@@ -356,6 +358,11 @@ ApplicationWindow {
     Component {
         id: teamComponent
         TeamPage {}
+    }
+
+    Component {
+        id: growthComponent
+        GrowthPage {}
     }
 
     Component {
