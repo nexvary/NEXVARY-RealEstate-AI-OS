@@ -54,7 +54,7 @@ Flickable {
                     Image {
                         anchors.fill: parent
                         anchors.margins: 8
-                        source: apiClient.tenantSettings.logo_data_url || "qrc:/Nexvary/RealEstate/assets/nexvary-mark.svg"
+                        source: apiClient.tenantSettings.logo_data_url || "qrc:/qt/qml/Nexvary/RealEstate/assets/nexvary-mark.svg"
                         fillMode: Image.PreserveAspectFit
                     }
                 }
