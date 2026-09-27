@@ -54,6 +54,7 @@ qt_add_qml_module(nexvary_realestate_native
         qml/TeamPage.qml
         qml/OmnichannelPage.qml
         qml/GrowthPage.qml
+        qml/SeoPage.qml
         qml/SidebarItem.qml
     RESOURCES
         qml/Theme.js
