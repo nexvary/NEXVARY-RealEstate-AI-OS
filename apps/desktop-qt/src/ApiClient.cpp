@@ -79,6 +79,13 @@ QVariantList ApiClient::growthMedia() const { return m_growthMedia; }
 QVariantList ApiClient::growthPlaybooks() const { return m_growthPlaybooks; }
 QVariantList ApiClient::growthFeedback() const { return m_growthFeedback; }
 QVariantMap ApiClient::growthFeedbackSummary() const { return m_growthFeedbackSummary; }
+QVariantList ApiClient::seoProjects() const { return m_seoProjects; }
+QVariantMap ApiClient::seoDashboard() const { return m_seoDashboard; }
+QVariantList ApiClient::seoOpportunities() const { return m_seoOpportunities; }
+QVariantList ApiClient::seoPlans() const { return m_seoPlans; }
+QVariantList ApiClient::seoSnapshots() const { return m_seoSnapshots; }
+QVariantMap ApiClient::seoLastResult() const { return m_seoLastResult; }
+QString ApiClient::selectedSeoProjectId() const { return m_selectedSeoProjectId; }
 QVariantMap ApiClient::enterpriseSummary() const { return m_enterpriseSummary; }
 QVariantList ApiClient::proposals() const { return m_proposals; }
 QVariantList ApiClient::invoices() const { return m_invoices; }
@@ -214,6 +221,13 @@ void ApiClient::logout()
     m_growthPlaybooks.clear();
     m_growthFeedback.clear();
     m_growthFeedbackSummary.clear();
+    m_seoProjects.clear();
+    m_seoDashboard.clear();
+    m_seoOpportunities.clear();
+    m_seoPlans.clear();
+    m_seoSnapshots.clear();
+    m_seoLastResult.clear();
+    m_selectedSeoProjectId.clear();
     m_enterpriseSummary.clear();
     m_proposals.clear();
     m_invoices.clear();
@@ -250,6 +264,12 @@ void ApiClient::logout()
     emit growthPlaybooksChanged();
     emit growthFeedbackChanged();
     emit growthFeedbackSummaryChanged();
+    emit seoProjectsChanged();
+    emit seoDashboardChanged();
+    emit seoOpportunitiesChanged();
+    emit seoPlansChanged();
+    emit seoSnapshotsChanged();
+    emit seoLastResultChanged();
     emit enterpriseSummaryChanged();
     emit proposalsChanged();
     emit invoicesChanged();
@@ -274,6 +294,7 @@ void ApiClient::refreshAll()
     fetchTenantSettings();
     refreshWorkspace();
     refreshGrowth();
+    refreshSeo();
     refreshEnterprise();
 }
 
@@ -1480,6 +1501,210 @@ void ApiClient::fetchGrowthFeedbackSummary()
         const QByteArray body = reply->readAll();
         if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
         else { m_growthFeedbackSummary = QJsonDocument::fromJson(body).object().toVariantMap(); emit growthFeedbackSummaryChanged(); }
+        reply->deleteLater();
+    });
+}
+
+
+void ApiClient::refreshSeo()
+{
+    if (!loggedIn())
+        return;
+    fetchSeoProjects();
+    if (!m_selectedSeoProjectId.isEmpty()) {
+        fetchSeoDashboard(m_selectedSeoProjectId);
+        fetchSeoPlans(m_selectedSeoProjectId);
+        fetchSeoSnapshots(m_selectedSeoProjectId);
+    }
+}
+
+void ApiClient::selectSeoProject(const QString &projectId)
+{
+    const QString id = projectId.trimmed();
+    if (id.isEmpty())
+        return;
+    m_selectedSeoProjectId = id;
+    m_seoOpportunities.clear();
+    emit seoOpportunitiesChanged();
+    fetchSeoDashboard(id);
+    fetchSeoPlans(id);
+    fetchSeoSnapshots(id);
+}
+
+void ApiClient::createSeoProject(const QString &name, const QString &siteUrl)
+{
+    const QJsonObject payload{
+        {QStringLiteral("name"), name.trimmed()},
+        {QStringLiteral("site_url"), siteUrl.trimmed()},
+    };
+    setBusy(true);
+    auto *reply = m_network.post(makeRequest(QStringLiteral("/api/v1/seo/projects"), true), QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) {
+            setError(apiErrorMessage(body, reply->errorString()));
+        } else {
+            const QJsonObject row = QJsonDocument::fromJson(body).object();
+            m_selectedSeoProjectId = row.value(QStringLiteral("id")).toString();
+            setError(QString());
+            fetchSeoProjects();
+            if (!m_selectedSeoProjectId.isEmpty())
+                selectSeoProject(m_selectedSeoProjectId);
+        }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::runSeoAudit(const QString &projectId, const QString &targetUrl)
+{
+    QJsonObject payload;
+    if (!targetUrl.trimmed().isEmpty())
+        payload.insert(QStringLiteral("target_url"), targetUrl.trimmed());
+    setBusy(true);
+    auto *reply = m_network.post(
+        makeRequest(QStringLiteral("/api/v1/seo/projects/") + projectId + QStringLiteral("/audit"), true),
+        QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply, projectId] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else {
+            m_seoLastResult = QJsonDocument::fromJson(body).object().toVariantMap();
+            setError(QString());
+            emit seoLastResultChanged();
+            fetchSeoDashboard(projectId);
+            fetchSeoSnapshots(projectId);
+        }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::runSeoCrawl(const QString &projectId, int maxPages, int concurrency)
+{
+    const QJsonObject payload{
+        {QStringLiteral("max_pages"), qBound(1, maxPages, 300)},
+        {QStringLiteral("concurrency"), qBound(1, concurrency, 10)},
+    };
+    setBusy(true);
+    auto *reply = m_network.post(
+        makeRequest(QStringLiteral("/api/v1/seo/projects/") + projectId + QStringLiteral("/crawl"), true),
+        QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply, projectId] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else {
+            m_seoLastResult = QJsonDocument::fromJson(body).object().toVariantMap();
+            setError(QString());
+            emit seoLastResultChanged();
+            fetchSeoDashboard(projectId);
+            fetchSeoSnapshots(projectId);
+        }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::loadSeoOpportunities(const QString &projectId)
+{
+    auto *reply = m_network.get(makeRequest(
+        QStringLiteral("/api/v1/seo/projects/") + projectId + QStringLiteral("/opportunities?limit=50"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) {
+            setError(apiErrorMessage(body, reply->errorString()));
+        } else {
+            m_seoOpportunities = QJsonDocument::fromJson(body).array().toVariantList();
+            setError(QString());
+            emit seoOpportunitiesChanged();
+        }
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::planSeoChange(const QString &projectId, const QString &targetUrl, const QString &action, const QString &reason)
+{
+    const QJsonObject payload{
+        {QStringLiteral("target_url"), targetUrl.trimmed()},
+        {QStringLiteral("action"), action.trimmed()},
+        {QStringLiteral("before"), QJsonObject{}},
+        {QStringLiteral("after"), QJsonObject{}},
+        {QStringLiteral("reason"), reason.trimmed()},
+    };
+    setBusy(true);
+    auto *reply = m_network.post(
+        makeRequest(QStringLiteral("/api/v1/seo/projects/") + projectId + QStringLiteral("/autopilot/plan"), true),
+        QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply, projectId] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else {
+            m_seoLastResult = QJsonDocument::fromJson(body).object().toVariantMap();
+            setError(QString());
+            emit seoLastResultChanged();
+            fetchSeoPlans(projectId);
+            fetchSeoDashboard(projectId);
+        }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::fetchSeoProjects()
+{
+    auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/seo/projects"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) {
+            setError(apiErrorMessage(body, reply->errorString()));
+        } else {
+            m_seoProjects = QJsonDocument::fromJson(body).array().toVariantList();
+            emit seoProjectsChanged();
+            if (m_selectedSeoProjectId.isEmpty() && !m_seoProjects.isEmpty()) {
+                m_selectedSeoProjectId = m_seoProjects.constFirst().toMap().value(QStringLiteral("id")).toString();
+                if (!m_selectedSeoProjectId.isEmpty()) {
+                    fetchSeoDashboard(m_selectedSeoProjectId);
+                    fetchSeoPlans(m_selectedSeoProjectId);
+                    fetchSeoSnapshots(m_selectedSeoProjectId);
+                }
+            }
+        }
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::fetchSeoDashboard(const QString &projectId)
+{
+    auto *reply = m_network.get(makeRequest(
+        QStringLiteral("/api/v1/seo/projects/") + projectId + QStringLiteral("/dashboard"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { m_seoDashboard = QJsonDocument::fromJson(body).object().toVariantMap(); emit seoDashboardChanged(); }
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::fetchSeoPlans(const QString &projectId)
+{
+    auto *reply = m_network.get(makeRequest(
+        QStringLiteral("/api/v1/seo/projects/") + projectId + QStringLiteral("/autopilot/plans"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { m_seoPlans = QJsonDocument::fromJson(body).array().toVariantList(); emit seoPlansChanged(); }
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::fetchSeoSnapshots(const QString &projectId)
+{
+    auto *reply = m_network.get(makeRequest(
+        QStringLiteral("/api/v1/seo/projects/") + projectId + QStringLiteral("/snapshots"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { m_seoSnapshots = QJsonDocument::fromJson(body).array().toVariantList(); emit seoSnapshotsChanged(); }
         reply->deleteLater();
     });
 }
