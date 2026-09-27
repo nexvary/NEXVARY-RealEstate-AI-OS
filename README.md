@@ -4,14 +4,14 @@ AI-first, multi-tenant, white-label operating system for real-estate companies.
 
 ## Current release line
 
-**v1.4.0 — Commercial White-Label Platform + Verified Bank Transfer Billing**
+**v1.5.0 — White-Label UX & Development Release**
 
 The product now has two isolated workspaces:
 
 1. **Company workspace** — CRM, inventory, viewings, reservations, contracts, installments, commissions, tasks, inbox, knowledge base and grounded AI.
 2. **NEXVARY Platform Admin** — create and manage multiple real-estate companies from one control plane.
 
-The Windows desktop build is designed for normal installation and first-run configuration without Python, Node.js, Docker or terminal commands.
+The Windows desktop build is designed for normal installation without Python, Node.js, Docker or terminal commands. During active development, first-run setup can be skipped with a one-click local development workspace.
 
 ## Product rule: AI never owns the truth
 
@@ -56,6 +56,9 @@ The platform separates exact transactional data from probabilistic AI:
 - Safe operational JSON export.
 - Arabic RTL + English.
 - Responsive desktop/mobile web UI.
+- Development-mode first-run skip plus one-click re-entry for repeated install/uninstall testing.
+- Internal Back navigation history that stays inside the application.
+- Separate About the System and About the Company sections.
 - Company logo, social links and custom white-label identity.
 - Integrated White-Label SEO Autopilot workspace copied from the preserved original SEO project.
 - Technical audits, bounded crawling, Search Console read-only analytics, opportunities, schema, performance and guarded dry-run SEO planning.
@@ -121,3 +124,4 @@ docker compose up -d postgres redis n8n
 - [White-Label SEO Autopilot integration](docs/SEO_AUTOPILOT_INTEGRATION.md)
 - [Commercial Platform v1.3.0](docs/COMMERCIAL_PLATFORM_V13.md)
 - [Verified Bank Transfer Billing v1.4.0](docs/BANK_TRANSFER_BILLING_V14.md)
+- [UX & Development Release v1.5.0](docs/UX_RELEASE_V15.md)
