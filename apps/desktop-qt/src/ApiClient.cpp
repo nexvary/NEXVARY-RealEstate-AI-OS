@@ -86,6 +86,11 @@ QVariantList ApiClient::seoPlans() const { return m_seoPlans; }
 QVariantList ApiClient::seoSnapshots() const { return m_seoSnapshots; }
 QVariantMap ApiClient::seoLastResult() const { return m_seoLastResult; }
 QString ApiClient::selectedSeoProjectId() const { return m_selectedSeoProjectId; }
+QVariantList ApiClient::automationCatalog() const { return m_automationCatalog; }
+QVariantList ApiClient::automationWorkflows() const { return m_automationWorkflows; }
+QVariantMap ApiClient::automationGraph() const { return m_automationGraph; }
+QVariantList ApiClient::automationRuns() const { return m_automationRuns; }
+QString ApiClient::selectedAutomationWorkflowId() const { return m_selectedAutomationWorkflowId; }
 QVariantMap ApiClient::enterpriseSummary() const { return m_enterpriseSummary; }
 QVariantList ApiClient::proposals() const { return m_proposals; }
 QVariantList ApiClient::invoices() const { return m_invoices; }
@@ -228,6 +233,11 @@ void ApiClient::logout()
     m_seoSnapshots.clear();
     m_seoLastResult.clear();
     m_selectedSeoProjectId.clear();
+    m_automationCatalog.clear();
+    m_automationWorkflows.clear();
+    m_automationGraph.clear();
+    m_automationRuns.clear();
+    m_selectedAutomationWorkflowId.clear();
     m_enterpriseSummary.clear();
     m_proposals.clear();
     m_invoices.clear();
@@ -270,6 +280,10 @@ void ApiClient::logout()
     emit seoPlansChanged();
     emit seoSnapshotsChanged();
     emit seoLastResultChanged();
+    emit automationCatalogChanged();
+    emit automationWorkflowsChanged();
+    emit automationGraphChanged();
+    emit automationRunsChanged();
     emit enterpriseSummaryChanged();
     emit proposalsChanged();
     emit invoicesChanged();
@@ -295,6 +309,7 @@ void ApiClient::refreshAll()
     refreshWorkspace();
     refreshGrowth();
     refreshSeo();
+    refreshAutomation();
     refreshEnterprise();
 }
 
@@ -1705,6 +1720,208 @@ void ApiClient::fetchSeoSnapshots(const QString &projectId)
         const QByteArray body = reply->readAll();
         if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
         else { m_seoSnapshots = QJsonDocument::fromJson(body).array().toVariantList(); emit seoSnapshotsChanged(); }
+        reply->deleteLater();
+    });
+}
+
+
+void ApiClient::refreshAutomation()
+{
+    if (!loggedIn())
+        return;
+    fetchAutomationCatalog();
+    fetchAutomationWorkflows();
+    if (!m_selectedAutomationWorkflowId.isEmpty()) {
+        fetchAutomationGraph(m_selectedAutomationWorkflowId);
+        fetchAutomationRuns(m_selectedAutomationWorkflowId);
+    }
+}
+
+void ApiClient::selectAutomationWorkflow(const QString &workflowId)
+{
+    const QString id = workflowId.trimmed();
+    if (id.isEmpty())
+        return;
+    m_selectedAutomationWorkflowId = id;
+    fetchAutomationGraph(id);
+    fetchAutomationRuns(id);
+}
+
+void ApiClient::createAutomationWorkflow(const QString &name, const QString &description)
+{
+    const QJsonObject payload{
+        {QStringLiteral("name"), name.trimmed()},
+        {QStringLiteral("description"), description.trimmed()},
+    };
+    setBusy(true);
+    auto *reply = m_network.post(makeRequest(QStringLiteral("/api/v1/automations"), true), QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) {
+            setError(apiErrorMessage(body, reply->errorString()));
+        } else {
+            const QJsonObject row = QJsonDocument::fromJson(body).object();
+            m_selectedAutomationWorkflowId = row.value(QStringLiteral("id")).toString();
+            setError(QString());
+            fetchAutomationWorkflows();
+            if (!m_selectedAutomationWorkflowId.isEmpty())
+                selectAutomationWorkflow(m_selectedAutomationWorkflowId);
+        }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::duplicateAutomationWorkflow(const QString &workflowId)
+{
+    setBusy(true);
+    auto *reply = m_network.post(
+        makeRequest(QStringLiteral("/api/v1/automations/") + workflowId + QStringLiteral("/duplicate"), true),
+        QByteArray());
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) {
+            setError(apiErrorMessage(body, reply->errorString()));
+        } else {
+            const QJsonObject graph = QJsonDocument::fromJson(body).object();
+            m_automationGraph = graph.toVariantMap();
+            const QJsonObject workflow = graph.value(QStringLiteral("workflow")).toObject();
+            m_selectedAutomationWorkflowId = workflow.value(QStringLiteral("id")).toString();
+            setError(QString());
+            emit automationGraphChanged();
+            fetchAutomationWorkflows();
+            fetchAutomationRuns(m_selectedAutomationWorkflowId);
+        }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::replaceAutomationGraph(const QString &workflowId, const QVariantList &nodes, const QVariantList &edges)
+{
+    const QJsonObject payload{
+        {QStringLiteral("nodes"), QJsonArray::fromVariantList(nodes)},
+        {QStringLiteral("edges"), QJsonArray::fromVariantList(edges)},
+    };
+    setBusy(true);
+    auto *reply = m_network.sendCustomRequest(
+        makeRequest(QStringLiteral("/api/v1/automations/") + workflowId + QStringLiteral("/graph"), true),
+        QByteArray("PUT"),
+        QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply, workflowId] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) {
+            setError(apiErrorMessage(body, reply->errorString()));
+        } else {
+            m_automationGraph = QJsonDocument::fromJson(body).object().toVariantMap();
+            setError(QString());
+            emit automationGraphChanged();
+            fetchAutomationWorkflows();
+            fetchAutomationRuns(workflowId);
+        }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::runAutomationWorkflow(const QString &workflowId, const QString &leadId)
+{
+    QJsonObject input;
+    if (!leadId.trimmed().isEmpty())
+        input.insert(QStringLiteral("lead_id"), leadId.trimmed());
+    const QJsonObject payload{
+        {QStringLiteral("trigger_type"), QStringLiteral("manual")},
+        {QStringLiteral("input"), input},
+    };
+    setBusy(true);
+    auto *reply = m_network.post(
+        makeRequest(QStringLiteral("/api/v1/automations/") + workflowId + QStringLiteral("/run"), true),
+        QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply, workflowId] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { setError(QString()); fetchAutomationRuns(workflowId); }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::decideAutomationApproval(const QString &approvalId, const QString &decision, const QString &note)
+{
+    const QJsonObject payload{
+        {QStringLiteral("decision"), decision.trimmed()},
+        {QStringLiteral("note"), note.trimmed()},
+    };
+    setBusy(true);
+    auto *reply = m_network.post(
+        makeRequest(QStringLiteral("/api/v1/automations/approvals/") + approvalId + QStringLiteral("/decision"), true),
+        QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else {
+            setError(QString());
+            if (!m_selectedAutomationWorkflowId.isEmpty())
+                fetchAutomationRuns(m_selectedAutomationWorkflowId);
+        }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::fetchAutomationCatalog()
+{
+    auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/automations/catalog"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else {
+            const QJsonObject object = QJsonDocument::fromJson(body).object();
+            m_automationCatalog = object.value(QStringLiteral("nodes")).toArray().toVariantList();
+            emit automationCatalogChanged();
+        }
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::fetchAutomationWorkflows()
+{
+    auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/automations"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) {
+            setError(apiErrorMessage(body, reply->errorString()));
+        } else {
+            m_automationWorkflows = QJsonDocument::fromJson(body).array().toVariantList();
+            emit automationWorkflowsChanged();
+            if (m_selectedAutomationWorkflowId.isEmpty() && !m_automationWorkflows.isEmpty()) {
+                m_selectedAutomationWorkflowId = m_automationWorkflows.constFirst().toMap().value(QStringLiteral("id")).toString();
+                if (!m_selectedAutomationWorkflowId.isEmpty())
+                    selectAutomationWorkflow(m_selectedAutomationWorkflowId);
+            }
+        }
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::fetchAutomationGraph(const QString &workflowId)
+{
+    auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/automations/") + workflowId, true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { m_automationGraph = QJsonDocument::fromJson(body).object().toVariantMap(); emit automationGraphChanged(); }
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::fetchAutomationRuns(const QString &workflowId)
+{
+    auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/automations/") + workflowId + QStringLiteral("/runs"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
+        else { m_automationRuns = QJsonDocument::fromJson(body).array().toVariantList(); emit automationRunsChanged(); }
         reply->deleteLater();
     });
 }
