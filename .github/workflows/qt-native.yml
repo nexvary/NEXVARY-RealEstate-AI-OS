@@ -19,7 +19,7 @@ on:
       - "services/api/**"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   native-build:
@@ -208,6 +208,27 @@ jobs:
             native-dist/smoke/*.log
             native-installer/install-smoke/*.log
           if-no-files-found: error
+
+      - name: Publish direct Windows release download
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "v2.0.1"
+          gh release view $tag --repo "${{ github.repository }}" *> $null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag `
+              --repo "${{ github.repository }}" `
+              --target "${{ github.sha }}" `
+              --title "NEXVARY RealEstate AI OS v2.0.1" `
+              --notes "Corrected native Windows release: first-run recovery, previous-workspace access, redesigned NX identity, and vector navigation icons."
+          }
+          gh release upload $tag `
+            "native-installer\NEXVARY-RealEstate-AI-OS-v2.0.1-Windows-Setup.exe" `
+            "native-installer\SHA256.txt" `
+            --repo "${{ github.repository }}" `
+            --clobber
 
       - name: QML Arabic RTL screenshot gate
         if: runner.os == 'Linux'
