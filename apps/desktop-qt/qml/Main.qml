@@ -280,11 +280,19 @@ ApplicationWindow {
                                             ? enterpriseComponent
                                             : appState.currentPage === "timeline"
                                                 ? timelineComponent
-                                                : appState.currentPage === "settings"
-                                                    ? settingsComponent
-                                                    : appState.currentPage === "company"
-                                                        ? companyComponent
-                                                        : migrationComponent
+                                                : appState.currentPage === "inbox"
+                                                    ? omnichannelComponent
+                                                    : appState.currentPage === "knowledge"
+                                                        ? knowledgeComponent
+                                                        : appState.currentPage === "tasks"
+                                                            ? tasksComponent
+                                                            : appState.currentPage === "team"
+                                                                ? teamComponent
+                                                                : appState.currentPage === "settings"
+                                                                    ? settingsComponent
+                                                                    : appState.currentPage === "company"
+                                                                        ? companyComponent
+                                                                        : migrationComponent
                 }
             }
         }
@@ -328,6 +336,26 @@ ApplicationWindow {
     Component {
         id: timelineComponent
         CustomerTimelinePage {}
+    }
+
+    Component {
+        id: omnichannelComponent
+        OmnichannelPage {}
+    }
+
+    Component {
+        id: knowledgeComponent
+        KnowledgePage {}
+    }
+
+    Component {
+        id: tasksComponent
+        TasksPage {}
+    }
+
+    Component {
+        id: teamComponent
+        TeamPage {}
     }
 
     Component {
