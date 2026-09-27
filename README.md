@@ -73,7 +73,7 @@ The platform separates exact transactional data from probabilistic AI:
 - Passwords use salted PBKDF2-SHA256 hashes.
 - Provider credentials are encrypted at rest and secret values are never returned by read APIs.
 - Operational backup exports exclude password hashes and integration secret ciphertext.
-- Desktop runtime secrets are generated automatically per installation.
+- Desktop runtime secrets are generated once per local data profile and are reused safely across uninstall/reinstall cycles; incompatible development databases are archived instead of overwritten.
 
 ## Verification
 
