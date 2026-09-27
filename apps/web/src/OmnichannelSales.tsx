@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
-import { Bot, CheckCircle2, Headphones, MessageSquare, RefreshCw, Send, ShieldCheck, Sparkles, Volume2, XCircle } from "lucide-react";
+import { Bot, CheckCircle2, Headphones, MessageSquare, Plus, RefreshCw, Send, ShieldCheck, Sparkles, Volume2, XCircle } from "lucide-react";
 
 type Locale = "ar" | "en";
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://localhost:8000" : window.location.origin);
@@ -52,6 +52,18 @@ export default function OmnichannelSales({token,locale}:{token:string;locale:Loc
   }
   useEffect(()=>{void loadConversations();},[token]);
   useEffect(()=>{void loadSelected(selected);},[selected,token]);
+
+  async function createManual(event:FormEvent<HTMLFormElement>){
+    event.preventDefault(); const form=event.currentTarget; const d=new FormData(form); setError(""); setNotice("");
+    try{
+      const created=await api<Conversation>("/api/v1/inbox/conversations",token,{method:"POST",body:JSON.stringify({
+        channel:String(d.get("channel")||"manual"),
+        external_contact:String(d.get("external_contact")||"").trim(),
+        display_name:String(d.get("display_name")||"").trim()||null
+      })});
+      form.reset(); await loadConversations(); setSelected(created.id);
+    }catch(e){setError(e instanceof Error?e.message:"Conversation creation failed");}
+  }
 
   async function patchState(patch:Record<string,unknown>){
     if(!selected)return;
@@ -108,7 +120,7 @@ export default function OmnichannelSales({token,locale}:{token:string;locale:Loc
     {error&&<div className="systemError">{error}</div>}{notice&&<div className="successNotice">{notice}</div>}
 
     <div className="salesInboxLayout">
-      <aside className="panel salesConversationRail"><div className="panelHead"><h3>{ar?"المحادثات":"Conversations"}</h3><span>{items.length}</span></div><div className="conversationList">{items.map((x)=><button key={x.id} className={selected===x.id?"conversationItem active":"conversationItem"} onClick={()=>setSelected(x.id)}><strong>{x.display_name||x.external_contact}</strong><span>{x.channel+" · "+x.status}</span></button>)}</div></aside>
+      <aside className="panel salesConversationRail"><div className="panelHead"><h3>{ar?"المحادثات":"Conversations"}</h3><span>{items.length}</span></div><form className="salesConversationCreate" onSubmit={createManual}><select name="channel" defaultValue="manual"><option value="manual">Manual</option><option value="whatsapp">WhatsApp</option><option value="messenger">Messenger</option><option value="instagram">Instagram</option><option value="website">Website</option></select><input name="external_contact" required placeholder={ar?"رقم/معرّف العميل":"Customer contact"}/><input name="display_name" placeholder={ar?"اسم العميل":"Customer name"}/><button className="secondaryButton"><Plus size={14}/>{ar?"إضافة":"Add"}</button></form><div className="conversationList">{items.map((x)=><button key={x.id} className={selected===x.id?"conversationItem active":"conversationItem"} onClick={()=>setSelected(x.id)}><strong>{x.display_name||x.external_contact}</strong><span>{x.channel+" · "+x.status}</span></button>)}</div></aside>
       <section className="panel salesConversationMain">
         {!selected&&<div className="seoEmpty"><MessageSquare size={26}/><p>{ar?"اختر محادثة.":"Select a conversation."}</p></div>}
         {selected&&<>
