@@ -29,7 +29,7 @@ from .db import get_db
 from .models import AuditEvent, Lead, Project, Unit, UnitStatus, UserRole
 from .policy import RequestContext, get_request_context, require_roles
 from .seo_models import SEOProject
-from .workspace_models import FollowUpTask, InboxMessage, MessageDirection
+from .workspace_models import FollowUpTask, InboxConversation, InboxMessage, MessageDirection
 
 router = APIRouter(prefix="/api/v1/automations")
 automation_editor = require_roles(UserRole.owner, UserRole.admin, UserRole.sales_manager)
@@ -585,6 +585,14 @@ def execute_node(
         conversation_id = str(config.get("conversation_id") or path_get(context, "input.conversation_id", "") or "").strip()
         if not conversation_id:
             raise ValueError("conversation_id is required")
+        conversation = db.scalar(
+            select(InboxConversation).where(
+                InboxConversation.id == conversation_id,
+                InboxConversation.tenant_id == ctx.tenant_id,
+            )
+        )
+        if conversation is None:
+            raise ValueError("Conversation not found")
         body = render_template(str(config.get("body") or "Automation note"), context)
         message = InboxMessage(
             tenant_id=ctx.tenant_id,
