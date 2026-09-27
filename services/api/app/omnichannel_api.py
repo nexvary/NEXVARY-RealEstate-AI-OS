@@ -17,7 +17,8 @@ from sqlalchemy.orm import Session
 from .commercial_models import WhatsAppChannel
 from .db import get_db
 from .integration_crypto import decrypt_secret_map
-from .models import AuditEvent, Lead, Project, Unit, UnitStatus, User, UserRole
+from .growth_models import PropertyMediaAsset
+from .models import AuditEvent, Lead, PaymentPlan, Project, Unit, UnitStatus, User, UserRole
 from .omnichannel_models import (
     AttributionEventType,
     ConversationSalesState,
@@ -30,6 +31,8 @@ from .omnichannel_models import (
     SalesJourneyStage,
 )
 from .policy import RequestContext, get_request_context, require_roles, write_sales
+from .property_sales_models import ConversationPropertyContext
+from .property_sales_service import ensure_crm_lead, resolve_property_referral, upsert_conversation_property_context
 from .saas_models import TenantIntegration
 from .workspace_models import (
     ConversationChannel,
@@ -90,6 +93,9 @@ class InboundIntake(BaseModel):
     lead_id: str | None = None
     campaign_id: str | None = Field(default=None, max_length=180)
     ad_id: str | None = Field(default=None, max_length=180)
+    project_id: str | None = None
+    unit_id: str | None = None
+    referral_source_url: str | None = Field(default=None, max_length=2048)
 
 
 class InboundResult(BaseModel):
@@ -97,6 +103,9 @@ class InboundResult(BaseModel):
     conversation_id: str
     message_id: str
     state_id: str
+    lead_id: str | None
+    project_id: str | None
+    unit_id: str | None
 
 
 class SalesStatePatch(BaseModel):
@@ -129,6 +138,8 @@ class GroundedReplyRequest(BaseModel):
     max_price: Decimal | None = Field(default=None, ge=0)
     bedrooms: int | None = Field(default=None, ge=0, le=30)
     unit_type: str | None = Field(default=None, max_length=80)
+    project_id: str | None = None
+    unit_id: str | None = None
     source_confidence: Decimal = Field(default=Decimal("1.0"), ge=0, le=1)
     channel_id: str | None = None
 
@@ -160,6 +171,7 @@ class GroundedReplyResult(BaseModel):
     outbox: OutboxRead
     voice_plan: dict[str, Any] | None
     units: list[dict[str, Any]]
+    media: list[dict[str, Any]]
     evidence: list[dict[str, Any]]
 
 
@@ -230,9 +242,13 @@ def ingest_inbound(
         )
     )
     if existing:
-        state = get_or_create_state(
-            db,
-            tenant_record(db, InboxConversation, existing.conversation_id, ctx.tenant_id),
+        conversation = tenant_record(db, InboxConversation, existing.conversation_id, ctx.tenant_id)
+        state = get_or_create_state(db, conversation)
+        property_context = db.scalar(
+            select(ConversationPropertyContext).where(
+                ConversationPropertyContext.tenant_id == ctx.tenant_id,
+                ConversationPropertyContext.conversation_id == conversation.id,
+            )
         )
         db.commit()
         return InboundResult(
@@ -240,10 +256,41 @@ def ingest_inbound(
             conversation_id=existing.conversation_id,
             message_id=existing.message_id,
             state_id=state.id,
+            lead_id=conversation.lead_id,
+            project_id=property_context.project_id if property_context else None,
+            unit_id=property_context.unit_id if property_context else None,
         )
 
+    try:
+        referral, project, unit = resolve_property_referral(
+            db,
+            tenant_id=ctx.tenant_id,
+            channel=payload.channel.value,
+            ad_id=payload.ad_id,
+            project_id=payload.project_id,
+            unit_id=payload.unit_id,
+        )
+    except ValueError as exc:
+        status_code = 404 if "not found" in str(exc).lower() else 409
+        raise HTTPException(status_code=status_code, detail=str(exc)) from exc
+
+    effective_campaign_id = payload.campaign_id or (referral.campaign_id if referral else None)
+    effective_ad_id = payload.ad_id or (referral.ad_id if referral else None)
+
     if payload.lead_id:
-        tenant_record(db, Lead, payload.lead_id, ctx.tenant_id)
+        lead = tenant_record(db, Lead, payload.lead_id, ctx.tenant_id)
+    else:
+        lead = ensure_crm_lead(
+            db,
+            tenant_id=ctx.tenant_id,
+            external_contact=payload.external_contact,
+            display_name=payload.display_name,
+            channel=payload.channel.value,
+            campaign_id=effective_campaign_id,
+            ad_id=effective_ad_id,
+            project=project,
+            unit=unit,
+        )
 
     conversation = db.scalar(
         select(InboxConversation).where(
@@ -255,7 +302,7 @@ def ingest_inbound(
     if conversation is None:
         conversation = InboxConversation(
             tenant_id=ctx.tenant_id,
-            lead_id=payload.lead_id,
+            lead_id=lead.id,
             channel=payload.channel,
             external_contact=payload.external_contact,
             display_name=payload.display_name,
@@ -265,8 +312,8 @@ def ingest_inbound(
     else:
         if payload.display_name:
             conversation.display_name = payload.display_name
-        if payload.lead_id and not conversation.lead_id:
-            conversation.lead_id = payload.lead_id
+        if not conversation.lead_id:
+            conversation.lead_id = lead.id
 
     message = InboxMessage(
         tenant_id=ctx.tenant_id,
@@ -293,18 +340,30 @@ def ingest_inbound(
     db.add(receipt)
 
     state = get_or_create_state(db, conversation)
-    if payload.campaign_id:
-        state.campaign_id = payload.campaign_id
-    if payload.ad_id:
-        state.ad_id = payload.ad_id
-    if payload.campaign_id:
+    if effective_campaign_id:
+        state.campaign_id = effective_campaign_id
+    if effective_ad_id:
+        state.ad_id = effective_ad_id
+
+    property_context = upsert_conversation_property_context(
+        db,
+        conversation=conversation,
+        referral=referral,
+        project=project,
+        unit=unit,
+        campaign_id=effective_campaign_id,
+        ad_id=effective_ad_id,
+        source_url=payload.referral_source_url,
+    )
+
+    if effective_campaign_id:
         db.add(
             MarketingAttributionEvent(
                 tenant_id=ctx.tenant_id,
                 conversation_id=conversation.id,
-                lead_id=conversation.lead_id,
-                campaign_id=payload.campaign_id,
-                ad_id=payload.ad_id,
+                lead_id=lead.id,
+                campaign_id=effective_campaign_id,
+                ad_id=effective_ad_id,
                 event_type=AttributionEventType.conversation,
             )
         )
@@ -322,9 +381,13 @@ def ingest_inbound(
         )
         if existing is None:
             raise
-        state = get_or_create_state(
-            db,
-            tenant_record(db, InboxConversation, existing.conversation_id, ctx.tenant_id),
+        conversation = tenant_record(db, InboxConversation, existing.conversation_id, ctx.tenant_id)
+        state = get_or_create_state(db, conversation)
+        property_context = db.scalar(
+            select(ConversationPropertyContext).where(
+                ConversationPropertyContext.tenant_id == ctx.tenant_id,
+                ConversationPropertyContext.conversation_id == conversation.id,
+            )
         )
         db.commit()
         return InboundResult(
@@ -332,6 +395,9 @@ def ingest_inbound(
             conversation_id=existing.conversation_id,
             message_id=existing.message_id,
             state_id=state.id,
+            lead_id=conversation.lead_id,
+            project_id=property_context.project_id if property_context else None,
+            unit_id=property_context.unit_id if property_context else None,
         )
 
     return InboundResult(
@@ -339,6 +405,9 @@ def ingest_inbound(
         conversation_id=conversation.id,
         message_id=message.id,
         state_id=state.id,
+        lead_id=lead.id,
+        project_id=property_context.project_id if property_context else None,
+        unit_id=property_context.unit_id if property_context else None,
     )
 
 
@@ -380,6 +449,9 @@ def grounded_inventory(
     db: Session,
     tenant_id: str,
     payload: GroundedReplyRequest,
+    *,
+    project_id: str | None = None,
+    unit_id: str | None = None,
 ) -> list[tuple[Unit, Project]]:
     query = (
         select(Unit, Project)
@@ -390,6 +462,10 @@ def grounded_inventory(
             Unit.status == UnitStatus.available,
         )
     )
+    if unit_id:
+        query = query.where(Unit.id == unit_id)
+    elif project_id:
+        query = query.where(Project.id == project_id)
     if payload.city:
         query = query.where(func.lower(Project.city) == payload.city.lower())
     if payload.max_price is not None:
@@ -427,24 +503,37 @@ def grounded_evidence(db: Session, tenant_id: str, question: str) -> list[dict[s
     return sorted(scored, key=lambda item: item["score"], reverse=True)[:4]
 
 
-def build_answer(rows: list[tuple[Unit, Project]], evidence: list[dict[str, Any]], arabic: bool) -> str:
+def build_answer(
+    rows: list[tuple[Unit, Project]],
+    evidence: list[dict[str, Any]],
+    arabic: bool,
+    plans: dict[str, PaymentPlan],
+) -> str:
     if rows:
+        def plan_text(unit: Unit) -> str:
+            plan = plans.get(unit.payment_plan_id or "")
+            if not plan:
+                return ""
+            if arabic:
+                return f"، خطة {plan.name}: مقدم {plan.down_payment_percent}% على {plan.years} سنوات"
+            return f", {plan.name}: {plan.down_payment_percent}% down over {plan.years} years"
+
         if arabic:
             intro = f"وجدت {len(rows)} وحدة متاحة حاليًا من قاعدة البيانات:"
             items = [
-                f"{project.name} — {unit.code}: {unit.unit_type}، {unit.area_sqm} م²، {unit.price} {unit.currency}"
+                f"{project.name} — {unit.code}: {unit.unit_type}، {unit.area_sqm} م²، {unit.price} {unit.currency}{plan_text(unit)}"
                 for unit, project in rows[:3]
             ]
-            suffix = "السعر والتوافر المذكوران أعلاه من قاعدة البيانات الحالية."
+            suffix = "السعر والتوافر وخطة السداد المذكورة أعلاه مأخوذة من قاعدة البيانات الحالية."
             if evidence:
                 suffix += " توجد أيضًا معلومات مساندة في قاعدة المعرفة."
             return "\n".join([intro, *items, suffix])
         intro = f"I found {len(rows)} currently available units in the database:"
         items = [
-            f"{project.name} — {unit.code}: {unit.unit_type}, {unit.area_sqm} m², {unit.price} {unit.currency}"
+            f"{project.name} — {unit.code}: {unit.unit_type}, {unit.area_sqm} m², {unit.price} {unit.currency}{plan_text(unit)}"
             for unit, project in rows[:3]
         ]
-        suffix = "The pricing and availability above come from the current transactional database."
+        suffix = "The pricing, availability and payment-plan details above come from the current transactional database."
         if evidence:
             suffix += " Related supporting knowledge is also available."
         return "\n".join([intro, *items, suffix])
@@ -464,10 +553,44 @@ def prepare_grounded_reply(
 ) -> GroundedReplyResult:
     conversation = tenant_record(db, InboxConversation, conversation_id, ctx.tenant_id)
     state = get_or_create_state(db, conversation)
-    rows = grounded_inventory(db, ctx.tenant_id, payload)
+    property_context = db.scalar(
+        select(ConversationPropertyContext).where(
+            ConversationPropertyContext.tenant_id == ctx.tenant_id,
+            ConversationPropertyContext.conversation_id == conversation.id,
+        )
+    )
+    context_project_id = payload.project_id or (property_context.project_id if property_context else None)
+    context_unit_id = payload.unit_id or (property_context.unit_id if property_context else None)
+    if context_project_id:
+        tenant_record(db, Project, context_project_id, ctx.tenant_id)
+    if context_unit_id:
+        context_unit = tenant_record(db, Unit, context_unit_id, ctx.tenant_id)
+        if context_project_id and context_unit.project_id != context_project_id:
+            raise HTTPException(status_code=409, detail="Unit belongs to a different project")
+        context_project_id = context_project_id or context_unit.project_id
+
+    rows = grounded_inventory(
+        db,
+        ctx.tenant_id,
+        payload,
+        project_id=context_project_id,
+        unit_id=context_unit_id,
+    )
     evidence = grounded_evidence(db, ctx.tenant_id, payload.question)
+
+    plan_ids = {unit.payment_plan_id for unit, _ in rows if unit.payment_plan_id}
+    plans = {
+        plan.id: plan
+        for plan in db.scalars(
+            select(PaymentPlan).where(
+                PaymentPlan.tenant_id == ctx.tenant_id,
+                PaymentPlan.id.in_(plan_ids),
+            )
+        ).all()
+    } if plan_ids else {}
+
     arabic = bool(re.search(r"[\u0600-\u06FF]", payload.question))
-    answer = build_answer(rows, evidence, arabic)
+    answer = build_answer(rows, evidence, arabic, plans)
 
     grounded = bool(rows or evidence)
     requires_handoff = not bool(rows)
@@ -514,6 +637,29 @@ def prepare_grounded_reply(
             "synthesis_required": True,
         }
 
+    unit_ids = [unit.id for unit, _ in rows]
+    project_ids = list({project.id for _, project in rows})
+    media_rows: list[PropertyMediaAsset] = []
+    if unit_ids or project_ids:
+        media_query = select(PropertyMediaAsset).where(
+            PropertyMediaAsset.tenant_id == ctx.tenant_id,
+            PropertyMediaAsset.is_verified == 1,
+        )
+        conditions = []
+        if unit_ids:
+            conditions.append(PropertyMediaAsset.unit_id.in_(unit_ids))
+        if project_ids:
+            conditions.append(
+                (PropertyMediaAsset.project_id.in_(project_ids))
+                & (PropertyMediaAsset.unit_id.is_(None))
+            )
+        condition = conditions[0]
+        for extra in conditions[1:]:
+            condition = condition | extra
+        media_rows = list(
+            db.scalars(media_query.where(condition).order_by(PropertyMediaAsset.created_at.desc()).limit(10)).all()
+        )
+
     db.add(
         AuditEvent(
             tenant_id=ctx.tenant_id,
@@ -521,26 +667,49 @@ def prepare_grounded_reply(
             action="omnichannel.grounded_reply.prepare",
             entity_type="inbox_conversation",
             entity_id=conversation.id,
-            details=f"grounded={grounded};handoff={requires_handoff};auto={auto_allowed}",
+            details=f"grounded={grounded};handoff={requires_handoff};auto={auto_allowed};media={len(media_rows)}",
         )
     )
     db.commit()
     db.refresh(outbox)
 
-    unit_payload = [
+    unit_payload = []
+    for unit, project in rows:
+        plan = plans.get(unit.payment_plan_id or "")
+        unit_payload.append(
+            {
+                "unit_id": unit.id,
+                "project_id": project.id,
+                "project_name": project.name,
+                "code": unit.code,
+                "unit_type": unit.unit_type,
+                "bedrooms": unit.bedrooms,
+                "area_sqm": str(unit.area_sqm),
+                "price": str(unit.price),
+                "currency": unit.currency,
+                "status": unit.status.value,
+                "payment_plan": {
+                    "id": plan.id,
+                    "name": plan.name,
+                    "down_payment_percent": str(plan.down_payment_percent),
+                    "years": plan.years,
+                    "installment_frequency_months": plan.installment_frequency_months,
+                } if plan else None,
+            }
+        )
+
+    media_payload = [
         {
-            "unit_id": unit.id,
-            "project_id": project.id,
-            "project_name": project.name,
-            "code": unit.code,
-            "unit_type": unit.unit_type,
-            "bedrooms": unit.bedrooms,
-            "area_sqm": str(unit.area_sqm),
-            "price": str(unit.price),
-            "currency": unit.currency,
-            "status": unit.status.value,
+            "id": asset.id,
+            "project_id": asset.project_id,
+            "unit_id": asset.unit_id,
+            "title": asset.title,
+            "media_type": asset.media_type.value,
+            "url": asset.url,
+            "source_kind": asset.source_kind.value,
+            "verified": bool(asset.is_verified),
         }
-        for unit, project in rows
+        for asset in media_rows
     ]
     return GroundedReplyResult(
         answer=answer,
@@ -550,6 +719,7 @@ def prepare_grounded_reply(
         outbox=outbox_read(outbox),
         voice_plan=voice_plan,
         units=unit_payload,
+        media=media_payload,
         evidence=evidence,
     )
 
