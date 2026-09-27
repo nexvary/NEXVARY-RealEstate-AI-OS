@@ -208,7 +208,7 @@ Item {
                                 ColumnLayout {
                                     Layout.fillWidth: true
                                     Text { Layout.fillWidth:true; text:(modelData.code || "—") + " · " + (modelData.unit_type || ""); color:Theme.platinum; font.pixelSize:12; font.bold:true; elide:Text.ElideRight }
-                                    Text { Layout.fillWidth:true; text:String(modelData.area_sqm || "—") + " m² · " + String(modelData.bedrooms ?? "—") + " BR"; color:Theme.muted; font.pixelSize:9 }
+                                    Text { Layout.fillWidth:true; text:String(modelData.area_sqm || "—") + " m² · " + String(modelData.bedrooms === null || modelData.bedrooms === undefined ? "—" : modelData.bedrooms) + " BR"; color:Theme.muted; font.pixelSize:9 }
                                 }
                                 ColumnLayout {
                                     Text { text:Number(modelData.price || 0).toLocaleString(Qt.locale("en_US"),"f",0) + " " + (modelData.currency || ""); color:Theme.silver; font.pixelSize:10; font.bold:true }
