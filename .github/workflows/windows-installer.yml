@@ -1,4 +1,4 @@
-name: Windows v1.4.0 Bank Transfer Platform Installer
+name: Windows v1.5.0 UX Release Installer
 
 on:
   push:
@@ -48,7 +48,7 @@ jobs:
         shell: pwsh
         env:
           APP_ENV: test
-          DATABASE_URL: sqlite:///./v140-test.db
+          DATABASE_URL: sqlite:///./v150-test.db
         run: |
           Set-Location services/api
           pytest -q
@@ -61,13 +61,13 @@ jobs:
           npx playwright install chromium
           Set-Location ../..
 
-          Remove-Item "services/api/e2e-v140.db" -ErrorAction SilentlyContinue
+          Remove-Item "services/api/e2e-v150.db" -ErrorAction SilentlyContinue
           $env:APP_ENV = "desktop"
-          $env:DATABASE_URL = "sqlite:///./e2e-v140.db"
+          $env:DATABASE_URL = "sqlite:///./e2e-v150.db"
           $env:NEXVARY_STATIC_DIR = (Resolve-Path "apps/web/dist").Path
-          $env:JWT_SECRET = "v140-release-gate-jwt-secret-at-least-32-bytes-long"
-          $env:PLATFORM_ADMIN_KEY = "v140-release-gate-platform-key-at-least-32-bytes"
-          $env:INTEGRATION_MASTER_SECRET = "v140-release-gate-integration-secret-at-least-32-bytes"
+          $env:JWT_SECRET = "v150-release-gate-jwt-secret-at-least-32-bytes-long"
+          $env:PLATFORM_ADMIN_KEY = "v150-release-gate-platform-key-at-least-32-bytes"
+          $env:INTEGRATION_MASTER_SECRET = "v150-release-gate-integration-secret-at-least-32-bytes"
           $server = Start-Process python -ArgumentList "-m","uvicorn","app.main:app","--host","127.0.0.1","--port","8000","--log-level","warning" -WorkingDirectory "services/api" -PassThru
 
           try {
@@ -112,21 +112,21 @@ jobs:
           if (!(Test-Path $iscc)) { throw "Inno Setup compiler not found" }
           & $iscc "desktop\installer.iss"
           if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed with exit code $LASTEXITCODE" }
-          if (!(Test-Path "installer/NEXVARY-RealEstate-AI-OS-WhiteLabel-v1.4.0-Setup.exe")) { throw "Installer output is missing" }
+          if (!(Test-Path "installer/NEXVARY-RealEstate-AI-OS-WhiteLabel-v1.5.0-Setup.exe")) { throw "Installer output is missing" }
 
       - name: Generate SHA256
         shell: pwsh
         run: |
-          $hash = Get-FileHash "installer/NEXVARY-RealEstate-AI-OS-WhiteLabel-v1.4.0-Setup.exe" -Algorithm SHA256
-          "$($hash.Hash)  NEXVARY-RealEstate-AI-OS-WhiteLabel-v1.4.0-Setup.exe" | Out-File -FilePath "installer/SHA256.txt" -Encoding ascii
-          Get-Item "installer/NEXVARY-RealEstate-AI-OS-WhiteLabel-v1.4.0-Setup.exe" | Select-Object Name, Length, LastWriteTime
+          $hash = Get-FileHash "installer/NEXVARY-RealEstate-AI-OS-WhiteLabel-v1.5.0-Setup.exe" -Algorithm SHA256
+          "$($hash.Hash)  NEXVARY-RealEstate-AI-OS-WhiteLabel-v1.5.0-Setup.exe" | Out-File -FilePath "installer/SHA256.txt" -Encoding ascii
+          Get-Item "installer/NEXVARY-RealEstate-AI-OS-WhiteLabel-v1.5.0-Setup.exe" | Select-Object Name, Length, LastWriteTime
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
         with:
-          name: NEXVARY-RealEstate-AI-OS-WhiteLabel-v1.4.0-Windows
+          name: NEXVARY-RealEstate-AI-OS-WhiteLabel-v1.5.0-Windows
           path: |
-            installer/NEXVARY-RealEstate-AI-OS-WhiteLabel-v1.4.0-Setup.exe
+            installer/NEXVARY-RealEstate-AI-OS-WhiteLabel-v1.5.0-Setup.exe
             installer/SHA256.txt
           if-no-files-found: error
           compression-level: 0

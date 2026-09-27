@@ -22,8 +22,10 @@ import {
   KeyRound,
   Languages,
   LayoutDashboard,
+  Landmark,
   LogOut,
   MapPin,
+  MessageCircle,
   MessageSquare,
   Plus,
   RefreshCw,
@@ -36,7 +38,7 @@ import {
 } from "lucide-react";
 
 type Locale = "ar" | "en";
-type View = "dashboard" | "leads" | "inventory" | "manage" | "appointments" | "finance" | "billing" | "inbox" | "whatsapp" | "knowledge" | "tasks" | "team" | "settings" | "ai" | "seo" | "about";
+type View = "dashboard" | "leads" | "inventory" | "manage" | "appointments" | "finance" | "billing" | "inbox" | "whatsapp" | "knowledge" | "tasks" | "team" | "settings" | "ai" | "seo" | "systemAbout" | "companyAbout";
 
 type User = {
   id: string;
@@ -58,6 +60,7 @@ type SetupStatus = {
   needs_setup: boolean;
   tenant_count: number;
   desktop_mode: boolean;
+  development_workspace: boolean;
 };
 
 type BootstrapResponse = {
@@ -171,7 +174,8 @@ const copy = {
     settings: "إعدادات الشركة",
     ai: "مساعد الذكاء الاصطناعي",
     seo: "SEO Autopilot",
-    about: "عن المنصة",
+    systemAbout: "عن النظام",
+    companyAbout: "عن الشركة",
     search: "ابحث داخل الصفحة الحالية...",
     addLead: "إضافة عميل",
     welcome: "مركز قيادة المبيعات",
@@ -236,7 +240,8 @@ const copy = {
     settings: "Company Settings",
     ai: "AI Assistant",
     seo: "SEO Autopilot",
-    about: "About",
+    systemAbout: "About the System",
+    companyAbout: "About the Company",
     search: "Search the current view...",
     addLead: "Add lead",
     welcome: "Sales Command Center",
@@ -292,16 +297,17 @@ const navItems = [
   { id: "manage" as View, icon: ClipboardCheck, key: "manage" as const },
   { id: "appointments" as View, icon: CalendarDays, key: "appointments" as const },
   { id: "finance" as View, icon: CircleDollarSign, key: "finance" as const },
-  { id: "billing" as View, icon: CircleDollarSign, key: "billing" as const },
+  { id: "billing" as View, icon: Landmark, key: "billing" as const },
   { id: "inbox" as View, icon: MessageSquare, key: "inbox" as const },
-  { id: "whatsapp" as View, icon: MessageSquare, key: "whatsapp" as const },
+  { id: "whatsapp" as View, icon: MessageCircle, key: "whatsapp" as const },
   { id: "knowledge" as View, icon: BookOpen, key: "knowledge" as const },
   { id: "tasks" as View, icon: ClipboardCheck, key: "tasks" as const },
   { id: "team" as View, icon: ShieldCheck, key: "team" as const },
   { id: "settings" as View, icon: Settings2, key: "settings" as const },
   { id: "ai" as View, icon: Bot, key: "ai" as const },
   { id: "seo" as View, icon: Search, key: "seo" as const },
-  { id: "about" as View, icon: Info, key: "about" as const },
+  { id: "systemAbout" as View, icon: Info, key: "systemAbout" as const },
+  { id: "companyAbout" as View, icon: Building2, key: "companyAbout" as const },
 ];
 
 function readSession(): AuthSession | null {
@@ -339,7 +345,7 @@ export default function App() {
     fetch(`${API_URL}/api/v1/setup/status`)
       .then((response) => response.json())
       .then((data: SetupStatus) => setSetup(data))
-      .catch(() => setSetup({ needs_setup: false, tenant_count: 0, desktop_mode: false }));
+      .catch(() => setSetup({ needs_setup: false, tenant_count: 0, desktop_mode: false, development_workspace: false }));
   }, []);
 
   function acceptSession(auth: AuthSession) {
@@ -357,7 +363,13 @@ export default function App() {
   }
 
   if (!session) {
-    return <Login locale={locale} setLocale={setLocale} onAuthenticated={acceptSession} onPlatformAdmin={() => setPlatformMode(true)} />;
+    return <Login
+      locale={locale}
+      setLocale={setLocale}
+      onAuthenticated={acceptSession}
+      onPlatformAdmin={() => setPlatformMode(true)}
+      developmentQuickEntry={Boolean(setup?.desktop_mode)}
+    />;
   }
 
   return <ControlCenter locale={locale} setLocale={setLocale} session={session} onSignOut={() => {
@@ -379,6 +391,34 @@ function FirstRunSetup({
   const dir = locale === "ar" ? "rtl" : "ltr";
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
+  async function skipDevelopment() {
+    setBusy(true);
+    setError("");
+    try {
+      const response = await fetch(`${API_URL}/api/v1/auth/bootstrap-development`, { method: "POST" });
+      const body = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(body?.detail || "development setup failed");
+      const result = body as BootstrapResponse;
+      onAuthenticated({
+        access_token: result.access_token,
+        token_type: result.token_type,
+        expires_in_minutes: result.expires_in_minutes,
+        user: {
+          id: result.user_id,
+          tenant_id: result.tenant_id,
+          email: result.user_email,
+          display_name: result.user_name,
+          role: result.role,
+          is_active: 1,
+        },
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t.systemError);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -449,6 +489,15 @@ function FirstRunSetup({
             {busy ? <RefreshCw size={18} className="spin" /> : <KeyRound size={18} />}
             {locale === "ar" ? "إنشاء الشركة والدخول" : "Create company and enter"}
           </button>
+          <button className="developmentSkipButton" type="button" disabled={busy} onClick={() => void skipDevelopment()}>
+            <Sparkles size={17}/>
+            {locale === "ar" ? "تخطي الإعداد — وضع التطوير" : "Skip setup — Development mode"}
+          </button>
+          <div className="developmentHint">
+            {locale === "ar"
+              ? "للاختبارات المتكررة فقط: ينشئ مساحة تطوير محلية تلقائيًا، ويمكن الدخول إليها لاحقًا بضغطة واحدة."
+              : "For repeated testing only: creates a local development workspace and enables one-click entry later."}
+          </div>
         </form>
       </section>
     </div>
@@ -460,11 +509,13 @@ function Login({
   setLocale,
   onAuthenticated,
   onPlatformAdmin,
+  developmentQuickEntry,
 }: {
   locale: Locale;
   setLocale: (locale: Locale) => void;
   onAuthenticated: (session: AuthSession) => void;
   onPlatformAdmin: () => void;
+  developmentQuickEntry: boolean;
 }) {
   const t = copy[locale];
   const dir = locale === "ar" ? "rtl" : "ltr";
@@ -480,6 +531,34 @@ function Login({
       .then((data: BrandingResolve | null) => setDomainBrand(data))
       .catch(() => undefined);
   }, []);
+
+  async function quickDevelopmentEntry() {
+    setBusy(true);
+    setError("");
+    try {
+      const response = await fetch(`${API_URL}/api/v1/auth/bootstrap-development`, { method: "POST" });
+      const body = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(body?.detail || "development session failed");
+      const result = body as BootstrapResponse;
+      onAuthenticated({
+        access_token: result.access_token,
+        token_type: result.token_type,
+        expires_in_minutes: result.expires_in_minutes,
+        user: {
+          id: result.user_id,
+          tenant_id: result.tenant_id,
+          email: result.user_email,
+          display_name: result.user_name,
+          role: result.role,
+          is_active: 1,
+        },
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t.loginError);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -543,6 +622,12 @@ function Login({
             {busy ? t.loginBusy : t.login}
           </button>
         </form>
+        {developmentQuickEntry && (
+          <button className="developmentQuickEntry" type="button" disabled={busy} onClick={() => void quickDevelopmentEntry()}>
+            <Sparkles size={17}/>
+            {locale === "ar" ? "دخول/إنشاء مساحة التطوير بضغطة واحدة" : "One-click development workspace"}
+          </button>
+        )}
         <button className="platformEntryButton" type="button" onClick={onPlatformAdmin}>
           <ShieldCheck size={17}/>
           {locale === "ar" ? "إدارة منصة NEXVARY والشركات" : "NEXVARY Platform Admin"}
@@ -565,6 +650,7 @@ function ControlCenter({
   onSignOut: () => void;
 }) {
   const [view, setView] = useState<View>("dashboard");
+  const [viewHistory, setViewHistory] = useState<View[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [overview, setOverview] = useState<Overview | null>(null);
@@ -582,6 +668,26 @@ function ControlCenter({
   const visibleNavItems = navItems.filter((item) => item.id !== "billing" || ["owner", "admin"].includes(session.user.role));
   const currentKey = navItems.find((item) => item.id === view)?.key ?? "dashboard";
   const title = useMemo(() => t[currentKey], [currentKey, t]);
+
+  function navigateTo(next: View) {
+    if (next === view) return;
+    setViewHistory((history) => [...history, view].slice(-30));
+    setView(next);
+    setSearch("");
+  }
+
+  function goBack() {
+    setViewHistory((history) => {
+      if (!history.length) {
+        setView("dashboard");
+        return history;
+      }
+      const previous = history[history.length - 1];
+      setView(previous);
+      return history.slice(0, -1);
+    });
+    setSearch("");
+  }
 
   async function loadData() {
     setBusy(true);
@@ -636,7 +742,7 @@ function ControlCenter({
         }),
       });
       setModalOpen(false);
-      setView("leads");
+      navigateTo("leads");
       await loadData();
     } catch (error) {
       const typed = error as Error & { status?: number };
@@ -675,7 +781,7 @@ function ControlCenter({
         </div>
         <nav>
           {visibleNavItems.map(({ id, icon: Icon, key }) => (
-            <button key={id} className={view === id ? "navItem active" : "navItem"} onClick={() => setView(id)}>
+            <button key={id} className={view === id ? "navItem active" : "navItem"} onClick={() => navigateTo(id)}>
               <Icon size={19} />
               <span>{t[key]}</span>
               {view === id && <ChevronLeft size={16} className="navArrow" />}
@@ -699,7 +805,7 @@ function ControlCenter({
             {tenantSettings?.logo_data_url ? <img src={tenantSettings.logo_data_url} alt={tenantSettings.brand_name || tenantSettings.name}/> : "N"}
           </div>
           {view !== "dashboard" && (
-            <button className="iconButton backButton" onClick={() => setView("dashboard")} title={t.back}>
+            <button className="iconButton backButton" onClick={goBack} title={t.back}>
               {locale === "ar" ? <ArrowRight size={19}/> : <ArrowLeft size={19}/>}
               <span>{t.back}</span>
             </button>
@@ -760,7 +866,7 @@ function ControlCenter({
                   <div className="truthRules">
                     <span>DB → Price</span><span>DB → Availability</span><span>RAG → Documents</span>
                   </div>
-                  <button onClick={() => setView("ai")}>{t.ai}<ChevronLeft size={16}/></button>
+                  <button onClick={() => navigateTo("ai")}>{t.ai}<ChevronLeft size={16}/></button>
                 </section>
               </div>
             </>
@@ -832,15 +938,65 @@ function ControlCenter({
           {view === "ai" && <AICopilotOps token={session.access_token} locale={locale} />}
           {view === "seo" && <SEOAutopilot token={session.access_token} locale={locale} />}
 
-          {view === "about" && (
-            <section className="panel aboutPanel">
-              <div className={tenantSettings?.logo_data_url ? "logoMark tenantLogoMark" : "logoMark"}>
-                {tenantSettings?.logo_data_url ? <img src={tenantSettings.logo_data_url} alt={tenantSettings.brand_name || tenantSettings.name}/> : "N"}
+          {view === "systemAbout" && (
+            <section className="aboutSystem">
+              <div className="panel systemHero">
+                <div className="logoMark">N</div>
+                <div>
+                  <span className="eyebrow">NEXVARY REALESTATE AI OS · v1.5</span>
+                  <h2>{locale === "ar" ? "عن النظام" : "About the System"}</h2>
+                  <p>{locale === "ar"
+                    ? "منصة White-Label متعددة الشركات لإدارة دورة العمل العقاري كاملة، من العميل والمخزون حتى العقود والتحصيل والتسويق والذكاء الاصطناعي."
+                    : "A multi-tenant white-label platform covering the complete real-estate operating cycle, from leads and inventory to contracts, collections, marketing and AI."}</p>
+                </div>
               </div>
-              <span className="eyebrow">{tenantSettings?.brand_name || tenantSettings?.name || t.brand}</span>
+              <div className="systemFeatureGrid">
+                {[
+                  { title: locale === "ar" ? "CRM والمبيعات" : "CRM & Sales", text: locale === "ar" ? "العملاء المحتملون، التقييم، مسار البيع، المعاينات والمتابعة." : "Leads, scoring, pipeline, viewings and follow-up.", Icon: Users },
+                  { title: locale === "ar" ? "المخزون العقاري" : "Real-estate Inventory", text: locale === "ar" ? "المشروعات والمباني والوحدات والأسعار والتوافر وخطط السداد." : "Projects, buildings, units, pricing, availability and payment plans.", Icon: Building2 },
+                  { title: locale === "ar" ? "الحجوزات والعقود" : "Reservations & Contracts", text: locale === "ar" ? "حجز الوحدات، التحويل إلى عقود، الأقساط والعمولات." : "Unit reservations, contract conversion, installments and commissions.", Icon: CircleDollarSign },
+                  { title: locale === "ar" ? "الفوترة البنكية" : "Bank-transfer Billing", text: locale === "ar" ? "اشتراكات وفواتير وتحويلات بنكية مع اعتماد يدوي قبل تسجيل السداد." : "Subscriptions, invoices and bank transfers with manual verification before payment.", Icon: Landmark },
+                  { title: locale === "ar" ? "WhatsApp والقنوات" : "WhatsApp & Channels", text: locale === "ar" ? "إعداد قنوات منفصلة لكل شركة مع تشفير بيانات الاعتماد." : "Per-company channel configuration with encrypted credentials.", Icon: MessageCircle },
+                  { title: "SEO Autopilot", text: locale === "ar" ? "فحص SEO والزحف وSearch Console وصفحات المشروعات والوحدات المبنية من قاعدة البيانات." : "SEO audit, crawl, Search Console and database-grounded project/unit pages.", Icon: Search },
+                  { title: locale === "ar" ? "الذكاء الاصطناعي" : "Grounded AI", text: locale === "ar" ? "مساعد مبيعات يعتمد على السعر والتوافر الحقيقيين وقاعدة المعرفة دون اختلاق البيانات." : "Sales copilot grounded in real pricing, availability and tenant knowledge.", Icon: Bot },
+                  { title: locale === "ar" ? "White-Label وSaaS" : "White-Label & SaaS", text: locale === "ar" ? "هوية مستقلة، قوالب شركات، خطط وحدود، Custom Domain وPlatform Admin." : "Independent branding, tenant templates, plans, limits, custom domains and Platform Admin.", Icon: Settings2 },
+                  { title: locale === "ar" ? "الأمان والتدقيق" : "Security & Audit", text: locale === "ar" ? "RBAC، عزل الشركات، مفاتيح مشفرة، Audit Log ونسخ تشغيلية." : "RBAC, tenant isolation, encrypted secrets, audit log and operational exports.", Icon: ShieldCheck },
+                ].map(({ title: featureTitle, text, Icon }) => (
+                  <article className="systemFeatureCard" key={featureTitle}>
+                    <Icon size={20}/><strong>{featureTitle}</strong><p>{text}</p>
+                  </article>
+                ))}
+              </div>
+              <div className="panel systemDeveloper">
+                <div><span className="eyebrow">DEVELOPER</span><strong>NEXVARY</strong><p>{locale === "ar" ? "الجهة المطورة لنظام NEXVARY RealEstate AI OS." : "Developer of NEXVARY RealEstate AI OS."}</p></div>
+                <div className="aboutLinks">
+                  <a href="https://nexvary.com/" target="_blank" rel="noreferrer">NEXVARY</a>
+                  <a href="https://nexvary.com/" target="_blank" rel="noreferrer">Website</a>
+                  <a href="https://www.facebook.com/share/14p9krEn5ij/" target="_blank" rel="noreferrer">Facebook</a>
+                  <a href="mailto:info@nexvary.com">Email</a>
+                  <a href="https://www.youtube.com/@NexvaryInc" target="_blank" rel="noreferrer">YouTube</a>
+                  <a href="https://x.com/Nexvary" target="_blank" rel="noreferrer">X</a>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {view === "companyAbout" && (
+            <section className="panel aboutPanel companyAboutPanel">
+              <div className={tenantSettings?.logo_data_url ? "companyAboutLogo tenantLogoMark" : "companyAboutLogo"}>
+                {tenantSettings?.logo_data_url ? <img src={tenantSettings.logo_data_url} alt={tenantSettings.brand_name || tenantSettings.name}/> : <Building2 size={34}/>}
+              </div>
+              <span className="eyebrow">{locale === "ar" ? "عن الشركة" : "ABOUT COMPANY"}</span>
               <h2>{tenantSettings?.brand_name || tenantSettings?.name || t.brand}</h2>
-              <p>{locale === "ar" ? "منصة تشغيل عقاري لإدارة المبيعات والمخزون والعملاء والأتمتة والذكاء الاصطناعي." : "Real-estate operating workspace for sales, inventory, customers, automation and AI."}</p>
-              <div className="aboutLinks">
+              <p>{locale === "ar"
+                ? "بيانات وهوية الشركة الحالية داخل منصة NEXVARY White-Label. يمكن تعديل الاسم والشعار والروابط من إعدادات الشركة."
+                : "Current company identity inside the NEXVARY White-Label platform. Brand, logo and links can be changed from Company Settings."}</p>
+              <div className="companyIdentityFacts">
+                <span><strong>{locale === "ar" ? "الخطة" : "Plan"}</strong>{tenantSettings?.plan || "—"}</span>
+                <span><strong>{locale === "ar" ? "الحالة" : "Status"}</strong>{tenantSettings?.lifecycle || "—"}</span>
+                <span><strong>{locale === "ar" ? "معرّف الشركة" : "Company ID"}</strong>{tenantSettings?.slug || "—"}</span>
+              </div>
+              <div className="aboutLinks companySocialLinks">
                 {tenantSettings?.website_url && <a href={tenantSettings.website_url} target="_blank" rel="noreferrer">Website</a>}
                 {tenantSettings?.facebook_url && <a href={tenantSettings.facebook_url} target="_blank" rel="noreferrer">Facebook</a>}
                 {tenantSettings?.linkedin_url && <a href={tenantSettings.linkedin_url} target="_blank" rel="noreferrer">LinkedIn</a>}
@@ -849,13 +1005,13 @@ function ControlCenter({
                 {tenantSettings?.tiktok_url && <a href={tenantSettings.tiktok_url} target="_blank" rel="noreferrer">TikTok</a>}
                 {tenantSettings?.contact_email && <a href={`mailto:${tenantSettings.contact_email}`}>Email</a>}
               </div>
-              {tenantSettings?.powered_by_nexvary && (
-                <div className="poweredByBlock">
-                  <span>Powered by</span><strong>NEXVARY RealEstate AI OS</strong>
-                  <div className="aboutLinks">
-                    <a href="https://nexvary.com/" target="_blank" rel="noreferrer">NEXVARY</a>
-                  </div>
+              {!tenantSettings?.website_url && !tenantSettings?.facebook_url && !tenantSettings?.linkedin_url && !tenantSettings?.youtube_url && !tenantSettings?.x_url && !tenantSettings?.tiktok_url && !tenantSettings?.contact_email && (
+                <div className="companyLinksEmpty">
+                  {locale === "ar" ? "لم تتم إضافة روابط الشركة بعد. افتح «إعدادات الشركة» لإضافتها." : "Company links have not been configured yet. Add them from Company Settings."}
                 </div>
+              )}
+              {tenantSettings?.powered_by_nexvary && (
+                <div className="poweredByBlock"><span>Powered by</span><strong>NEXVARY RealEstate AI OS</strong></div>
               )}
             </section>
           )}
@@ -863,8 +1019,8 @@ function ControlCenter({
       </main>
 
       <div className="mobileNav">
-        {visibleNavItems.filter((item) => item.id !== "about").map(({ id, icon: Icon, key }) => (
-          <button key={id} className={view === id ? "active" : ""} onClick={() => setView(id)} aria-label={t[key]}>
+        {visibleNavItems.map(({ id, icon: Icon, key }) => (
+          <button key={id} className={view === id ? "active" : ""} onClick={() => navigateTo(id)} aria-label={t[key]}>
             <Icon size={20}/>
           </button>
         ))}

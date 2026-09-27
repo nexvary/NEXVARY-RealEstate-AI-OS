@@ -32,7 +32,7 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(
     title=settings.app_name,
-    version="1.4.0",
+    version="1.5.0",
     description="Transactional real-estate core with grounded AI/RAG orchestration boundaries.",
     lifespan=lifespan,
 )
@@ -47,7 +47,7 @@ app.add_middleware(
 
 @app.get("/health")
 def health() -> dict[str, str]:
-    return {"status": "ok", "service": "nexvary-realestate-api", "version": "1.4.0"}
+    return {"status": "ok", "service": "nexvary-realestate-api", "version": "1.5.0"}
 
 
 app.include_router(setup_router)
