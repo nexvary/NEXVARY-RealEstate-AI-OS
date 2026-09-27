@@ -10,6 +10,11 @@
 #include <QQuickStyle>
 #include <QQuickWindow>
 #include <QTimer>
+#include <QProcess>
+#include <QFileInfo>
+#include <QDir>
+#include <QTcpServer>
+#include <QHostAddress>
 
 int main(int argc, char *argv[])
 {
@@ -61,8 +66,36 @@ int main(int argc, char *argv[])
     state.setLanguage(parser.value(languageOption));
 
     ApiClient api;
-    if (parser.isSet(apiUrlOption))
-        api.setBaseUrl(parser.value(apiUrlOption));
+    QProcess backendProcess;
+    QString resolvedApiUrl;
+
+    if (parser.isSet(apiUrlOption)) {
+        resolvedApiUrl = parser.value(apiUrlOption);
+    } else {
+        const QString sidecarName =
+#ifdef Q_OS_WIN
+            QStringLiteral("NEXVARY-RealEstate-API.exe");
+#else
+            QStringLiteral("NEXVARY-RealEstate-API");
+#endif
+        const QString sidecarPath = QDir(QCoreApplication::applicationDirPath()).filePath(sidecarName);
+        if (QFileInfo::exists(sidecarPath)) {
+            QTcpServer probe;
+            if (probe.listen(QHostAddress::LocalHost, 0)) {
+                const quint16 port = probe.serverPort();
+                probe.close();
+
+                resolvedApiUrl = QStringLiteral("http://127.0.0.1:%1").arg(port);
+                backendProcess.setProgram(sidecarPath);
+                backendProcess.setArguments({QStringLiteral("--port"), QString::number(port)});
+                backendProcess.setProcessChannelMode(QProcess::ForwardedErrorChannel);
+                backendProcess.start();
+            }
+        }
+    }
+
+    if (!resolvedApiUrl.isEmpty())
+        api.setBaseUrl(resolvedApiUrl);
 
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty(QStringLiteral("appState"), &state);
@@ -86,6 +119,14 @@ int main(int argc, char *argv[])
         window->setHeight(requestedHeight);
 
     api.health();
+
+    QObject::connect(&app, &QCoreApplication::aboutToQuit, [&backendProcess] {
+        if (backendProcess.state() != QProcess::NotRunning) {
+            backendProcess.terminate();
+            if (!backendProcess.waitForFinished(2500))
+                backendProcess.kill();
+        }
+    });
 
     if (parser.isSet(screenshotOption)) {
         const QString path = parser.value(screenshotOption);
