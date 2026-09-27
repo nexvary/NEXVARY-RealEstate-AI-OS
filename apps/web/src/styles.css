@@ -1521,3 +1521,7 @@ button:disabled { opacity: .6; cursor: wait; }
   .outboxList article { grid-template-columns:24px minmax(0,1fr); }
   .outboxActions { grid-column:2; justify-content:flex-start; }
 }
+
+.salesConversationCreate { display:grid; grid-template-columns:1fr; gap:6px; padding:8px 0 10px; border-bottom:1px solid #15283b; margin-bottom:8px; }
+.salesConversationCreate input, .salesConversationCreate select { width:100%; min-height:36px; border:1px solid #1b374f; border-radius:8px; background:#06111c; color:#eef7ff; padding:7px 9px; }
+.salesConversationCreate .secondaryButton { min-height:34px; justify-content:center; }
