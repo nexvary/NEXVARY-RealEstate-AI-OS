@@ -91,6 +91,7 @@ QVariantList ApiClient::automationWorkflows() const { return m_automationWorkflo
 QVariantMap ApiClient::automationGraph() const { return m_automationGraph; }
 QVariantList ApiClient::automationRuns() const { return m_automationRuns; }
 QString ApiClient::selectedAutomationWorkflowId() const { return m_selectedAutomationWorkflowId; }
+QVariantMap ApiClient::aiSalesResult() const { return m_aiSalesResult; }
 QVariantMap ApiClient::enterpriseSummary() const { return m_enterpriseSummary; }
 QVariantList ApiClient::proposals() const { return m_proposals; }
 QVariantList ApiClient::invoices() const { return m_invoices; }
@@ -238,6 +239,7 @@ void ApiClient::logout()
     m_automationGraph.clear();
     m_automationRuns.clear();
     m_selectedAutomationWorkflowId.clear();
+    m_aiSalesResult.clear();
     m_enterpriseSummary.clear();
     m_proposals.clear();
     m_invoices.clear();
@@ -284,6 +286,7 @@ void ApiClient::logout()
     emit automationWorkflowsChanged();
     emit automationGraphChanged();
     emit automationRunsChanged();
+    emit aiSalesResultChanged();
     emit enterpriseSummaryChanged();
     emit proposalsChanged();
     emit invoicesChanged();
@@ -1922,6 +1925,38 @@ void ApiClient::fetchAutomationRuns(const QString &workflowId)
         const QByteArray body = reply->readAll();
         if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
         else { m_automationRuns = QJsonDocument::fromJson(body).array().toVariantList(); emit automationRunsChanged(); }
+        reply->deleteLater();
+    });
+}
+
+
+void ApiClient::runAiSalesAssist(const QString &question, const QString &city, double minPrice, double maxPrice, int bedrooms, const QString &unitType)
+{
+    QJsonObject payload{
+        {QStringLiteral("question"), question.trimmed()},
+        {QStringLiteral("limit"), 8},
+    };
+    if (!city.trimmed().isEmpty()) payload.insert(QStringLiteral("city"), city.trimmed());
+    if (minPrice > 0) payload.insert(QStringLiteral("min_price"), minPrice);
+    if (maxPrice > 0) payload.insert(QStringLiteral("max_price"), maxPrice);
+    if (bedrooms >= 0) payload.insert(QStringLiteral("bedrooms"), bedrooms);
+    if (!unitType.trimmed().isEmpty()) payload.insert(QStringLiteral("unit_type"), unitType.trimmed());
+
+    setBusy(true);
+    setError(QString());
+    auto *reply = m_network.post(
+        makeRequest(QStringLiteral("/api/v1/ai/sales/assist"), true),
+        QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) {
+            setError(apiErrorMessage(body, reply->errorString()));
+        } else {
+            m_aiSalesResult = QJsonDocument::fromJson(body).object().toVariantMap();
+            setError(QString());
+            emit aiSalesResultChanged();
+        }
+        setBusy(false);
         reply->deleteLater();
     });
 }
