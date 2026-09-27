@@ -6,6 +6,7 @@
 #include <QString>
 #include <QVariantList>
 #include <QVariantMap>
+#include <QUrl>
 
 class QJsonObject;
 
@@ -29,6 +30,7 @@ class ApiClient final : public QObject
     Q_PROPERTY(QVariantList installments READ installments NOTIFY installmentsChanged)
     Q_PROPERTY(QVariantList commissions READ commissions NOTIFY commissionsChanged)
     Q_PROPERTY(QVariantList appointments READ appointments NOTIFY appointmentsChanged)
+    Q_PROPERTY(QVariantMap tenantSettings READ tenantSettings NOTIFY tenantSettingsChanged)
     Q_PROPERTY(QVariantMap enterpriseSummary READ enterpriseSummary NOTIFY enterpriseSummaryChanged)
     Q_PROPERTY(QVariantList proposals READ proposals NOTIFY proposalsChanged)
     Q_PROPERTY(QVariantList invoices READ invoices NOTIFY invoicesChanged)
@@ -58,6 +60,7 @@ public:
     QVariantList installments() const;
     QVariantList commissions() const;
     QVariantList appointments() const;
+    QVariantMap tenantSettings() const;
     QVariantMap enterpriseSummary() const;
     QVariantList proposals() const;
     QVariantList invoices() const;
@@ -91,6 +94,8 @@ public:
     Q_INVOKABLE void payInstallment(const QString &installmentId);
     Q_INVOKABLE void createCommission(const QString &contractId, const QString &brokerName, double ratePercent);
     Q_INVOKABLE void payCommission(const QString &commissionId);
+    Q_INVOKABLE void updateTenantSettings(const QString &brandName, const QString &primaryColor, const QString &logoDataUrl, const QString &coverDataUrl, const QString &email, const QString &website, const QString &facebook, const QString &linkedin, const QString &youtube, const QString &xUrl, const QString &tiktok);
+    Q_INVOKABLE QString imageFileToDataUrl(const QUrl &fileUrl, int maxBytes);
 
 signals:
     void baseUrlChanged();
@@ -107,6 +112,7 @@ signals:
     void installmentsChanged();
     void commissionsChanged();
     void appointmentsChanged();
+    void tenantSettingsChanged();
     void enterpriseSummaryChanged();
     void proposalsChanged();
     void invoicesChanged();
@@ -126,6 +132,7 @@ private:
     void fetchContracts();
     void fetchCommissions();
     void fetchAppointments();
+    void fetchTenantSettings();
     void fetchEnterpriseSummary();
     void fetchProposals();
     void fetchInvoices();
@@ -150,6 +157,7 @@ private:
     QVariantList m_installments;
     QVariantList m_commissions;
     QVariantList m_appointments;
+    QVariantMap m_tenantSettings;
     QVariantMap m_enterpriseSummary;
     QVariantList m_proposals;
     QVariantList m_invoices;
