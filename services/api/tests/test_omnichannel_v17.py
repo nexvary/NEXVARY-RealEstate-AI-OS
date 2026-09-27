@@ -20,11 +20,24 @@ def create_project_unit(headers):
         json={"name": "Nile Residence", "city": "New Cairo", "developer": "NEX Developer"},
     )
     assert project.status_code == 201
+    plan = client.post(
+        "/api/v1/payment-plans",
+        headers=headers,
+        json={
+            "project_id": project.json()["id"],
+            "name": "20% over 8 years",
+            "down_payment_percent": 20,
+            "years": 8,
+            "installment_frequency_months": 3,
+        },
+    )
+    assert plan.status_code == 201
     unit = client.post(
         "/api/v1/units",
         headers=headers,
         json={
             "project_id": project.json()["id"],
+            "payment_plan_id": plan.json()["id"],
             "code": "NR-A12",
             "unit_type": "apartment",
             "bedrooms": 3,
@@ -34,22 +47,49 @@ def create_project_unit(headers):
         },
     )
     assert unit.status_code == 201
+    media = client.post(
+        "/api/v1/growth/media",
+        headers=headers,
+        json={
+            "project_id": project.json()["id"],
+            "unit_id": unit.json()["id"],
+            "title": "NR-A12 Living Room",
+            "media_type": "image",
+            "url": "https://assets.example.test/nr-a12-living.jpg",
+            "source_kind": "verified",
+            "is_verified": True,
+        },
+    )
+    assert media.status_code == 201
     return project.json(), unit.json()
 
 
-def inbound(headers, external_id="wamid-001", campaign_id="cmp-001"):
+def inbound(
+    headers,
+    external_id="wamid-001",
+    campaign_id="cmp-001",
+    *,
+    ad_id="ad-001",
+    project_id=None,
+    unit_id=None,
+):
+    payload = {
+        "channel": "whatsapp",
+        "external_message_id": external_id,
+        "external_contact": "201000000001",
+        "display_name": "Customer One",
+        "body": "عايز شقة 3 غرف في القاهرة الجديدة",
+        "campaign_id": campaign_id,
+        "ad_id": ad_id,
+    }
+    if project_id:
+        payload["project_id"] = project_id
+    if unit_id:
+        payload["unit_id"] = unit_id
     response = client.post(
         "/api/v1/omnichannel/inbound",
         headers=headers,
-        json={
-            "channel": "whatsapp",
-            "external_message_id": external_id,
-            "external_contact": "201000000001",
-            "display_name": "Customer One",
-            "body": "عايز شقة 3 غرف في القاهرة الجديدة",
-            "campaign_id": campaign_id,
-            "ad_id": "ad-001",
-        },
+        json=payload,
     )
     assert response.status_code == 201
     return response.json()
@@ -78,9 +118,59 @@ def test_inbound_dedupes_and_preserves_campaign_context(admin_headers):
     assert campaigns.json()[0]["events"]["conversation"] == 1
 
 
+
+def test_whatsapp_ad_referral_creates_crm_lead_and_property_context(admin_headers):
+    project, unit = create_project_unit(admin_headers)
+    mapped = client.post(
+        "/api/v1/property-sales/ad-referrals",
+        headers=admin_headers,
+        json={
+            "channel": "whatsapp",
+            "campaign_id": "meta-campaign-77",
+            "ad_id": "meta-ad-77",
+            "project_id": project["id"],
+            "unit_id": unit["id"],
+            "label": "NR A12 WhatsApp Ad",
+            "source_url": "https://facebook.example.test/ad/77",
+        },
+    )
+    assert mapped.status_code == 201
+
+    received = inbound(
+        admin_headers,
+        external_id="wamid-referral-77",
+        campaign_id=None,
+        ad_id="meta-ad-77",
+    )
+    assert received["lead_id"]
+    assert received["project_id"] == project["id"]
+    assert received["unit_id"] == unit["id"]
+
+    leads = client.get("/api/v1/leads", headers=admin_headers)
+    assert leads.status_code == 200
+    lead = next(item for item in leads.json() if item["id"] == received["lead_id"])
+    assert lead["source"] == "whatsapp_ad"
+    assert lead["preferred_city"] == "New Cairo"
+
+    context = client.get(
+        f"/api/v1/property-sales/conversations/{received['conversation_id']}/context",
+        headers=admin_headers,
+    )
+    assert context.status_code == 200
+    property_context = context.json()["context"]
+    assert property_context["ad_id"] == "meta-ad-77"
+    assert property_context["campaign_id"] == "meta-campaign-77"
+    assert property_context["project_name"] == "Nile Residence"
+    assert property_context["unit_code"] == "NR-A12"
+
 def test_grounded_auto_reply_uses_live_inventory_and_voice_preference(admin_headers):
-    create_project_unit(admin_headers)
-    received = inbound(admin_headers, external_id="wamid-grounded")
+    project, unit = create_project_unit(admin_headers)
+    received = inbound(
+        admin_headers,
+        external_id="wamid-grounded",
+        project_id=project["id"],
+        unit_id=unit["id"],
+    )
 
     state = client.patch(
         f"/api/v1/omnichannel/conversations/{received['conversation_id']}/sales-state",
@@ -113,9 +203,23 @@ def test_grounded_auto_reply_uses_live_inventory_and_voice_preference(admin_head
     assert body["outbox"]["status"] == "approved"
     assert body["units"][0]["code"] == "NR-A12"
     assert body["units"][0]["price"] == "6500000.00"
+    assert body["units"][0]["payment_plan"]["years"] == 8
+    assert body["units"][0]["payment_plan"]["down_payment_percent"] == "20.00"
+    assert body["media"][0]["title"] == "NR-A12 Living Room"
+    assert body["media"][0]["verified"] is True
     assert body["voice_plan"]["gender"] == "female"
     assert body["voice_plan"]["style"] == "professional"
     assert len(body["voice_plan"]["segments"]) <= 3
+
+    queued = client.post(
+        f"/api/v1/property-sales/conversations/{received['conversation_id']}/media-outbox",
+        headers=admin_headers,
+        json={"asset_ids": [body["media"][0]["id"]]},
+    )
+    assert queued.status_code == 201
+    assert queued.json()[0]["kind"] == "image"
+    assert queued.json()[0]["status"] == "approved"
+    assert queued.json()[0]["grounded"] is True
 
 
 def test_no_inventory_forces_handoff_and_human_approval(admin_headers):
