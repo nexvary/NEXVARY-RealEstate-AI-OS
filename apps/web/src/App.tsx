@@ -483,7 +483,7 @@ function FirstRunSetup({
       <div className="loginGlow" />
       <section className="loginCard setupCard">
         <div className="loginBrand">
-          <div className="logoMark">N</div>
+          <div className="logoMark nexvaryLogoMark"><img src="/assets/nexvary-logo.svg" alt="NEXVARY"/></div>
           <div><strong>{t.brand}</strong><span>{t.subtitle}</span></div>
         </div>
         <span className="eyebrow">FIRST OWNER SETUP</span>
@@ -611,7 +611,7 @@ function Login({
       <section className="loginCard">
         <div className="loginBrand">
           <div className={domainBrand?.logo_data_url ? "logoMark tenantLogoMark" : "logoMark"} style={domainBrand ? ({ "--tenant-primary": domainBrand.primary_color } as CSSProperties) : undefined}>
-            {domainBrand?.logo_data_url ? <img src={domainBrand.logo_data_url} alt={domainBrand.brand_name}/> : "N"}
+            {domainBrand?.logo_data_url ? <img src={domainBrand.logo_data_url} alt={domainBrand.brand_name}/> : <img src="/assets/nexvary-logo.svg" alt="NEXVARY"/>}
           </div>
           <div>
             <strong>{domainBrand?.brand_name || t.brand}</strong>
@@ -822,7 +822,7 @@ function ControlCenter({
       <main className="main">
         <header>
           <div className={tenantSettings?.logo_data_url ? "mobileBrand tenantLogoMark" : "mobileBrand"}>
-            {tenantSettings?.logo_data_url ? <img src={tenantSettings.logo_data_url} alt={tenantSettings.brand_name || tenantSettings.name}/> : "N"}
+            {tenantSettings?.logo_data_url ? <img src={tenantSettings.logo_data_url} alt={tenantSettings.brand_name || tenantSettings.name}/> : <img src="/assets/nexvary-logo.svg" alt="NEXVARY"/>}
           </div>
           {view !== "dashboard" && (
             <button className="iconButton backButton" onClick={goBack} title={t.back}>
