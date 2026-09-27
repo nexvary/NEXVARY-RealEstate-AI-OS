@@ -292,7 +292,9 @@ ApplicationWindow {
                                                                     ? growthComponent
                                                                     : appState.currentPage === "seo"
                                                                         ? seoComponent
-                                                                        : appState.currentPage === "settings"
+                                                                        : appState.currentPage === "automation"
+                                                                            ? automationComponent
+                                                                            : appState.currentPage === "settings"
                                                                         ? settingsComponent
                                                                     : appState.currentPage === "company"
                                                                         ? companyComponent
@@ -370,6 +372,11 @@ ApplicationWindow {
     Component {
         id: seoComponent
         SeoPage {}
+    }
+
+    Component {
+        id: automationComponent
+        AutomationStudioPage {}
     }
 
     Component {
