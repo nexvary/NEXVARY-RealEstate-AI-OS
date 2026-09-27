@@ -368,7 +368,7 @@ export default function App() {
       setLocale={setLocale}
       onAuthenticated={acceptSession}
       onPlatformAdmin={() => setPlatformMode(true)}
-      developmentQuickEntry={Boolean(setup?.desktop_mode && setup?.development_workspace)}
+      developmentQuickEntry={Boolean(setup?.desktop_mode)}
     />;
   }
 
@@ -536,7 +536,7 @@ function Login({
     setBusy(true);
     setError("");
     try {
-      const response = await fetch(`${API_URL}/api/v1/auth/development-session`, { method: "POST" });
+      const response = await fetch(`${API_URL}/api/v1/auth/bootstrap-development`, { method: "POST" });
       const body = await response.json().catch(() => null);
       if (!response.ok) throw new Error(body?.detail || "development session failed");
       const result = body as BootstrapResponse;
@@ -625,7 +625,7 @@ function Login({
         {developmentQuickEntry && (
           <button className="developmentQuickEntry" type="button" disabled={busy} onClick={() => void quickDevelopmentEntry()}>
             <Sparkles size={17}/>
-            {locale === "ar" ? "دخول سريع إلى مساحة التطوير" : "Quick entry to development workspace"}
+            {locale === "ar" ? "دخول/إنشاء مساحة التطوير بضغطة واحدة" : "One-click development workspace"}
           </button>
         )}
         <button className="platformEntryButton" type="button" onClick={onPlatformAdmin}>
