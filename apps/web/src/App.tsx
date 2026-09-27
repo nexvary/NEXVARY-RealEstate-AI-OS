@@ -5,6 +5,7 @@ import SEOAutopilot from "./SEOAutopilot";
 import WhatsAppOps from "./CommercialOps";
 import TenantBilling from "./TenantBilling";
 import AutomationStudio from "./AutomationStudio";
+import GrowthCenter from "./GrowthCenter";
 
 import {
   ArrowLeft,
@@ -28,6 +29,7 @@ import {
   MapPin,
   MessageCircle,
   MessageSquare,
+  Megaphone,
   Plus,
   RefreshCw,
   Ruler,
@@ -40,7 +42,7 @@ import {
 } from "lucide-react";
 
 type Locale = "ar" | "en";
-type View = "dashboard" | "leads" | "inventory" | "manage" | "appointments" | "finance" | "billing" | "inbox" | "whatsapp" | "knowledge" | "tasks" | "team" | "settings" | "ai" | "seo" | "automation" | "systemAbout" | "companyAbout";
+type View = "dashboard" | "leads" | "inventory" | "manage" | "appointments" | "finance" | "billing" | "inbox" | "whatsapp" | "knowledge" | "tasks" | "team" | "settings" | "ai" | "seo" | "growth" | "automation" | "systemAbout" | "companyAbout";
 
 type User = {
   id: string;
@@ -176,6 +178,7 @@ const copy = {
     settings: "إعدادات الشركة",
     ai: "مساعد الذكاء الاصطناعي",
     seo: "SEO Autopilot",
+    growth: "النمو والإسناد",
     automation: "Automation Studio",
     systemAbout: "عن النظام",
     companyAbout: "عن الشركة",
@@ -243,6 +246,7 @@ const copy = {
     settings: "Company Settings",
     ai: "AI Assistant",
     seo: "SEO Autopilot",
+    growth: "Growth & Attribution",
     automation: "Automation Studio",
     systemAbout: "About the System",
     companyAbout: "About the Company",
@@ -310,6 +314,7 @@ const navItems = [
   { id: "settings" as View, icon: Settings2, key: "settings" as const },
   { id: "ai" as View, icon: Bot, key: "ai" as const },
   { id: "seo" as View, icon: Search, key: "seo" as const },
+  { id: "growth" as View, icon: Megaphone, key: "growth" as const },
   { id: "automation" as View, icon: Workflow, key: "automation" as const },
   { id: "systemAbout" as View, icon: Info, key: "systemAbout" as const },
   { id: "companyAbout" as View, icon: Building2, key: "companyAbout" as const },
@@ -942,6 +947,7 @@ function ControlCenter({
 
           {view === "ai" && <AICopilotOps token={session.access_token} locale={locale} />}
           {view === "seo" && <SEOAutopilot token={session.access_token} locale={locale} />}
+          {view === "growth" && <GrowthCenter token={session.access_token} locale={locale} />}
           {view === "automation" && <AutomationStudio token={session.access_token} locale={locale} />}
 
           {view === "systemAbout" && (
@@ -966,6 +972,7 @@ function ControlCenter({
                   { title: "SEO Autopilot", text: locale === "ar" ? "فحص SEO والزحف وSearch Console وصفحات المشروعات والوحدات المبنية من قاعدة البيانات." : "SEO audit, crawl, Search Console and database-grounded project/unit pages.", Icon: Search },
                   { title: locale === "ar" ? "الذكاء الاصطناعي" : "Grounded AI", text: locale === "ar" ? "مساعد مبيعات يعتمد على السعر والتوافر الحقيقيين وقاعدة المعرفة دون اختلاق البيانات." : "Sales copilot grounded in real pricing, availability and tenant knowledge.", Icon: Bot },
                   { title: locale === "ar" ? "White-Label وSaaS" : "White-Label & SaaS", text: locale === "ar" ? "هوية مستقلة، قوالب شركات، خطط وحدود، Custom Domain وPlatform Admin." : "Independent branding, tenant templates, plans, limits, custom domains and Platform Admin.", Icon: Settings2 },
+                  { title: locale === "ar" ? "النمو والإسناد" : "Growth & Attribution", text: locale === "ar" ? "الحملات، رحلات العملاء، Audience 360، إسناد الصفقات والإيراد، مكتبة الوسائط، Playbooks وصوت العميل." : "Campaigns, customer journeys, Audience 360, deal/revenue attribution, media library, playbooks and customer feedback.", Icon: Megaphone },
                   { title: "Automation Studio", text: locale === "ar" ? "مصمم Workflow مرئي يربط CRM والمخزون والمهام وSEO والاعتماد البشري دون تشغيل Shell أو PowerShell مخفي." : "Visual workflow builder connecting CRM, inventory, tasks, SEO and human approvals without hidden shell or PowerShell execution.", Icon: Workflow },
                   { title: locale === "ar" ? "الأمان والتدقيق" : "Security & Audit", text: locale === "ar" ? "RBAC، عزل الشركات، مفاتيح مشفرة، Audit Log ونسخ تشغيلية." : "RBAC, tenant isolation, encrypted secrets, audit log and operational exports.", Icon: ShieldCheck },
                 ].map(({ title: featureTitle, text, Icon }) => (
