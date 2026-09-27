@@ -25,12 +25,12 @@ int main(int argc, char *argv[])
     QGuiApplication::setOrganizationName(QStringLiteral("NEXVARY"));
     QGuiApplication::setOrganizationDomain(QStringLiteral("nexvary.com"));
     QGuiApplication::setApplicationName(QStringLiteral("NEXVARY RealEstate AI OS"));
-    QGuiApplication::setApplicationVersion(QStringLiteral("2.0.0-native-preview"));
+    QGuiApplication::setApplicationVersion(QStringLiteral("2.0.0"));
 
     QQuickStyle::setStyle(QStringLiteral("Basic"));
 
     QCommandLineParser parser;
-    parser.setApplicationDescription(QStringLiteral("NEXVARY RealEstate AI OS — Qt 6 native migration shell"));
+    parser.setApplicationDescription(QStringLiteral("NEXVARY RealEstate AI OS — Qt 6 native desktop"));
     parser.addHelpOption();
     parser.addVersionOption();
 

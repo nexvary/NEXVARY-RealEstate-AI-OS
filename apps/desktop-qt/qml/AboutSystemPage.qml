@@ -94,7 +94,7 @@ Flickable {
                         spacing: 2
                         Text { anchors.horizontalCenter: parent.horizontalCenter; text: "NATIVE"; color: Theme.emerald; font.pixelSize: 11; font.bold: true }
                         Text { anchors.horizontalCenter: parent.horizontalCenter; text: "QT 6 / C++20"; color: Theme.platinum; font.pixelSize: 13; font.bold: true }
-                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: "MIGRATION TRACK"; color: Theme.muted; font.pixelSize: 8 }
+                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: "NATIVE RELEASE"; color: Theme.muted; font.pixelSize: 8 }
                     }
                 }
             }
