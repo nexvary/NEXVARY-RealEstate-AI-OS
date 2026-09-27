@@ -1598,3 +1598,27 @@ button:disabled { opacity: .6; cursor: wait; }
 .salesConversationCreate { display:grid; grid-template-columns:1fr; gap:6px; padding:8px 0 10px; border-bottom:1px solid #15283b; margin-bottom:8px; }
 .salesConversationCreate input, .salesConversationCreate select { width:100%; min-height:36px; border:1px solid #1b374f; border-radius:8px; background:#06111c; color:#eef7ff; padding:7px 9px; }
 .salesConversationCreate .secondaryButton { min-height:34px; justify-content:center; }
+
+/* Property Sales Intelligence v1.8 */
+.propertyContext span { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.propertyContext a { color:#7bd4ff; text-decoration:none; border-bottom:1px solid rgba(123,212,255,.3); }
+.propertyMediaResult { margin-top:12px; padding:12px; border:1px solid rgba(76,184,226,.18); border-radius:12px; background:rgba(16,76,112,.08); display:flex; flex-direction:column; gap:10px; }
+.propertyMediaCards { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.propertyMediaCards article { display:flex; flex-direction:column; gap:4px; min-width:0; padding:10px; border:1px solid #17354c; border-radius:10px; background:#06121d; }
+.propertyMediaCards article span { color:#66c9f6; font-size:8px; text-transform:uppercase; letter-spacing:.08em; }
+.propertyMediaCards article strong { color:#edf7ff; font-size:10px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.propertyMediaCards article a { color:#7897ad; font-size:9px; text-decoration:none; }
+.referralManager { display:flex; flex-direction:column; gap:12px; }
+.referralManager .panelHead > div { display:flex; flex-direction:column; gap:3px; }
+.referralManager .panelHead h3 { margin:0; }
+.referralForm { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; align-items:end; }
+.referralForm label { display:flex; flex-direction:column; gap:5px; color:#7891a6; font-size:9px; }
+.referralForm input,.referralForm select { width:100%; min-height:39px; border:1px solid #1c3851; border-radius:9px; background:#06111c; color:#edf7ff; padding:8px 10px; }
+.referralForm .primaryButton { min-height:39px; }
+.referralList { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+.referralList article { display:flex; flex-direction:column; gap:4px; min-width:0; padding:11px; border:1px solid #173149; border-radius:10px; background:linear-gradient(145deg,#081725,#06111c); }
+.referralList strong { color:#eef8ff; font-size:10px; }
+.referralList span { color:#80a4bc; font-size:9px; }
+.referralList small { color:#58778e; font-size:8px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+@media (max-width:900px) { .referralForm,.referralList { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width:650px) { .referralForm,.referralList,.propertyMediaCards { grid-template-columns:1fr; } }
