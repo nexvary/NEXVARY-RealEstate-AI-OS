@@ -13,6 +13,17 @@ async function bootstrap(page: Page) {
   await page.getByRole("button", { name: "إنشاء الشركة والدخول" }).click();
 
   await expect(page.getByText("مركز قيادة المبيعات")).toBeVisible();
+  await expect(page.locator(".app")).toHaveAttribute("dir", "rtl");
+  await expect(page.locator(".sidebar")).toBeVisible();
+  await expect(page.getByTestId("digital-clock")).toBeVisible();
+
+  const layout = await page.locator(".app").evaluate((el) => {
+    const app = el.getBoundingClientRect();
+    const side = el.querySelector(".sidebar")?.getBoundingClientRect();
+    return side ? { appLeft: app.left, appRight: app.right, sideLeft: side.left, sideRight: side.right } : null;
+  });
+  expect(layout).not.toBeNull();
+  expect((layout?.appRight || 0) - (layout?.sideRight || 0)).toBeLessThan(3);
 }
 
 test("desktop first-run, navigation, lead flow and back button", async ({ page, isMobile }) => {
@@ -81,6 +92,8 @@ test("system and company about sections are separate and reachable with internal
   await page.getByRole("button", { name: "عن الشركة" }).click();
   await expect(page.getByRole("heading", { name: "NEXVARY Realty" })).toBeVisible();
   await expect(page.getByText("بيانات وهوية الشركة الحالية داخل منصة NEXVARY White-Label.")).toBeVisible();
+  await expect(page.locator(".companyHeroCover")).toBeVisible();
+  await expect(page.locator(".companyCoverLogo img")).toBeVisible();
 
   await page.getByRole("button", { name: "رجوع" }).click();
   await expect(page.locator(".pageHeading h1").filter({ hasText: "عن النظام" })).toBeVisible();
