@@ -1622,3 +1622,111 @@ button:disabled { opacity: .6; cursor: wait; }
 .referralList small { color:#58778e; font-size:8px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 @media (max-width:900px) { .referralForm,.referralList { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media (max-width:650px) { .referralForm,.referralList,.propertyMediaCards { grid-template-columns:1fr; } }
+
+
+/* Desktop readability pass v1.8 */
+@media (min-width: 981px) {
+  .app { font-size: 15px; }
+
+  .sidebar { padding: 26px 18px; }
+  .brandBlock { margin-bottom: 24px; }
+  .brandBlock strong { font-size: 16px; line-height: 1.35; }
+  .brandBlock span { font-size: 12px; line-height: 1.65; }
+
+  .sidebar nav { gap: 6px; }
+  .navItem {
+    min-height: 49px;
+    padding-inline: 12px;
+    gap: 11px;
+    font-size: 14px;
+    line-height: 1.35;
+  }
+  .navItem > svg:first-child {
+    width: 31px;
+    height: 31px;
+    flex-basis: 31px;
+  }
+  .navItem span { font-size: 14px; }
+  .navArrow { width: 17px; height: 17px; }
+
+  .userCard { padding: 13px 10px; }
+  .userCard strong { font-size: 13px; }
+  .userCard span { font-size: 11px; line-height: 1.45; }
+  .sidebarFoot { padding: 13px; }
+  .sidebarFoot strong { font-size: 12px; }
+  .sidebarFoot small { font-size: 11px; }
+
+  header { min-height: 82px; }
+  .searchBox input,
+  .iconButton,
+  .primaryButton,
+  .secondaryButton {
+    font-size: 13px;
+  }
+
+  .eyebrow { font-size: 12px; }
+  .pageHeading p { font-size: 14px; line-height: 1.65; }
+  .liveBadge { font-size: 12px; }
+
+  .statCard > strong { font-size: 31px; }
+  .statCard p { font-size: 14px; line-height: 1.45; }
+  .panelHead span { font-size: 13px; }
+  .panelHead h2,
+  .panel h2 { font-size: 20px; }
+  .funnelMeta { font-size: 13px; }
+  .aiPanel p,
+  .emptyState p { font-size: 14px; }
+  .truthRules span { font-size: 11px; }
+
+  .leadRow,
+  .appointmentRow,
+  .unitFacts,
+  .docRow,
+  .taskRow,
+  .teamRow,
+  .conversationItem,
+  .messageBubble p {
+    font-size: 13px;
+  }
+  .leadName span,
+  .appointmentRow span,
+  .taskRow div span,
+  .teamRow div span,
+  .conversationItem span,
+  .messageBubble small {
+    font-size: 11px;
+  }
+
+  .statusBadge,
+  .dataTag,
+  .score,
+  .opsForm label,
+  .salesStateBar label,
+  .referralForm label,
+  .attributionCards span,
+  .propertyMediaCards article span,
+  .propertyMediaCards article a,
+  .referralList span,
+  .referralList small {
+    font-size: 11px !important;
+  }
+
+  .propertyMediaCards article strong,
+  .referralList strong,
+  .salesSafety strong,
+  .outboxList strong,
+  .attributionCards b {
+    font-size: 12px;
+  }
+
+  .salesSafety span,
+  .outboxList p,
+  .outboxList small,
+  .campaignContext,
+  .handoffBadge {
+    font-size: 11px;
+    line-height: 1.55;
+  }
+
+  .opsHeading h2 { font-size: 22px; }
+}
