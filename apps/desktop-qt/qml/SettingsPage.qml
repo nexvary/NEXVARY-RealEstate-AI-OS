@@ -133,7 +133,7 @@ Flickable {
                     Image {
                         anchors.fill: parent
                         anchors.margins: 7
-                        source: root.logoData.length > 0 ? root.logoData : "qrc:/qt/qml/Nexvary/RealEstate/assets/nexvary-mark.svg"
+                        source: root.logoData.length > 0 ? root.logoData : "qrc:/Nexvary/RealEstate/assets/nexvary-mark.svg"
                         fillMode: Image.PreserveAspectFit
                     }
                 }
