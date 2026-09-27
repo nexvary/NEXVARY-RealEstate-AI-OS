@@ -42,6 +42,7 @@ qt_add_qml_module(nexvary_realestate_native
         qml/DashboardPage.qml
         qml/LeadsPage.qml
         qml/InventoryPage.qml
+        qml/AppointmentsPage.qml
         qml/FinancePage.qml
         qml/EnterpriseCrmPage.qml
         qml/CustomerTimelinePage.qml
