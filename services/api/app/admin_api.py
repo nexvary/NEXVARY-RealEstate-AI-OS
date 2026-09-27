@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from .automation_models import AutomationApproval, AutomationEdge, AutomationNode, AutomationNodeRun, AutomationRun, AutomationWorkflow
 from .commercial_models import BankTransferSubmission, BillingInvoice, SaaSSubscription, SEOEntityPage, TenantTemplate, WhatsAppChannel
+from .crm_models import Expense, Invoice, Payment, Proposal, Reminder, SupportTicket
 from .db import get_db
 from .finance_models import BrokerCommission, Contract, Installment
 from .growth_models import AudienceSegment, CustomerFeedback, CustomerJourneyEvent, MarketingCampaign, PropertyMediaAsset, SalesPlaybook
@@ -247,6 +248,12 @@ def export_backup(
         "contracts": (Contract, set()),
         "installments": (Installment, set()),
         "broker_commissions": (BrokerCommission, set()),
+        "crm_proposals": (Proposal, set()),
+        "crm_invoices": (Invoice, set()),
+        "crm_payments": (Payment, set()),
+        "crm_expenses": (Expense, set()),
+        "crm_support_tickets": (SupportTicket, set()),
+        "crm_reminders": (Reminder, set()),
         "knowledge_documents": (KnowledgeDocument, {"content"}),
         "inbox_conversations": (InboxConversation, set()),
         "inbox_messages": (InboxMessage, set()),
