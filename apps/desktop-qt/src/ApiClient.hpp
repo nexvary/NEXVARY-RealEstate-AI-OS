@@ -7,6 +7,8 @@
 #include <QVariantList>
 #include <QVariantMap>
 
+class QJsonObject;
+
 class ApiClient final : public QObject
 {
     Q_OBJECT
@@ -58,6 +60,12 @@ public:
     Q_INVOKABLE void refreshAll();
     Q_INVOKABLE void refreshEnterprise();
     Q_INVOKABLE void loadTimeline(const QString &leadId);
+    Q_INVOKABLE void createProposal(const QString &leadId, const QString &unitId, const QString &number, const QString &title, double amount, const QString &currency);
+    Q_INVOKABLE void createInvoice(const QString &leadId, const QString &contractId, const QString &number, const QString &title, double amount, const QString &currency);
+    Q_INVOKABLE void recordPayment(const QString &invoiceId, double amount, const QString &method, const QString &reference);
+    Q_INVOKABLE void createTicket(const QString &leadId, const QString &contractId, const QString &subject, const QString &description, const QString &priority);
+    Q_INVOKABLE void createReminder(const QString &leadId, const QString &entityType, const QString &entityId, const QString &title, const QString &dueAtIso);
+    Q_INVOKABLE void createExpense(const QString &projectId, const QString &category, const QString &description, double amount, const QString &currency);
 
 signals:
     void baseUrlChanged();
@@ -87,6 +95,7 @@ private:
     void fetchInvoices();
     void fetchTickets();
     void fetchReminders();
+    void postEnterprise(const QString &path, const QJsonObject &payload);
 
     QNetworkAccessManager m_network;
     QString m_baseUrl;
