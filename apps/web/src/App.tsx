@@ -1,11 +1,12 @@
 import { CSSProperties, FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
-import { AICopilotOps, FinanceOps, InventoryOps, InboxOps, KnowledgeOps, SettingsOps, TasksOps, TeamOps } from "./Operations";
+import { AICopilotOps, FinanceOps, InventoryOps, KnowledgeOps, SettingsOps, TasksOps, TeamOps } from "./Operations";
 import PlatformAdminCenter from "./PlatformAdmin";
 import SEOAutopilot from "./SEOAutopilot";
 import WhatsAppOps from "./CommercialOps";
 import TenantBilling from "./TenantBilling";
 import AutomationStudio from "./AutomationStudio";
 import GrowthCenter from "./GrowthCenter";
+import OmnichannelSales from "./OmnichannelSales";
 
 import {
   ArrowLeft,
@@ -922,7 +923,7 @@ function ControlCenter({
           {view === "manage" && <InventoryOps token={session.access_token} locale={locale} />}
           {view === "finance" && <FinanceOps token={session.access_token} locale={locale} />}
           {view === "billing" && <TenantBilling token={session.access_token} locale={locale} />}
-          {view === "inbox" && <InboxOps token={session.access_token} locale={locale} />}
+          {view === "inbox" && <OmnichannelSales token={session.access_token} locale={locale} />}
           {view === "whatsapp" && <WhatsAppOps token={session.access_token} locale={locale} />}
           {view === "knowledge" && <KnowledgeOps token={session.access_token} locale={locale} />}
           {view === "tasks" && <TasksOps token={session.access_token} locale={locale} />}
@@ -969,6 +970,7 @@ function ControlCenter({
                   { title: locale === "ar" ? "الحجوزات والعقود" : "Reservations & Contracts", text: locale === "ar" ? "حجز الوحدات، التحويل إلى عقود، الأقساط والعمولات." : "Unit reservations, contract conversion, installments and commissions.", Icon: CircleDollarSign },
                   { title: locale === "ar" ? "الفوترة البنكية" : "Bank-transfer Billing", text: locale === "ar" ? "اشتراكات وفواتير وتحويلات بنكية مع اعتماد يدوي قبل تسجيل السداد." : "Subscriptions, invoices and bank transfers with manual verification before payment.", Icon: Landmark },
                   { title: locale === "ar" ? "WhatsApp والقنوات" : "WhatsApp & Channels", text: locale === "ar" ? "إعداد قنوات منفصلة لكل شركة مع تشفير بيانات الاعتماد." : "Per-company channel configuration with encrypted credentials.", Icon: MessageCircle },
+                  { title: locale === "ar" ? "المحادثات والمبيعات الذكية" : "Omnichannel AI Sales", text: locale === "ar" ? "Inbox موحد، منع تكرار الرسائل، Outbox بالموافقات، ردود مؤكدة من بيانات العقارات، Human Handoff وربط الحملات بالمحادثات." : "Unified inbox, message dedupe, approval-aware outbox, property-grounded replies, human handoff and campaign attribution.", Icon: MessageCircle },
                   { title: "SEO Autopilot", text: locale === "ar" ? "فحص SEO والزحف وSearch Console وصفحات المشروعات والوحدات المبنية من قاعدة البيانات." : "SEO audit, crawl, Search Console and database-grounded project/unit pages.", Icon: Search },
                   { title: locale === "ar" ? "الذكاء الاصطناعي" : "Grounded AI", text: locale === "ar" ? "مساعد مبيعات يعتمد على السعر والتوافر الحقيقيين وقاعدة المعرفة دون اختلاق البيانات." : "Sales copilot grounded in real pricing, availability and tenant knowledge.", Icon: Bot },
                   { title: locale === "ar" ? "White-Label وSaaS" : "White-Label & SaaS", text: locale === "ar" ? "هوية مستقلة، قوالب شركات، خطط وحدود، Custom Domain وPlatform Admin." : "Independent branding, tenant templates, plans, limits, custom domains and Platform Admin.", Icon: Settings2 },
