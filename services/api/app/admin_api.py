@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime, timezone
+import json
 from decimal import Decimal
 from typing import Any
 
@@ -44,6 +45,7 @@ class TenantSettingsRead(BaseModel):
     brand_name: str | None
     primary_color: str
     logo_data_url: str | None
+    cover_data_url: str | None
     contact_email: str | None
     website_url: str | None
     facebook_url: str | None
@@ -61,6 +63,7 @@ class TenantSettingsUpdate(BaseModel):
     brand_name: str | None = Field(default=None, min_length=2, max_length=160)
     primary_color: str | None = Field(default=None, pattern=r"^#[0-9A-Fa-f]{6}$")
     logo_data_url: str | None = Field(default=None, max_length=1500000)
+    cover_data_url: str | None = Field(default=None, max_length=4500000)
     contact_email: str | None = Field(default=None, max_length=255)
     website_url: str | None = Field(default=None, max_length=500)
     facebook_url: str | None = Field(default=None, max_length=500)
@@ -111,7 +114,27 @@ def validate_logo(value: str | None) -> str | None:
     return value
 
 
+def profile_feature_flags(profile: TenantSaaSProfile) -> dict[str, Any]:
+    try:
+        value = json.loads(profile.feature_flags_json or "{}")
+        return value if isinstance(value, dict) else {}
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return {}
+
+
+def validate_cover(value: str | None) -> str | None:
+    if value in (None, ""):
+        return None
+    allowed = ("data:image/png;base64,", "data:image/jpeg;base64,", "data:image/webp;base64,")
+    if not value.startswith(allowed):
+        raise HTTPException(status_code=422, detail="Cover must be PNG, JPEG or WEBP data URL")
+    if len(value) > 4_500_000:
+        raise HTTPException(status_code=413, detail="Cover image is too large")
+    return value
+
+
 def settings_payload(tenant: Tenant, profile: TenantSaaSProfile) -> TenantSettingsRead:
+    flags = profile_feature_flags(profile)
     return TenantSettingsRead(
         id=tenant.id,
         name=tenant.name,
@@ -119,6 +142,7 @@ def settings_payload(tenant: Tenant, profile: TenantSaaSProfile) -> TenantSettin
         brand_name=tenant.brand_name,
         primary_color=tenant.primary_color,
         logo_data_url=profile.logo_data_url,
+        cover_data_url=flags.get("branding_cover_data_url"),
         contact_email=profile.contact_email,
         website_url=profile.website_url,
         facebook_url=profile.facebook_url,
@@ -162,6 +186,14 @@ def update_tenant_settings(
             setattr(tenant, key, changes.pop(key))
     if "logo_data_url" in changes:
         profile.logo_data_url = validate_logo(changes.pop("logo_data_url"))
+    if "cover_data_url" in changes:
+        cover = validate_cover(changes.pop("cover_data_url"))
+        flags = profile_feature_flags(profile)
+        if cover:
+            flags["branding_cover_data_url"] = cover
+        else:
+            flags.pop("branding_cover_data_url", None)
+        profile.feature_flags_json = json.dumps(flags, ensure_ascii=False, separators=(",", ":"))
     for key, value in changes.items():
         setattr(profile, key, value)
 
