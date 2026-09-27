@@ -11,6 +11,7 @@ from .admin_api import router as admin_router
 from .branding_api import router as branding_router
 from .commercial_api import platform_router as commercial_platform_router, tenant_router as commercial_tenant_router
 from .ai_api import router as ai_router
+from .automation_api import router as automation_router
 from .config import get_settings
 from .db import Base, engine
 from .security import validate_production_secrets
@@ -55,6 +56,7 @@ app.include_router(router)
 app.include_router(workspace_router)
 app.include_router(finance_router)
 app.include_router(ai_router)
+app.include_router(automation_router)
 app.include_router(admin_router)
 app.include_router(platform_router)
 app.include_router(branding_router)
