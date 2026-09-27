@@ -2,6 +2,8 @@
 
 #include <QByteArray>
 #include <QDateTime>
+#include <QFile>
+#include <QMimeDatabase>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -57,6 +59,7 @@ QVariantList ApiClient::contracts() const { return m_contracts; }
 QVariantList ApiClient::installments() const { return m_installments; }
 QVariantList ApiClient::commissions() const { return m_commissions; }
 QVariantList ApiClient::appointments() const { return m_appointments; }
+QVariantMap ApiClient::tenantSettings() const { return m_tenantSettings; }
 QVariantMap ApiClient::enterpriseSummary() const { return m_enterpriseSummary; }
 QVariantList ApiClient::proposals() const { return m_proposals; }
 QVariantList ApiClient::invoices() const { return m_invoices; }
@@ -173,6 +176,7 @@ void ApiClient::logout()
     m_installments.clear();
     m_commissions.clear();
     m_appointments.clear();
+    m_tenantSettings.clear();
     m_enterpriseSummary.clear();
     m_proposals.clear();
     m_invoices.clear();
@@ -191,6 +195,7 @@ void ApiClient::logout()
     emit installmentsChanged();
     emit commissionsChanged();
     emit appointmentsChanged();
+    emit tenantSettingsChanged();
     emit enterpriseSummaryChanged();
     emit proposalsChanged();
     emit invoicesChanged();
@@ -212,6 +217,7 @@ void ApiClient::refreshAll()
     fetchContracts();
     fetchCommissions();
     fetchAppointments();
+    fetchTenantSettings();
     refreshEnterprise();
 }
 
@@ -718,6 +724,95 @@ void ApiClient::fetchAppointments()
         const QByteArray body = reply->readAll();
         if (reply->error() != QNetworkReply::NoError) setError(apiErrorMessage(body, reply->errorString()));
         else { m_appointments = QJsonDocument::fromJson(body).array().toVariantList(); emit appointmentsChanged(); }
+        reply->deleteLater();
+    });
+}
+
+
+QString ApiClient::imageFileToDataUrl(const QUrl &fileUrl, int maxBytes)
+{
+    const QString path = fileUrl.isLocalFile() ? fileUrl.toLocalFile() : fileUrl.toString();
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly)) {
+        setError(QStringLiteral("Unable to read image file"));
+        return QString();
+    }
+    if (maxBytes > 0 && file.size() > maxBytes) {
+        setError(QStringLiteral("Image file is too large"));
+        return QString();
+    }
+
+    const QByteArray bytes = file.readAll();
+    QMimeDatabase db;
+    const QString mime = db.mimeTypeForData(bytes).name();
+    if (mime != QStringLiteral("image/png") &&
+        mime != QStringLiteral("image/jpeg") &&
+        mime != QStringLiteral("image/webp")) {
+        setError(QStringLiteral("Only PNG, JPEG and WEBP images are supported"));
+        return QString();
+    }
+
+    setError(QString());
+    return QStringLiteral("data:") + mime + QStringLiteral(";base64,") + QString::fromLatin1(bytes.toBase64());
+}
+
+void ApiClient::updateTenantSettings(
+    const QString &brandName,
+    const QString &primaryColor,
+    const QString &logoDataUrl,
+    const QString &coverDataUrl,
+    const QString &email,
+    const QString &website,
+    const QString &facebook,
+    const QString &linkedin,
+    const QString &youtube,
+    const QString &xUrl,
+    const QString &tiktok)
+{
+    QJsonObject payload{
+        {QStringLiteral("brand_name"), brandName.trimmed()},
+        {QStringLiteral("primary_color"), primaryColor.trimmed()},
+        {QStringLiteral("logo_data_url"), logoDataUrl},
+        {QStringLiteral("cover_data_url"), coverDataUrl},
+        {QStringLiteral("contact_email"), email.trimmed()},
+        {QStringLiteral("website_url"), website.trimmed()},
+        {QStringLiteral("facebook_url"), facebook.trimmed()},
+        {QStringLiteral("linkedin_url"), linkedin.trimmed()},
+        {QStringLiteral("youtube_url"), youtube.trimmed()},
+        {QStringLiteral("x_url"), xUrl.trimmed()},
+        {QStringLiteral("tiktok_url"), tiktok.trimmed()},
+    };
+
+    setBusy(true);
+    auto *reply = m_network.sendCustomRequest(
+        makeRequest(QStringLiteral("/api/v1/tenant/settings"), true),
+        QByteArray("PATCH"),
+        QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) {
+            setError(apiErrorMessage(body, reply->errorString()));
+        } else {
+            m_tenantSettings = QJsonDocument::fromJson(body).object().toVariantMap();
+            setError(QString());
+            emit tenantSettingsChanged();
+        }
+        setBusy(false);
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::fetchTenantSettings()
+{
+    auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/tenant/settings"), true));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() != QNetworkReply::NoError) {
+            setError(apiErrorMessage(body, reply->errorString()));
+        } else {
+            m_tenantSettings = QJsonDocument::fromJson(body).object().toVariantMap();
+            emit tenantSettingsChanged();
+        }
         reply->deleteLater();
     });
 }
