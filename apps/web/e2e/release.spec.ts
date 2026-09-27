@@ -49,6 +49,20 @@ test("desktop first-run, navigation, lead flow and back button", async ({ page, 
   await expect(page.getByText("Sales Command Center")).toBeVisible();
 });
 
+test("desktop development workspace is one-click and survives normal tenant presence", async ({ page, isMobile }) => {
+  if (isMobile) test.skip();
+
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: "دخول/إنشاء مساحة التطوير بضغطة واحدة" })).toBeVisible();
+  await page.getByRole("button", { name: "دخول/إنشاء مساحة التطوير بضغطة واحدة" }).click();
+  await expect(page.getByText("مركز قيادة المبيعات")).toBeVisible();
+
+  await page.getByRole("button", { name: "تسجيل الخروج" }).click();
+  await expect(page.getByRole("button", { name: "دخول/إنشاء مساحة التطوير بضغطة واحدة" })).toBeVisible();
+  await page.getByRole("button", { name: "دخول/إنشاء مساحة التطوير بضغطة واحدة" }).click();
+  await expect(page.getByText("مركز قيادة المبيعات")).toBeVisible();
+});
+
 test("system and company about sections are separate and reachable with internal back navigation", async ({ page, isMobile }) => {
   if (isMobile) test.skip();
 
