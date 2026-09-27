@@ -955,7 +955,7 @@ function ControlCenter({
               <div className="panel systemHero">
                 <div className="logoMark">N</div>
                 <div>
-                  <span className="eyebrow">NEXVARY REALESTATE AI OS · v1.6</span>
+                  <span className="eyebrow">NEXVARY REALESTATE AI OS · v1.7</span>
                   <h2>{locale === "ar" ? "عن النظام" : "About the System"}</h2>
                   <p>{locale === "ar"
                     ? "منصة White-Label متعددة الشركات لإدارة دورة العمل العقاري كاملة، من العميل والمخزون حتى العقود والتحصيل والتسويق والذكاء الاصطناعي."
