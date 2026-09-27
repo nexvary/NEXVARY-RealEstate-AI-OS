@@ -13,6 +13,7 @@ from .automation_models import AutomationApproval, AutomationEdge, AutomationNod
 from .commercial_models import BankTransferSubmission, BillingInvoice, SaaSSubscription, SEOEntityPage, TenantTemplate, WhatsAppChannel
 from .db import get_db
 from .finance_models import BrokerCommission, Contract, Installment
+from .growth_models import AudienceSegment, CustomerFeedback, CustomerJourneyEvent, MarketingCampaign, PropertyMediaAsset, SalesPlaybook
 from .models import (
     Appointment,
     AuditEvent,
@@ -222,6 +223,12 @@ def export_backup(
         "automation_runs": (AutomationRun, set()),
         "automation_node_runs": (AutomationNodeRun, set()),
         "automation_approvals": (AutomationApproval, set()),
+        "marketing_campaigns": (MarketingCampaign, set()),
+        "customer_journey_events": (CustomerJourneyEvent, set()),
+        "audience_segments": (AudienceSegment, set()),
+        "property_media_assets": (PropertyMediaAsset, set()),
+        "sales_playbooks": (SalesPlaybook, set()),
+        "customer_feedback": (CustomerFeedback, set()),
         "tenant_saas_profiles": (TenantSaaSProfile, set()),
         "tenant_integrations": (TenantIntegration, {"encrypted_secret_json"}),
         "saas_subscriptions": (SaaSSubscription, set()),
@@ -241,7 +248,7 @@ def export_backup(
 
     data: dict[str, Any] = {
         "format": "NEXVARY-RealEstate-AI-OS-backup",
-        "version": "1.6.0",
+        "version": "1.7.0",
         "exported_at": datetime.now(timezone.utc).isoformat(),
         "tenant": row_dict(tenant),
         "tables": {},
