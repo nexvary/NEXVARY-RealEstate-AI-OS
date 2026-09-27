@@ -82,6 +82,7 @@ public:
     Q_INVOKABLE void updateLead(const QString &leadId, const QString &status, const QString &city, double budget, int bedrooms, const QString &notes);
     Q_INVOKABLE void createProject(const QString &name, const QString &city, const QString &developer, const QString &description);
     Q_INVOKABLE void createUnit(const QString &projectId, const QString &code, const QString &unitType, int bedrooms, double areaSqm, double price, const QString &currency);
+    Q_INVOKABLE void createAppointment(const QString &leadId, const QString &projectId, const QString &startsAtIso, const QString &notes);
     Q_INVOKABLE void createReservation(const QString &leadId, const QString &unitId, double reservationAmount);
     Q_INVOKABLE void cancelReservation(const QString &reservationId);
     Q_INVOKABLE void convertReservationToContract(const QString &reservationId, const QString &contractNumber);
