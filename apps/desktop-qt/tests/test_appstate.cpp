@@ -1,6 +1,8 @@
 #include "AppState.hpp"
 
+#include <QCoreApplication>
 #include <QSettings>
+#include <QStandardPaths>
 #include <QtTest/QtTest>
 
 class AppStateTest final : public QObject
@@ -8,7 +10,20 @@ class AppStateTest final : public QObject
     Q_OBJECT
 
 private slots:
+    void initTestCase()
+    {
+        QStandardPaths::setTestModeEnabled(true);
+        QCoreApplication::setOrganizationName(QStringLiteral("White Label Business Software Tests"));
+        QCoreApplication::setApplicationName(QStringLiteral("Real Estate Business OS Tests"));
+        QSettings().clear();
+    }
+
     void init()
+    {
+        QSettings().clear();
+    }
+
+    void cleanupTestCase()
     {
         QSettings().clear();
     }
