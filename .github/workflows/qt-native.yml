@@ -10,11 +10,13 @@ on:
     paths:
       - "apps/desktop-qt/**"
       - "desktop/**"
+      - "tools/license_manager.py"
       - ".github/workflows/qt-native.yml"
   pull_request:
     paths:
       - "apps/desktop-qt/**"
       - "desktop/**"
+      - "tools/license_manager.py"
       - ".github/workflows/qt-native.yml"
       - "services/api/**"
 

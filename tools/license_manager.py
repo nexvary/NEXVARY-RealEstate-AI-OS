@@ -87,7 +87,8 @@ def run_gui() -> None:
 
     window = tk.Tk()
     window.title("White-Label License Manager")
-    window.geometry("760x610")
+    window.geometry("900x680")
+    window.minsize(820, 640)
     window.configure(bg="#07111D")
     values = {name: tk.StringVar() for name in ("key", "company", "customer", "machine", "days", "edition", "output")}
     values["days"].set("365")
@@ -102,11 +103,40 @@ def run_gui() -> None:
     frame.pack(fill="both", expand=True)
     ttk.Label(frame, text="WHITE-LABEL LICENSE MANAGER", font=("Segoe UI", 20, "bold"), foreground="#39C8FF").pack(anchor="w", pady=(0, 18))
 
+    def copy_value(key: str) -> None:
+        window.clipboard_clear()
+        window.clipboard_append(values[key].get())
+        window.update()
+
+    def paste_value(key: str) -> None:
+        try:
+            value = window.clipboard_get()
+        except tk.TclError:
+            messagebox.showwarning("Clipboard", "The clipboard does not contain text.")
+            return
+        values[key].set(value.strip())
+
+    def attach_context_menu(entry: ttk.Entry) -> None:
+        menu = tk.Menu(window, tearoff=False)
+        menu.add_command(label="Cut", command=lambda: entry.event_generate("<<Cut>>"))
+        menu.add_command(label="Copy", command=lambda: entry.event_generate("<<Copy>>"))
+        menu.add_command(label="Paste", command=lambda: entry.event_generate("<<Paste>>"))
+        menu.add_separator()
+        menu.add_command(label="Select all", command=lambda: (entry.selection_range(0, tk.END), entry.icursor(tk.END)))
+
+        def show_menu(event):
+            entry.focus_set()
+            menu.tk_popup(event.x_root, event.y_root)
+
+        entry.bind("<Button-3>", show_menu)
+
     def row(label: str, key: str, browse: str = ""):
         ttk.Label(frame, text=label).pack(anchor="w", pady=(8, 3))
         line = ttk.Frame(frame)
         line.pack(fill="x")
-        ttk.Entry(line, textvariable=values[key], font=("Segoe UI", 11)).pack(side="left", fill="x", expand=True)
+        entry = ttk.Entry(line, textvariable=values[key], font=("Segoe UI", 11))
+        entry.pack(side="left", fill="x", expand=True)
+        attach_context_menu(entry)
         if browse == "open_key":
             ttk.Button(
                 line,
@@ -130,6 +160,9 @@ def run_gui() -> None:
                     ) or values[key].get()
                 ),
             ).pack(side="left", padx=(8, 0))
+        else:
+            ttk.Button(line, text="Paste", command=lambda: paste_value(key)).pack(side="left", padx=(8, 0))
+            ttk.Button(line, text="Copy", command=lambda: copy_value(key)).pack(side="left", padx=(6, 0))
 
     row("Vendor private key — choose real-estate-license-private.pem", "key", "open_key")
     row("Licensed company", "company")
