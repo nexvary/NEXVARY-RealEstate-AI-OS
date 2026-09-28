@@ -4,12 +4,27 @@ import QtQuick.Layouts
 
 Item {
     id: root
+    property bool useLicensedIdentity: false
+
+    function licensedCompanySlug() {
+        var value = String(apiClient.licenseInfo.company || "").toLowerCase()
+        value = value.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")
+        if (value.length < 3)
+            value = "licensed-company"
+        return value.substring(0, 100).replace(/-+$/g, "")
+    }
+
+    function applyLicensedIdentity() {
+        if (!apiClient.licenseInfo.company)
+            return
+        companyName.text = apiClient.licenseInfo.company
+        brandName.text = apiClient.licenseInfo.company
+        companySlug.text = licensedCompanySlug()
+        useLicensedIdentity = true
+    }
 
     Component.onCompleted: {
-        if (apiClient.licenseInfo.company)
-            companyName.text = apiClient.licenseInfo.company
-        if (apiClient.licenseInfo.company)
-            brandName.text = apiClient.licenseInfo.company
+        applyLicensedIdentity()
     }
 
     Flickable {
@@ -96,6 +111,50 @@ Item {
                     color: Theme.borderSoft
                 }
 
+                Rectangle {
+                    visible: apiClient.licenseInfo.company
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 82
+                    radius: 12
+                    color: Theme.shellDeep
+                    border.width: 1
+                    border.color: Theme.emerald
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.margins: 12
+                        spacing: 10
+                        layoutDirection: appState.rtl ? Qt.RightToLeft : Qt.LeftToRight
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 2
+                            Text {
+                                Layout.fillWidth: true
+                                text: appState.localize(appState.language, "هوية الشركة مأخوذة من الترخيص", "Company identity loaded from the license")
+                                color: Theme.emerald; font.pixelSize: 12; font.bold: true
+                                horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
+                            }
+                            Text {
+                                Layout.fillWidth: true
+                                text: apiClient.licenseInfo.company
+                                color: Theme.platinum; font.pixelSize: 17; font.bold: true
+                                horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
+                            }
+                        }
+                        Button {
+                            text: root.useLicensedIdentity
+                                ? appState.localize(appState.language, "تعديل يدوي", "Edit manually")
+                                : appState.localize(appState.language, "استخدام بيانات الترخيص", "Use license details")
+                            onClicked: {
+                                if (root.useLicensedIdentity)
+                                    root.useLicensedIdentity = false
+                                else
+                                    root.applyLicensedIdentity()
+                            }
+                        }
+                    }
+                }
+
                 GridLayout {
                     Layout.fillWidth: true
                     columns: card.width > 660 ? 2 : 1
@@ -104,6 +163,7 @@ Item {
 
                     TextField {
                         id: companyName
+                        visible: !root.useLicensedIdentity
                         Layout.fillWidth: true
                         Layout.preferredHeight: 48
                         placeholderText: appState.localize(appState.language, "اسم الشركة *", "Company name *")
@@ -112,6 +172,7 @@ Item {
 
                     TextField {
                         id: companySlug
+                        visible: !root.useLicensedIdentity
                         Layout.fillWidth: true
                         Layout.preferredHeight: 48
                         placeholderText: appState.localize(appState.language, "معرّف الشركة بالإنجليزية *", "Company identifier *")
@@ -122,6 +183,7 @@ Item {
 
                     TextField {
                         id: brandName
+                        visible: !root.useLicensedIdentity
                         Layout.fillWidth: true
                         Layout.preferredHeight: 48
                         placeholderText: appState.localize(appState.language, "الاسم التجاري", "Brand name")

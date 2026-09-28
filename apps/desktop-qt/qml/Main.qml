@@ -20,6 +20,10 @@ ApplicationWindow {
     palette.buttonText: Theme.platinum
     palette.highlight: Theme.emerald
     palette.highlightedText: Theme.shellDeep
+    palette.placeholderText: Theme.emerald
+    palette.brightText: Theme.emerald
+    palette.link: Theme.emerald
+    palette.linkVisited: Theme.violet
 
     Component.onCompleted: Theme.apply(appState.theme)
     Connections {
@@ -329,10 +333,8 @@ ApplicationWindow {
                 Loader {
                     anchors.fill: parent
                     anchors.margins: 22
-                    sourceComponent: !apiClient.licenseKnown
-                        ? startupComponent
-                        : !apiClient.licenseValid
-                            ? licenseComponent
+                    sourceComponent: (!apiClient.licenseKnown || !apiClient.licenseValid || !appState.licenseGateAccepted)
+                        ? licenseComponent
                     : !apiClient.loggedIn
                         ? (!apiClient.setupKnown
                             ? startupComponent

@@ -26,7 +26,7 @@ Flickable {
                 Rectangle { Layout.preferredWidth: 150; Layout.preferredHeight: 84; radius: 14; color: Theme.shellDeep; border.width: 1; border.color: Theme.emerald
                     Column { anchors.centerIn: parent; spacing: 5
                         Text { anchors.horizontalCenter: parent.horizontalCenter; text: appState.localize(appState.language, "الإصدار", "VERSION"); color: Theme.muted; font.pixelSize: 11 }
-                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: "2.2.0"; color: Theme.emerald; font.pixelSize: 20; font.bold: true }
+                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: "2.2.1"; color: Theme.emerald; font.pixelSize: 20; font.bold: true }
                     }
                 }
             }

@@ -16,6 +16,7 @@ class AppState final : public QObject
     Q_PROPERTY(QString theme READ theme WRITE setTheme NOTIFY themeChanged)
     Q_PROPERTY(QStringList themeCodes READ themeCodes CONSTANT)
     Q_PROPERTY(QStringList themeNames READ themeNames CONSTANT)
+    Q_PROPERTY(bool licenseGateAccepted READ licenseGateAccepted NOTIFY licenseGateAcceptedChanged)
     Q_PROPERTY(QString currentPage READ currentPage NOTIFY currentPageChanged)
     Q_PROPERTY(QString currentTime READ currentTime NOTIFY clockChanged)
     Q_PROPERTY(QString currentDate READ currentDate NOTIFY clockChanged)
@@ -32,6 +33,7 @@ public:
     void setTheme(const QString &theme);
     QStringList themeCodes() const;
     QStringList themeNames() const;
+    bool licenseGateAccepted() const;
 
     QString currentPage() const;
     QString currentTime() const;
@@ -42,10 +44,12 @@ public:
     Q_INVOKABLE void navigate(const QString &page);
     Q_INVOKABLE void goBack();
     Q_INVOKABLE void resetNavigation();
+    Q_INVOKABLE void acceptCurrentLicense();
 
 signals:
     void languageChanged();
     void themeChanged();
+    void licenseGateAcceptedChanged();
     void currentPageChanged();
     void clockChanged();
 
@@ -54,6 +58,7 @@ private:
 
     QString m_language{"en"};
     QString m_theme{"neon"};
+    bool m_licenseGateAccepted{false};
     QString m_currentPage{"dashboard"};
     QStringList m_history;
     QString m_currentTime;

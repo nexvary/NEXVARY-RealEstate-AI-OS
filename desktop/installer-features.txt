@@ -1,4 +1,4 @@
-Real Estate Business OS — International White-Label v2.2.0
+Real Estate Business OS — International White-Label v2.2.1
 
 This installer contains a neutral business edition. No vendor or customer brand is shown before activation. After activation, the customer can set its company name, logo, cover, colors, contact details and social-media links.
 

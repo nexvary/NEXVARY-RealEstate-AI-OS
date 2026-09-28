@@ -161,7 +161,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $installer = Resolve-Path "native-installer\Real-Estate-Business-OS-v2.2.0-Windows-Setup.exe"
+          $installer = Resolve-Path "native-installer\Real-Estate-Business-OS-v2.2.1-Windows-Setup.exe"
           $installDir = Join-Path $PWD "native-installed"
           New-Item -ItemType Directory -Force -Path $installDir | Out-Null
 
@@ -199,7 +199,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $file = Get-ChildItem "native-installer\Real-Estate-Business-OS-v2.2.0-Windows-Setup.exe"
+          $file = Get-ChildItem "native-installer\Real-Estate-Business-OS-v2.2.1-Windows-Setup.exe"
           $hash = (Get-FileHash $file.FullName -Algorithm SHA256).Hash.ToLower()
           "$hash  $($file.Name)" | Out-File -Encoding ascii "native-installer\SHA256.txt"
           Get-Content "native-installer\SHA256.txt"
@@ -208,9 +208,9 @@ jobs:
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
         with:
-          name: Real-Estate-Business-OS-v2.2.0-Windows
+          name: Real-Estate-Business-OS-v2.2.1-Windows
           path: |
-            native-installer/Real-Estate-Business-OS-v2.2.0-Windows-Setup.exe
+            native-installer/Real-Estate-Business-OS-v2.2.1-Windows-Setup.exe
             native-installer/SHA256.txt
             dist/White-Label-License-Manager.exe
             native-dist/smoke/*.log
@@ -223,17 +223,17 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $tag = "v2.2.0"
+          $tag = "v2.2.1"
           gh release view $tag --repo "${{ github.repository }}" *> $null
           if ($LASTEXITCODE -ne 0) {
             gh release create $tag `
               --repo "${{ github.repository }}" `
               --target "${{ github.sha }}" `
-              --title "Real Estate Business OS v2.2.0" `
+              --title "Real Estate Business OS v2.2.1" `
               --notes "International neutral white-label Windows release with signed licensing, English first-run default, eight languages, six persistent neon/amber/silver themes, a jurisdiction-neutral user agreement and the complete business workspace."
           }
           gh release upload $tag `
-            "native-installer\Real-Estate-Business-OS-v2.2.0-Windows-Setup.exe" `
+            "native-installer\Real-Estate-Business-OS-v2.2.1-Windows-Setup.exe" `
             "native-installer\SHA256.txt" `
             "dist\White-Label-License-Manager.exe" `
             --repo "${{ github.repository }}" `

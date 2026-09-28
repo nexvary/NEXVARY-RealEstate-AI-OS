@@ -307,7 +307,7 @@ def export_backup(
 
     data: dict[str, Any] = {
         "format": "Real-Estate-Business-OS-backup",
-        "version": "2.2.0",
+        "version": "2.2.1",
         "exported_at": datetime.now(timezone.utc).isoformat(),
         "tenant": row_dict(tenant),
         "tables": {},

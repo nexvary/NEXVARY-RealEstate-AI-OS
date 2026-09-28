@@ -36,6 +36,18 @@ private slots:
         QCOMPARE(state.currentPage(), QStringLiteral("dashboard"));
         QCOMPARE(state.t(QStringLiteral("dashboard")), QStringLiteral("Dashboard"));
         QCOMPARE(state.theme(), QStringLiteral("neon"));
+        QVERIFY(!state.licenseGateAccepted());
+    }
+
+    void licenseGateIsRequiredOncePerRelease()
+    {
+        AppState state;
+        QVERIFY(!state.licenseGateAccepted());
+        state.acceptCurrentLicense();
+        QVERIFY(state.licenseGateAccepted());
+
+        AppState restored;
+        QVERIFY(restored.licenseGateAccepted());
     }
 
     void themeSelectionPersists()

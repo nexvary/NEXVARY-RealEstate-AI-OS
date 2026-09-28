@@ -10,6 +10,7 @@ const QStringList kLanguageCodes{"ar", "en", "tr", "ru", "de", "it", "es", "fr"}
 const QStringList kLanguageNames{"العربية", "English", "Türkçe", "Русский", "Deutsch", "Italiano", "Español", "Français"};
 const QStringList kThemeCodes{"neon", "blue", "green", "amber", "silver", "violet"};
 const QStringList kThemeNames{"Neon Fusion", "Electric Blue", "Neon Green", "Amber", "Metallic Silver", "Violet"};
+const QString kLicenseGateVersion{QStringLiteral("2.2.1")};
 using TranslationRow = QStringList;
 
 const QHash<QString, TranslationRow> kTranslations{
@@ -115,6 +116,7 @@ AppState::AppState(QObject *parent) : QObject(parent)
     const QString savedTheme = settings.value(QStringLiteral("appearance/theme"), QStringLiteral("neon")).toString().toLower();
     m_language = kLanguageCodes.contains(savedLanguage) ? savedLanguage : QStringLiteral("en");
     m_theme = kThemeCodes.contains(savedTheme) ? savedTheme : QStringLiteral("neon");
+    m_licenseGateAccepted = settings.value(QStringLiteral("onboarding/license-gate-version")).toString() == kLicenseGateVersion;
     m_clock.setInterval(1000);
     connect(&m_clock, &QTimer::timeout, this, &AppState::updateClock);
     updateClock();
@@ -153,6 +155,7 @@ void AppState::setTheme(const QString &theme)
 
 QStringList AppState::themeCodes() const { return kThemeCodes; }
 QStringList AppState::themeNames() const { return kThemeNames; }
+bool AppState::licenseGateAccepted() const { return m_licenseGateAccepted; }
 QString AppState::currentPage() const { return m_currentPage; }
 QString AppState::currentTime() const { return m_currentTime; }
 QString AppState::currentDate() const { return m_currentDate; }
@@ -211,6 +214,15 @@ void AppState::resetNavigation()
         m_currentPage = QStringLiteral("dashboard");
         emit currentPageChanged();
     }
+}
+
+void AppState::acceptCurrentLicense()
+{
+    if (m_licenseGateAccepted)
+        return;
+    QSettings().setValue(QStringLiteral("onboarding/license-gate-version"), kLicenseGateVersion);
+    m_licenseGateAccepted = true;
+    emit licenseGateAcceptedChanged();
 }
 
 void AppState::updateClock()

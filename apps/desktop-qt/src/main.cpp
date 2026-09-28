@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
     QGuiApplication::setOrganizationName(QStringLiteral("White Label Business Software"));
     QGuiApplication::setOrganizationDomain(QStringLiteral("localhost"));
     QGuiApplication::setApplicationName(QStringLiteral("Real Estate Business OS"));
-    QGuiApplication::setApplicationVersion(QStringLiteral("2.2.0"));
+    QGuiApplication::setApplicationVersion(QStringLiteral("2.2.1"));
     QGuiApplication::setWindowIcon(QIcon(QStringLiteral(":/qt/qml/Business/RealEstate/assets/property-mark.svg")));
 
     QQuickStyle::setStyle(QStringLiteral("Basic"));

@@ -40,7 +40,7 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(
     title=settings.app_name,
-    version="2.2.0",
+    version="2.2.1",
     description="White-label real-estate business workspace.",
     lifespan=lifespan,
 )
@@ -68,7 +68,7 @@ app.add_middleware(
 
 @app.get("/health")
 def health() -> dict[str, str]:
-    return {"status": "ok", "service": "real-estate-business-service", "version": "2.2.0"}
+    return {"status": "ok", "service": "real-estate-business-service", "version": "2.2.1"}
 
 
 app.include_router(setup_router)

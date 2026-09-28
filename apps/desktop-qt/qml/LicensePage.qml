@@ -28,15 +28,62 @@ Item {
 
             Text {
                 Layout.fillWidth: true
-                text: appState.localize(appState.language, "تفعيل النسخة", "Activate this copy")
+                text: apiClient.licenseValid
+                    ? appState.localize(appState.language, "تأكيد الترخيص أولًا", "Confirm the license first")
+                    : appState.localize(appState.language, "تفعيل النسخة", "Activate this copy")
                 color: Theme.platinum; font.pixelSize: 30; font.bold: true
                 horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
             }
             Text {
                 Layout.fillWidth: true
-                text: appState.localize(appState.language, "أرسل كود الجهاز إلى المورّد، ثم اختر ملف الترخيص الموقّع. لا يحتوي البرنامج على اسم المورّد أو العميل قبل التفعيل.", "Send the machine code to your vendor, then select the signed license file. The application contains no vendor or customer identity before activation.")
+                text: apiClient.licenseValid
+                    ? appState.localize(appState.language, "هذه أول مرة يُفتح فيها هذا الإصدار. راجع الترخيص الموقّع ثم تابع إلى إعداد مساحة العمل.", "This is the first launch of this release. Review the signed license, then continue to workspace setup.")
+                    : appState.localize(appState.language, "أرسل كود الجهاز إلى المورّد، ثم اختر ملف الترخيص الموقّع. لا يحتوي البرنامج على اسم المورّد أو العميل قبل التفعيل.", "Send the machine code to your vendor, then select the signed license file. The application contains no vendor or customer identity before activation.")
                 color: Theme.silver; font.pixelSize: 14; wrapMode: Text.WordWrap
                 horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
+            }
+
+            Rectangle {
+                visible: apiClient.licenseValid
+                Layout.fillWidth: true
+                Layout.preferredHeight: 132
+                radius: 14
+                color: Theme.panelAlt
+                border.width: 2
+                border.color: Theme.emerald
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.margins: 16
+                    spacing: 14
+                    layoutDirection: appState.rtl ? Qt.RightToLeft : Qt.LeftToRight
+
+                    Rectangle {
+                        Layout.preferredWidth: 48; Layout.preferredHeight: 48; radius: 14
+                        color: Theme.shellDeep; border.width: 1; border.color: Theme.emerald
+                        Text { anchors.centerIn: parent; text: "✓"; color: Theme.emerald; font.pixelSize: 23; font.bold: true }
+                    }
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 4
+                        Text {
+                            Layout.fillWidth: true
+                            text: apiClient.licenseInfo.company || appState.localize(appState.language, "ترخيص موقّع صالح", "Valid signed license")
+                            color: Theme.emerald; font.pixelSize: 18; font.bold: true
+                            horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
+                        }
+                        Text {
+                            Layout.fillWidth: true
+                            text: (apiClient.licenseInfo.edition || "professional") + " · " + (apiClient.licenseInfo.expires_at || appState.localize(appState.language, "دائم", "perpetual"))
+                            color: Theme.silver; font.pixelSize: 12
+                            horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
+                        }
+                    }
+                    Button {
+                        text: appState.localize(appState.language, "متابعة بهذا الترخيص", "Continue with this license")
+                        onClicked: appState.acceptCurrentLicense()
+                    }
+                }
             }
 
             Rectangle {
@@ -60,7 +107,7 @@ Item {
                     anchors.fill: parent; anchors.margins: 15; spacing: 10
                     RowLayout {
                         Layout.fillWidth: true
-                        Text { Layout.fillWidth: true; text: appState.localize(appState.language, "ملف الترخيص", "License file"); color: Theme.platinum; font.pixelSize: 17; font.bold: true }
+                        Text { Layout.fillWidth: true; text: apiClient.licenseValid ? appState.localize(appState.language, "استبدال الترخيص (اختياري)", "Replace license (optional)") : appState.localize(appState.language, "ملف الترخيص", "License file"); color: Theme.platinum; font.pixelSize: 17; font.bold: true }
                         Button { text: appState.localize(appState.language, "اختيار ملف", "Choose file"); onClicked: licenseDialog.open() }
                     }
                     TextArea {
