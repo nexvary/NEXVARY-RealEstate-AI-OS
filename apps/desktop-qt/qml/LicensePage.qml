@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
-import "Theme.js" as Theme
 import "LegalText.js" as LegalText
 
 Item {

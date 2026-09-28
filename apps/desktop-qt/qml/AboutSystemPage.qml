@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import "Theme.js" as Theme
 
 Flickable {
     id: root
@@ -11,7 +10,7 @@ Flickable {
         Rectangle {
             Layout.fillWidth: true; Layout.preferredHeight: 238; radius: 20
             color: Theme.panel; border.width: 2; border.color: Theme.metallicSilver; clip: true
-            gradient: Gradient { GradientStop { position: 0; color: "#030810" } GradientStop { position: .55; color: "#0A1C2B" } GradientStop { position: 1; color: "#10334A" } }
+            gradient: Gradient { GradientStop { position: 0; color: Theme.bg } GradientStop { position: .55; color: Theme.panelAlt } GradientStop { position: 1; color: Theme.shell } }
             RowLayout {
                 anchors.fill: parent; anchors.margins: 26; spacing: 24; layoutDirection: appState.rtl ? Qt.RightToLeft : Qt.LeftToRight
                 Rectangle {
@@ -27,7 +26,7 @@ Flickable {
                 Rectangle { Layout.preferredWidth: 150; Layout.preferredHeight: 84; radius: 14; color: Theme.shellDeep; border.width: 1; border.color: Theme.emerald
                     Column { anchors.centerIn: parent; spacing: 5
                         Text { anchors.horizontalCenter: parent.horizontalCenter; text: appState.localize(appState.language, "الإصدار", "VERSION"); color: Theme.muted; font.pixelSize: 11 }
-                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: "2.1.0"; color: Theme.emerald; font.pixelSize: 20; font.bold: true }
+                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: "2.2.0"; color: Theme.emerald; font.pixelSize: 20; font.bold: true }
                     }
                 }
             }

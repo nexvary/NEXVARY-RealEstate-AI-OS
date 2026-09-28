@@ -1,5 +1,5 @@
 #define MyAppName "Real Estate Business OS"
-#define MyAppVersion "2.1.0"
+#define MyAppVersion "2.2.0"
 #define MyAppPublisher "White-Label Business Software"
 #define MyAppURL ""
 #define MyAppExeName "real_estate_business_os.exe"
@@ -15,7 +15,7 @@ DefaultDirName={autopf}\Real Estate Business OS
 DefaultGroupName=Real Estate Business OS
 DisableProgramGroupPage=yes
 OutputDir=..\native-installer
-OutputBaseFilename=Real-Estate-Business-OS-v2.1.0-Windows-Setup
+OutputBaseFilename=Real-Estate-Business-OS-v2.2.0-Windows-Setup
 SetupIconFile=nexvary-realestate.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 Compression=lzma2/ultra64

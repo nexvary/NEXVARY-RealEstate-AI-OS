@@ -1,4 +1,4 @@
-Real Estate Business OS — Neutral White-Label v2.1.0
+Real Estate Business OS — International White-Label v2.2.0
 
 This installer contains a neutral business edition. No vendor or customer brand is shown before activation. After activation, the customer can set its company name, logo, cover, colors, contact details and social-media links.
 
@@ -11,8 +11,10 @@ Included workspace
 - Knowledge base and sales assistance
 - Growth intelligence, SEO workspace and automation studio
 - Arabic, English, Turkish, Russian, German, Italian, Spanish and French
+- English first-run default with selectable languages
+- Six persistent dark themes: Neon Fusion, Electric Blue, Neon Green, Amber, Metallic Silver and Violet
 
 Licensing
-Activation requires a signed license issued for this computer. The signing key is never included with the installer. Copying, resale, reverse engineering, circumvention or disabling protection is prohibited by the user and license agreement.
+Activation requires a signed license issued for this computer. The signing key is never included with the installer. Copying, resale, reverse engineering, circumvention or disabling protection is prohibited by the neutral international user and license agreement. Local mandatory law applies where the software is used.
 
 Before continuing, confirm that you are authorized to install and use this copy.

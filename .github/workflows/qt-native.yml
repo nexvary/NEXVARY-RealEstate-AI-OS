@@ -131,7 +131,7 @@ jobs:
           $env:QT_QPA_PLATFORM = "minimal"
           $env:QT_QUICK_BACKEND = "software"
 
-          & "native-dist/bin/real_estate_business_os.exe" --language ar --width 1600 --height 900 --smoke-test
+          & "native-dist/bin/real_estate_business_os.exe" --width 1600 --height 900 --smoke-test
           if ($LASTEXITCODE -ne 0) {
             if (Test-Path $env:NEXVARY_SIDECAR_LOG) {
               Write-Host "===== Auto sidecar log ====="
@@ -161,7 +161,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $installer = Resolve-Path "native-installer\Real-Estate-Business-OS-v2.1.0-Windows-Setup.exe"
+          $installer = Resolve-Path "native-installer\Real-Estate-Business-OS-v2.2.0-Windows-Setup.exe"
           $installDir = Join-Path $PWD "native-installed"
           New-Item -ItemType Directory -Force -Path $installDir | Out-Null
 
@@ -199,7 +199,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $file = Get-ChildItem "native-installer\Real-Estate-Business-OS-v2.1.0-Windows-Setup.exe"
+          $file = Get-ChildItem "native-installer\Real-Estate-Business-OS-v2.2.0-Windows-Setup.exe"
           $hash = (Get-FileHash $file.FullName -Algorithm SHA256).Hash.ToLower()
           "$hash  $($file.Name)" | Out-File -Encoding ascii "native-installer\SHA256.txt"
           Get-Content "native-installer\SHA256.txt"
@@ -208,9 +208,9 @@ jobs:
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
         with:
-          name: Real-Estate-Business-OS-v2.1.0-Windows
+          name: Real-Estate-Business-OS-v2.2.0-Windows
           path: |
-            native-installer/Real-Estate-Business-OS-v2.1.0-Windows-Setup.exe
+            native-installer/Real-Estate-Business-OS-v2.2.0-Windows-Setup.exe
             native-installer/SHA256.txt
             dist/White-Label-License-Manager.exe
             native-dist/smoke/*.log
@@ -223,17 +223,17 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $tag = "v2.1.0"
+          $tag = "v2.2.0"
           gh release view $tag --repo "${{ github.repository }}" *> $null
           if ($LASTEXITCODE -ne 0) {
             gh release create $tag `
               --repo "${{ github.repository }}" `
               --target "${{ github.sha }}" `
-              --title "Real Estate Business OS v2.1.0" `
-              --notes "Neutral white-label Windows release with signed licensing, eight languages, editable company identity, metallic UI, legal agreement and complete business workspace."
+              --title "Real Estate Business OS v2.2.0" `
+              --notes "International neutral white-label Windows release with signed licensing, English first-run default, eight languages, six persistent neon/amber/silver themes, a jurisdiction-neutral user agreement and the complete business workspace."
           }
           gh release upload $tag `
-            "native-installer\Real-Estate-Business-OS-v2.1.0-Windows-Setup.exe" `
+            "native-installer\Real-Estate-Business-OS-v2.2.0-Windows-Setup.exe" `
             "native-installer\SHA256.txt" `
             "dist\White-Label-License-Manager.exe" `
             --repo "${{ github.repository }}" `
@@ -285,6 +285,24 @@ jobs:
               --screenshot "build-qt/ui-gate/native-${language}-1600x900.png" 2>&1 | tee "build-qt/ui-gate/native-${language}.log"
             test -s "build-qt/ui-gate/native-${language}-1600x900.png"
             ! grep -E "QML .*Cannot open|QQmlApplicationEngine failed|module .* is not installed" "build-qt/ui-gate/native-${language}.log"
+          done
+
+      - name: QML theme selector gates
+        if: runner.os == 'Linux'
+        shell: bash
+        env:
+          QT_QPA_PLATFORM: offscreen
+          QT_QUICK_BACKEND: software
+        run: |
+          for theme in neon blue green amber silver violet; do
+            ./build-qt/real_estate_business_os \
+              --language en \
+              --theme "$theme" \
+              --width 1600 \
+              --height 900 \
+              --screenshot "build-qt/ui-gate/native-theme-${theme}-1600x900.png" 2>&1 | tee "build-qt/ui-gate/native-theme-${theme}.log"
+            test -s "build-qt/ui-gate/native-theme-${theme}-1600x900.png"
+            ! grep -E "QML .*Cannot open|QQmlApplicationEngine failed|module .* is not installed" "build-qt/ui-gate/native-theme-${theme}.log"
           done
 
       - name: Upload native UI gate

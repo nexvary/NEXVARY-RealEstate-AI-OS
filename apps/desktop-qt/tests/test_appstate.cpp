@@ -1,5 +1,6 @@
 #include "AppState.hpp"
 
+#include <QSettings>
 #include <QtTest/QtTest>
 
 class AppStateTest final : public QObject
@@ -7,13 +8,34 @@ class AppStateTest final : public QObject
     Q_OBJECT
 
 private slots:
-    void defaultsToArabicRtl()
+    void init()
+    {
+        QSettings().clear();
+    }
+
+    void defaultsToEnglishLtr()
     {
         AppState state;
-        QCOMPARE(state.language(), QStringLiteral("ar"));
-        QVERIFY(state.rtl());
+        QCOMPARE(state.language(), QStringLiteral("en"));
+        QVERIFY(!state.rtl());
         QCOMPARE(state.currentPage(), QStringLiteral("dashboard"));
-        QCOMPARE(state.t(QStringLiteral("dashboard")), QStringLiteral("لوحة التحكم"));
+        QCOMPARE(state.t(QStringLiteral("dashboard")), QStringLiteral("Dashboard"));
+        QCOMPARE(state.theme(), QStringLiteral("neon"));
+    }
+
+    void themeSelectionPersists()
+    {
+        AppState state;
+        const QStringList themes{"neon", "blue", "green", "amber", "silver", "violet"};
+        QCOMPARE(state.themeCodes(), themes);
+        state.setTheme(QStringLiteral("amber"));
+        QCOMPARE(state.theme(), QStringLiteral("amber"));
+
+        AppState restored;
+        QCOMPARE(restored.theme(), QStringLiteral("amber"));
+
+        restored.setTheme(QStringLiteral("unsupported"));
+        QCOMPARE(restored.theme(), QStringLiteral("neon"));
     }
 
     void languageSwitchesDirection()

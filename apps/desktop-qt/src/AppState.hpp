@@ -13,6 +13,9 @@ class AppState final : public QObject
     Q_PROPERTY(bool rtl READ rtl NOTIFY languageChanged)
     Q_PROPERTY(QStringList languageCodes READ languageCodes CONSTANT)
     Q_PROPERTY(QStringList languageNames READ languageNames CONSTANT)
+    Q_PROPERTY(QString theme READ theme WRITE setTheme NOTIFY themeChanged)
+    Q_PROPERTY(QStringList themeCodes READ themeCodes CONSTANT)
+    Q_PROPERTY(QStringList themeNames READ themeNames CONSTANT)
     Q_PROPERTY(QString currentPage READ currentPage NOTIFY currentPageChanged)
     Q_PROPERTY(QString currentTime READ currentTime NOTIFY clockChanged)
     Q_PROPERTY(QString currentDate READ currentDate NOTIFY clockChanged)
@@ -25,6 +28,10 @@ public:
     bool rtl() const;
     QStringList languageCodes() const;
     QStringList languageNames() const;
+    QString theme() const;
+    void setTheme(const QString &theme);
+    QStringList themeCodes() const;
+    QStringList themeNames() const;
 
     QString currentPage() const;
     QString currentTime() const;
@@ -38,13 +45,15 @@ public:
 
 signals:
     void languageChanged();
+    void themeChanged();
     void currentPageChanged();
     void clockChanged();
 
 private:
     void updateClock();
 
-    QString m_language{"ar"};
+    QString m_language{"en"};
+    QString m_theme{"neon"};
     QString m_currentPage{"dashboard"};
     QStringList m_history;
     QString m_currentTime;

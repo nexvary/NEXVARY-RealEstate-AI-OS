@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
-import "Theme.js" as Theme
 
 Flickable {
     id: root
@@ -119,6 +118,57 @@ Flickable {
                         youtubeField.text,
                         xField.text,
                         tiktokField.text)
+                }
+            }
+        }
+
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 112
+            radius: 15
+            color: Theme.panel
+            border.width: 2
+            border.color: Theme.metallicSilver
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 13
+                spacing: 8
+                Text {
+                    text: appState.localize(appState.language, "اختر مظهر النظام — يتم حفظه تلقائيًا", "Choose the application theme — saved automatically")
+                    color: Theme.platinum
+                    font.pixelSize: 15
+                    font.bold: true
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    Repeater {
+                        model: [
+                            {code:"neon", name:"Neon Fusion", accent:"#39FF88"},
+                            {code:"blue", name:"Electric Blue", accent:"#2DBDFF"},
+                            {code:"green", name:"Neon Green", accent:"#2DFF73"},
+                            {code:"amber", name:"Amber", accent:"#FFB000"},
+                            {code:"silver", name:"Silver", accent:"#E3EBEF"},
+                            {code:"violet", name:"Violet", accent:"#B37CFF"}
+                        ]
+                        delegate: Rectangle {
+                            required property var modelData
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 48
+                            radius: 10
+                            color: appState.theme === modelData.code ? Theme.panelAlt : Theme.shellDeep
+                            border.width: appState.theme === modelData.code ? 2 : 1
+                            border.color: appState.theme === modelData.code ? modelData.accent : Theme.metallicSilverDark
+                            Row {
+                                anchors.centerIn: parent
+                                spacing: 7
+                                Rectangle { width: 13; height: 13; radius: 7; color: modelData.accent; border.width: 1; border.color: Theme.metallicSilverLight }
+                                Text { text: modelData.name; color: Theme.platinum; font.pixelSize: 10; font.bold: appState.theme === modelData.code }
+                            }
+                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: appState.theme = modelData.code }
+                        }
+                    }
                 }
             }
         }

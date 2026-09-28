@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import "Theme.js" as Theme
 import "LegalText.js" as LegalText
 
 Item {
@@ -22,7 +21,7 @@ Item {
                         Text { text: appState.localize(appState.language, "الترخيص الحالي", "Current license"); color: Theme.electricCyan; font.pixelSize: 13; font.bold: true }
                         Text { text: (apiClient.licenseInfo.company || "—") + " · " + (apiClient.licenseInfo.edition || "—") + " · " + (apiClient.licenseInfo.expires_at || appState.localize(appState.language, "دائم", "Perpetual")); color: Theme.platinum; font.pixelSize: 14 }
                     }
-                    Button { text: appState.localize(appState.language, "النص القانوني الرسمي", "Official legal source"); onClicked: Qt.openUrlExternally("https://www.wipo.int/wipolex/en/legislation/details/22066") }
+                    Rectangle { width: 12; height: 12; radius: 6; color: Theme.emerald; border.width: 1; border.color: Theme.metallicSilverLight }
                 }
             }
         }

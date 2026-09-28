@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(RealEstateBusinessOS VERSION 2.1.0 LANGUAGES CXX)
+project(RealEstateBusinessOS VERSION 2.2.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -61,6 +61,7 @@ set(NEXVARY_QML_FILES
     qml/LegalPage.qml
     qml/SidebarItem.qml
     qml/NavIcon.qml
+    qml/Theme.qml
 )
 
 # Keep every QML type at the URI root. Without explicit aliases, an installed
@@ -71,7 +72,7 @@ foreach(qml_file IN LISTS NEXVARY_QML_FILES)
     set_source_files_properties("${qml_file}" PROPERTIES QT_RESOURCE_ALIAS "${qml_alias}")
 endforeach()
 
-set_source_files_properties(qml/Theme.js PROPERTIES QT_RESOURCE_ALIAS "Theme.js")
+set_source_files_properties(qml/Theme.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/LegalText.js PROPERTIES QT_RESOURCE_ALIAS "LegalText.js")
 set_source_files_properties(
     assets/property-mark.svg
@@ -85,7 +86,6 @@ qt_add_qml_module(nexvary_realestate_native
     QML_FILES
         ${NEXVARY_QML_FILES}
     RESOURCES
-        qml/Theme.js
         qml/LegalText.js
         assets/property-mark.svg
 )

@@ -2,11 +2,14 @@
 
 #include <QDateTime>
 #include <QLocale>
+#include <QSettings>
 #include <QSet>
 
 namespace {
 const QStringList kLanguageCodes{"ar", "en", "tr", "ru", "de", "it", "es", "fr"};
 const QStringList kLanguageNames{"العربية", "English", "Türkçe", "Русский", "Deutsch", "Italiano", "Español", "Français"};
+const QStringList kThemeCodes{"neon", "blue", "green", "amber", "silver", "violet"};
+const QStringList kThemeNames{"Neon Fusion", "Electric Blue", "Neon Green", "Amber", "Metallic Silver", "Violet"};
 using TranslationRow = QStringList;
 
 const QHash<QString, TranslationRow> kTranslations{
@@ -107,6 +110,11 @@ int languageIndex(const QString &language)
 
 AppState::AppState(QObject *parent) : QObject(parent)
 {
+    QSettings settings;
+    const QString savedLanguage = settings.value(QStringLiteral("appearance/language"), QStringLiteral("en")).toString().toLower();
+    const QString savedTheme = settings.value(QStringLiteral("appearance/theme"), QStringLiteral("neon")).toString().toLower();
+    m_language = kLanguageCodes.contains(savedLanguage) ? savedLanguage : QStringLiteral("en");
+    m_theme = kThemeCodes.contains(savedTheme) ? savedTheme : QStringLiteral("neon");
     m_clock.setInterval(1000);
     connect(&m_clock, &QTimer::timeout, this, &AppState::updateClock);
     updateClock();
@@ -122,6 +130,7 @@ void AppState::setLanguage(const QString &language)
     if (m_language == accepted)
         return;
     m_language = accepted;
+    QSettings().setValue(QStringLiteral("appearance/language"), m_language);
     updateClock();
     emit languageChanged();
 }
@@ -129,6 +138,21 @@ void AppState::setLanguage(const QString &language)
 bool AppState::rtl() const { return m_language == QStringLiteral("ar"); }
 QStringList AppState::languageCodes() const { return kLanguageCodes; }
 QStringList AppState::languageNames() const { return kLanguageNames; }
+QString AppState::theme() const { return m_theme; }
+
+void AppState::setTheme(const QString &theme)
+{
+    const QString normalized = theme.toLower();
+    const QString accepted = kThemeCodes.contains(normalized) ? normalized : QStringLiteral("neon");
+    if (m_theme == accepted)
+        return;
+    m_theme = accepted;
+    QSettings().setValue(QStringLiteral("appearance/theme"), m_theme);
+    emit themeChanged();
+}
+
+QStringList AppState::themeCodes() const { return kThemeCodes; }
+QStringList AppState::themeNames() const { return kThemeNames; }
 QString AppState::currentPage() const { return m_currentPage; }
 QString AppState::currentTime() const { return m_currentTime; }
 QString AppState::currentDate() const { return m_currentDate; }

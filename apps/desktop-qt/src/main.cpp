@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
     QGuiApplication::setOrganizationName(QStringLiteral("White Label Business Software"));
     QGuiApplication::setOrganizationDomain(QStringLiteral("localhost"));
     QGuiApplication::setApplicationName(QStringLiteral("Real Estate Business OS"));
-    QGuiApplication::setApplicationVersion(QStringLiteral("2.1.0"));
+    QGuiApplication::setApplicationVersion(QStringLiteral("2.2.0"));
     QGuiApplication::setWindowIcon(QIcon(QStringLiteral(":/qt/qml/Business/RealEstate/assets/property-mark.svg")));
 
     QQuickStyle::setStyle(QStringLiteral("Basic"));
@@ -39,8 +39,11 @@ int main(int argc, char *argv[])
     QCommandLineOption languageOption(
         QStringList{QStringLiteral("language")},
         QStringLiteral("Initial UI language (ar/en/tr/ru/de/it/es/fr)."),
-        QStringLiteral("code"),
-        QStringLiteral("ar"));
+        QStringLiteral("code"));
+    QCommandLineOption themeOption(
+        QStringList{QStringLiteral("theme")},
+        QStringLiteral("Initial UI theme (neon/blue/green/amber/silver/violet)."),
+        QStringLiteral("code"));
     QCommandLineOption apiUrlOption(
         QStringList{QStringLiteral("api-url")},
         QStringLiteral("FastAPI base URL."),
@@ -64,6 +67,7 @@ int main(int argc, char *argv[])
         QStringLiteral("900"));
 
     parser.addOption(languageOption);
+    parser.addOption(themeOption);
     parser.addOption(apiUrlOption);
     parser.addOption(screenshotOption);
     parser.addOption(smokeTestOption);
@@ -72,7 +76,10 @@ int main(int argc, char *argv[])
     parser.process(app);
 
     AppState state;
-    state.setLanguage(parser.value(languageOption));
+    if (parser.isSet(languageOption))
+        state.setLanguage(parser.value(languageOption));
+    if (parser.isSet(themeOption))
+        state.setTheme(parser.value(themeOption));
 
     ApiClient api;
     QProcess backendProcess;

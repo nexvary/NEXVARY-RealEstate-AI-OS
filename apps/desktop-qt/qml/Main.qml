@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import "Theme.js" as Theme
 
 ApplicationWindow {
     id: root
@@ -12,6 +11,21 @@ ApplicationWindow {
     visible: true
     title: (appState.language, appState.t("appTitle"))
     color: Theme.bg
+    palette.window: Theme.bg
+    palette.base: Theme.panelAlt
+    palette.alternateBase: Theme.panel
+    palette.text: Theme.platinum
+    palette.windowText: Theme.platinum
+    palette.button: Theme.panelAlt
+    palette.buttonText: Theme.platinum
+    palette.highlight: Theme.emerald
+    palette.highlightedText: Theme.shellDeep
+
+    Component.onCompleted: Theme.apply(appState.theme)
+    Connections {
+        target: appState
+        function onThemeChanged() { Theme.apply(appState.theme) }
+    }
 
     property real uiScale: Math.max(0.92, Math.min(1.22, width / 1600.0))
     property var navItems: [
@@ -69,7 +83,7 @@ ApplicationWindow {
                         Layout.preferredWidth: 67
                         Layout.preferredHeight: 67
                         radius: 18
-                        color: "#050D16"
+                        color: Theme.shellDeep
                         border.width: 1
                         border.color: Theme.electricBlue
 
@@ -194,7 +208,7 @@ ApplicationWindow {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 76
-                color: "#06101B"
+                color: Theme.shellDeep
                 border.width: 1
                 border.color: Theme.borderSoft
 
@@ -251,6 +265,34 @@ ApplicationWindow {
                         }
                     }
 
+                    Rectangle {
+                        Layout.preferredWidth: 194
+                        Layout.preferredHeight: 50
+                        radius: 11
+                        color: Theme.panel
+                        border.width: 2
+                        border.color: Theme.metallicSilver
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.margins: 7
+                            spacing: 7
+
+                            Rectangle {
+                                width: 18; height: 18; radius: 9
+                                color: Theme.emerald
+                                border.width: 2
+                                border.color: Theme.metallicSilverLight
+                            }
+                            ComboBox {
+                                Layout.fillWidth: true
+                                model: appState.themeNames
+                                currentIndex: Math.max(0, appState.themeCodes.indexOf(appState.theme))
+                                onActivated: appState.theme = appState.themeCodes[currentIndex]
+                            }
+                        }
+                    }
+
                     ComboBox {
                         Layout.preferredWidth: 168
                         model: appState.languageNames
@@ -263,6 +305,26 @@ ApplicationWindow {
             Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+
+                Rectangle {
+                    anchors.fill: parent
+                    anchors.margins: 8
+                    radius: 20
+                    color: "transparent"
+                    border.width: 3
+                    border.color: Theme.metallicSilverDark
+                    opacity: .48
+                }
+
+                Rectangle {
+                    anchors.fill: parent
+                    anchors.margins: 12
+                    radius: 17
+                    color: "transparent"
+                    border.width: 1
+                    border.color: Theme.glow
+                    opacity: .72
+                }
 
                 Loader {
                     anchors.fill: parent
