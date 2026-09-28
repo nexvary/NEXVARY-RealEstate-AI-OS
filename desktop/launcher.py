@@ -12,9 +12,33 @@ import urllib.request
 from pathlib import Path
 
 
-APP_NAME = "NEXVARY RealEstate AI OS"
-APP_DIR_NAME = "NEXVARY-RealEstate-AI-OS"
-SCHEMA_GENERATION = "v1.8"
+APP_NAME = "Real Estate Business OS"
+APP_DIR_NAME = "Data"
+SCHEMA_GENERATION = "v2.1"
+
+
+def archive_orphaned_sqlite_sidecars(data_dir: Path) -> list[Path]:
+    """Archive WAL/SHM files left behind after a manual database rename."""
+    database_file = data_dir / "realestate.db"
+    if database_file.exists():
+        return []
+
+    orphaned = [
+        path
+        for path in (Path(str(database_file) + "-wal"), Path(str(database_file) + "-shm"))
+        if path.exists()
+    ]
+    if not orphaned:
+        return []
+
+    backup_dir = data_dir / "recovery-backups" / time.strftime("%Y%m%d-%H%M%S")
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    archived: list[Path] = []
+    for path in orphaned:
+        target = backup_dir / path.name
+        shutil.move(str(path), str(target))
+        archived.append(target)
+    return archived
 
 
 def resource_path(relative: str) -> Path:
@@ -52,8 +76,22 @@ def archive_incompatible_development_database(data_dir: Path) -> None:
 
 def configure_runtime() -> tuple[Path, Path]:
     local_app_data = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
-    data_dir = local_app_data / "NEXVARY" / APP_DIR_NAME
+    data_dir = local_app_data / "Real Estate Business OS" / APP_DIR_NAME
+    legacy_locations = [
+        local_app_data / "FG Machines" / "Real Estate OS",
+        local_app_data / "NEXVARY" / "NEXVARY-RealEstate-AI-OS",
+    ]
+    if not data_dir.exists():
+        for legacy_data_dir in legacy_locations:
+            if legacy_data_dir.exists():
+                data_dir.parent.mkdir(parents=True, exist_ok=True)
+                try:
+                    shutil.copytree(legacy_data_dir, data_dir)
+                except OSError:
+                    pass
+                break
     data_dir.mkdir(parents=True, exist_ok=True)
+    archive_orphaned_sqlite_sidecars(data_dir)
     archive_incompatible_development_database(data_dir)
 
     secrets_file = data_dir / "runtime-secrets.json"

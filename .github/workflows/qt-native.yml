@@ -1,0 +1,316 @@
+name: Qt Native Migration
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches: ["migration/**"]
+    paths:
+      - "apps/desktop-qt/**"
+      - "desktop/**"
+      - "tools/license_manager.py"
+      - ".github/workflows/qt-native.yml"
+  pull_request:
+    paths:
+      - "apps/desktop-qt/**"
+      - "desktop/**"
+      - "tools/license_manager.py"
+      - ".github/workflows/qt-native.yml"
+      - "services/api/**"
+
+permissions:
+  contents: write
+
+jobs:
+  native-build:
+    name: Qt 6 C++20 (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt 6
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.8.3"
+          cache: true
+
+      - name: Configure
+        shell: bash
+        run: cmake -S apps/desktop-qt -B build-qt -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        shell: bash
+        run: cmake --build build-qt --config Release --parallel 2
+
+      - name: Test
+        shell: bash
+        run: ctest --test-dir build-qt -C Release --output-on-failure
+
+      - name: Setup Python for native sidecar
+        if: runner.os == 'Windows'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install native sidecar packaging dependencies
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r services/api/requirements.txt
+          pip install -r desktop/requirements-desktop.txt
+
+      - name: Build neutral application icon
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: python desktop/build_icon.py
+
+      - name: Build local API sidecar
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: pyinstaller desktop/NEXVARY-RealEstate-API.spec --noconfirm --clean
+
+      - name: Build vendor license manager (key not included)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: pyinstaller --noconfirm --clean --onefile --windowed --name White-Label-License-Manager tools/license_manager.py
+
+      - name: Stage Qt native runtime
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cmake --install build-qt --config Release --prefix native-dist
+          $exe = Resolve-Path "native-dist/bin/real_estate_business_os.exe"
+          windeployqt --release --qmldir apps/desktop-qt/qml $exe
+          Copy-Item "dist/Real-Estate-Business-Service.exe" "native-dist/bin/Real-Estate-Business-Service.exe" -Force
+
+      - name: Smoke-test packaged API sidecar
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path native-dist/smoke | Out-Null
+          $env:NEXVARY_SIDECAR_LOG = (Resolve-Path "native-dist/smoke").Path + "\sidecar-standalone.log"
+          $api = Start-Process -FilePath "native-dist/bin/Real-Estate-Business-Service.exe" -ArgumentList "--port","8765" -PassThru
+          try {
+            $ready = $false
+            for ($i = 0; $i -lt 60; $i++) {
+              try {
+                $response = Invoke-WebRequest -UseBasicParsing "http://127.0.0.1:8765/health" -TimeoutSec 2
+                if ($response.StatusCode -eq 200) { $ready = $true; break }
+              } catch {}
+              Start-Sleep -Milliseconds 500
+            }
+            if (-not $ready) {
+              if (Test-Path $env:NEXVARY_SIDECAR_LOG) { Get-Content $env:NEXVARY_SIDECAR_LOG }
+              throw "Packaged API sidecar did not become healthy"
+            }
+
+            $license = Invoke-RestMethod "http://127.0.0.1:8765/api/v1/license/status" -TimeoutSec 3
+            if ([string]::IsNullOrWhiteSpace($license.machine_code)) {
+              throw "Packaged API did not return a machine license code"
+            }
+          }
+          finally {
+            if ($api -and -not $api.HasExited) { Stop-Process -Id $api.Id -Force }
+          }
+
+      - name: Smoke-test Qt client automatic sidecar lifecycle
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $smokeDir = (Resolve-Path "native-dist/smoke").Path
+          $env:NEXVARY_SIDECAR_LOG = $smokeDir + "\sidecar-auto.log"
+          $env:NEXVARY_QT_LOG = $smokeDir + "\qt-startup.log"
+          $env:QT_QPA_PLATFORM = "minimal"
+          $env:QT_QUICK_BACKEND = "software"
+
+          & "native-dist/bin/real_estate_business_os.exe" --width 1600 --height 900 --smoke-test
+          if ($LASTEXITCODE -ne 0) {
+            if (Test-Path $env:NEXVARY_SIDECAR_LOG) {
+              Write-Host "===== Auto sidecar log ====="
+              Get-Content $env:NEXVARY_SIDECAR_LOG
+            }
+            if (Test-Path $env:NEXVARY_QT_LOG) {
+              Write-Host "===== Packaged Qt startup log ====="
+              Get-Content $env:NEXVARY_QT_LOG
+            }
+            throw "Automatic native sidecar lifecycle smoke test failed with exit code $LASTEXITCODE"
+          }
+
+      - name: Install Inno Setup
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
+      - name: Compile final native installer
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path native-installer | Out-Null
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          & $iscc "desktop\native-installer.iss"
+
+      - name: Smoke-test installed native release
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $installer = Resolve-Path "native-installer\Real-Estate-Business-OS-v2.2.1-Windows-Setup.exe"
+          $installDir = Join-Path $PWD "native-installed"
+          New-Item -ItemType Directory -Force -Path $installDir | Out-Null
+
+          $installArgs = @(
+            "/VERYSILENT"
+            "/SUPPRESSMSGBOXES"
+            "/NORESTART"
+            "/DIR=$installDir"
+          )
+          $installProcess = Start-Process -FilePath $installer.Path -ArgumentList $installArgs -Wait -PassThru
+          if ($installProcess.ExitCode -ne 0) {
+            throw "Native release installer failed with exit code $($installProcess.ExitCode)"
+          }
+
+          $client = Join-Path $installDir "real_estate_business_os.exe"
+          $sidecar = Join-Path $installDir "Real-Estate-Business-Service.exe"
+          if (-not (Test-Path $client)) { throw "Installed Qt client is missing" }
+          if (-not (Test-Path $sidecar)) { throw "Installed API sidecar is missing" }
+
+          $installSmoke = Join-Path $PWD "native-installer\install-smoke"
+          New-Item -ItemType Directory -Force -Path $installSmoke | Out-Null
+          $env:NEXVARY_SIDECAR_LOG = Join-Path $installSmoke "sidecar-installed.log"
+          $env:NEXVARY_QT_LOG = Join-Path $installSmoke "qt-installed.log"
+          $env:QT_QPA_PLATFORM = "minimal"
+          $env:QT_QUICK_BACKEND = "software"
+
+          & $client --language en --width 1600 --height 900 --smoke-test
+          if ($LASTEXITCODE -ne 0) {
+            if (Test-Path $env:NEXVARY_SIDECAR_LOG) { Get-Content $env:NEXVARY_SIDECAR_LOG }
+            if (Test-Path $env:NEXVARY_QT_LOG) { Get-Content $env:NEXVARY_QT_LOG }
+            throw "Installed native release smoke test failed with exit code $LASTEXITCODE"
+          }
+
+      - name: Generate native installer SHA256
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $file = Get-ChildItem "native-installer\Real-Estate-Business-OS-v2.2.1-Windows-Setup.exe"
+          $hash = (Get-FileHash $file.FullName -Algorithm SHA256).Hash.ToLower()
+          "$hash  $($file.Name)" | Out-File -Encoding ascii "native-installer\SHA256.txt"
+          Get-Content "native-installer\SHA256.txt"
+
+      - name: Upload final Windows installer
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Real-Estate-Business-OS-v2.2.1-Windows
+          path: |
+            native-installer/Real-Estate-Business-OS-v2.2.1-Windows-Setup.exe
+            native-installer/SHA256.txt
+            dist/White-Label-License-Manager.exe
+            native-dist/smoke/*.log
+            native-installer/install-smoke/*.log
+          if-no-files-found: error
+
+      - name: Publish direct Windows release download
+        if: runner.os == 'Windows' && (github.event_name == 'push' || github.head_ref == 'migration/qt6-cpp-qml-v2')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "v2.2.1"
+          gh release view $tag --repo "${{ github.repository }}" *> $null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag `
+              --repo "${{ github.repository }}" `
+              --target "${{ github.sha }}" `
+              --title "Real Estate Business OS v2.2.1" `
+              --notes "International neutral white-label Windows release with signed licensing, English first-run default, eight languages, six persistent neon/amber/silver themes, a jurisdiction-neutral user agreement and the complete business workspace."
+          }
+          gh release upload $tag `
+            "native-installer\Real-Estate-Business-OS-v2.2.1-Windows-Setup.exe" `
+            "native-installer\SHA256.txt" `
+            "dist\White-Label-License-Manager.exe" `
+            --repo "${{ github.repository }}" `
+            --clobber
+
+      - name: QML Arabic RTL screenshot gate
+        if: runner.os == 'Linux'
+        shell: bash
+        env:
+          QT_QPA_PLATFORM: offscreen
+          QT_QUICK_BACKEND: software
+        run: |
+          mkdir -p build-qt/ui-gate
+          ./build-qt/real_estate_business_os \
+            --language ar \
+            --width 1600 \
+            --height 900 \
+            --screenshot build-qt/ui-gate/native-ar-1600x900.png 2>&1 | tee build-qt/ui-gate/native-ar.log
+          test -s build-qt/ui-gate/native-ar-1600x900.png
+          ! grep -E "QML .*Cannot open|QQmlApplicationEngine failed|module .* is not installed" build-qt/ui-gate/native-ar.log
+
+      - name: QML English screenshot gate
+        if: runner.os == 'Linux'
+        shell: bash
+        env:
+          QT_QPA_PLATFORM: offscreen
+          QT_QUICK_BACKEND: software
+        run: |
+          ./build-qt/real_estate_business_os \
+            --language en \
+            --width 1600 \
+            --height 900 \
+            --screenshot build-qt/ui-gate/native-en-1600x900.png 2>&1 | tee build-qt/ui-gate/native-en.log
+          test -s build-qt/ui-gate/native-en-1600x900.png
+          ! grep -E "QML .*Cannot open|QQmlApplicationEngine failed|module .* is not installed" build-qt/ui-gate/native-en.log
+
+      - name: QML Turkish Russian German Italian Spanish French gates
+        if: runner.os == 'Linux'
+        shell: bash
+        env:
+          QT_QPA_PLATFORM: offscreen
+          QT_QUICK_BACKEND: software
+        run: |
+          for language in tr ru de it es fr; do
+            ./build-qt/real_estate_business_os \
+              --language "$language" \
+              --width 1600 \
+              --height 900 \
+              --screenshot "build-qt/ui-gate/native-${language}-1600x900.png" 2>&1 | tee "build-qt/ui-gate/native-${language}.log"
+            test -s "build-qt/ui-gate/native-${language}-1600x900.png"
+            ! grep -E "QML .*Cannot open|QQmlApplicationEngine failed|module .* is not installed" "build-qt/ui-gate/native-${language}.log"
+          done
+
+      - name: QML theme selector gates
+        if: runner.os == 'Linux'
+        shell: bash
+        env:
+          QT_QPA_PLATFORM: offscreen
+          QT_QUICK_BACKEND: software
+        run: |
+          for theme in neon blue green amber silver violet; do
+            ./build-qt/real_estate_business_os \
+              --language en \
+              --theme "$theme" \
+              --width 1600 \
+              --height 900 \
+              --screenshot "build-qt/ui-gate/native-theme-${theme}-1600x900.png" 2>&1 | tee "build-qt/ui-gate/native-theme-${theme}.log"
+            test -s "build-qt/ui-gate/native-theme-${theme}-1600x900.png"
+            ! grep -E "QML .*Cannot open|QQmlApplicationEngine failed|module .* is not installed" "build-qt/ui-gate/native-theme-${theme}.log"
+          done
+
+      - name: Upload native UI gate
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: qt-native-ui-gate
+          path: |
+            build-qt/ui-gate/*.png
+            build-qt/ui-gate/*.log
+          if-no-files-found: error

@@ -5,11 +5,13 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
 
 from .api import router
 from .admin_api import router as admin_router
 from .branding_api import router as branding_router
 from .commercial_api import platform_router as commercial_platform_router, tenant_router as commercial_tenant_router
+from .crm_api import router as enterprise_crm_router
 from .ai_api import router as ai_router
 from .automation_api import router as automation_router
 from .config import get_settings
@@ -23,6 +25,8 @@ from .omnichannel_api import router as omnichannel_router
 from .property_sales_api import router as property_sales_router
 from .platform_api import router as platform_router
 from .workspace_api import router as workspace_router
+from .license_api import router as license_router
+from .license_core import current_license_status
 
 settings = get_settings()
 validate_production_secrets()
@@ -36,10 +40,23 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(
     title=settings.app_name,
-    version="1.8.0",
-    description="Transactional real-estate core with grounded AI/RAG orchestration boundaries.",
+    version="2.2.1",
+    description="White-label real-estate business workspace.",
     lifespan=lifespan,
 )
+
+
+@app.middleware("http")
+async def enforce_desktop_license(request, call_next):
+    path = request.url.path
+    allowed = path == "/health" or path.startswith("/api/v1/license")
+    if settings.app_env == "desktop" and path.startswith("/api/v1") and not allowed:
+        if not current_license_status().get("valid"):
+            return JSONResponse(
+                status_code=402,
+                content={"detail": "A valid license is required", "code": "license_required"},
+            )
+    return await call_next(request)
 
 app.add_middleware(
     CORSMiddleware,
@@ -51,13 +68,15 @@ app.add_middleware(
 
 @app.get("/health")
 def health() -> dict[str, str]:
-    return {"status": "ok", "service": "nexvary-realestate-api", "version": "1.8.0"}
+    return {"status": "ok", "service": "real-estate-business-service", "version": "2.2.1"}
 
 
 app.include_router(setup_router)
+app.include_router(license_router)
 app.include_router(router)
 app.include_router(workspace_router)
 app.include_router(finance_router)
+app.include_router(enterprise_crm_router)
 app.include_router(growth_router)
 app.include_router(omnichannel_router)
 app.include_router(property_sales_router)

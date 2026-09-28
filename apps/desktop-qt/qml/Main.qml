@@ -1,0 +1,606 @@
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+
+ApplicationWindow {
+    id: root
+    width: 1600
+    height: 900
+    minimumWidth: 1180
+    minimumHeight: 720
+    visible: true
+    title: (appState.language, appState.t("appTitle"))
+    color: Theme.bg
+    palette.window: Theme.bg
+    palette.base: Theme.panelAlt
+    palette.alternateBase: Theme.panel
+    palette.text: Theme.platinum
+    palette.windowText: Theme.platinum
+    palette.button: Theme.panelAlt
+    palette.buttonText: Theme.platinum
+    palette.highlight: Theme.emerald
+    palette.highlightedText: Theme.shellDeep
+    palette.placeholderText: Theme.emerald
+    palette.brightText: Theme.emerald
+    palette.link: Theme.emerald
+    palette.linkVisited: Theme.violet
+
+    Component.onCompleted: Theme.apply(appState.theme)
+    Connections {
+        target: appState
+        function onThemeChanged() { Theme.apply(appState.theme) }
+    }
+
+    property real uiScale: Math.max(0.92, Math.min(1.22, width / 1600.0))
+    property var navItems: [
+        {page:"dashboard", key:"dashboard", icon:"home"},
+        {page:"leads", key:"leads", icon:"leads"},
+        {page:"inventory", key:"inventory", icon:"inventory"},
+        {page:"appointments", key:"appointments", icon:"calendar"},
+        {page:"finance", key:"finance", icon:"finance"},
+        {page:"enterprise", key:"enterpriseCrm", icon:"enterprise"},
+        {page:"timeline", key:"customerTimeline", icon:"timeline"},
+        {page:"inbox", key:"inbox", icon:"inbox"},
+        {page:"knowledge", key:"knowledge", icon:"book"},
+        {page:"tasks", key:"tasks", icon:"tasks"},
+        {page:"team", key:"team", icon:"team"},
+        {page:"settings", key:"settings", icon:"settings"},
+        {page:"ai", key:"ai", icon:"ai"},
+        {page:"seo", key:"seo", icon:"search"},
+        {page:"growth", key:"growth", icon:"growth"},
+        {page:"automation", key:"automation", icon:"automation"},
+        {page:"about", key:"about", icon:"about"},
+        {page:"legal", key:"legal", icon:"about"},
+        {page:"company", key:"company", icon:"company"}
+    ]
+
+    RowLayout {
+        id: shellLayout
+        anchors.fill: parent
+        spacing: 0
+        layoutDirection: appState.rtl ? Qt.RightToLeft : Qt.LeftToRight
+
+        Rectangle {
+            id: sidebar
+            objectName: "sidebar"
+            Layout.preferredWidth: Math.round(292 * root.uiScale)
+            Layout.minimumWidth: 265
+            Layout.maximumWidth: 330
+            Layout.fillHeight: true
+            color: Theme.shell
+            border.width: 1
+            border.color: Theme.borderSoft
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 13
+                spacing: 8
+                layoutDirection: appState.rtl ? Qt.RightToLeft : Qt.LeftToRight
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 84
+                    spacing: 11
+                    layoutDirection: appState.rtl ? Qt.RightToLeft : Qt.LeftToRight
+
+                    Rectangle {
+                        Layout.preferredWidth: 67
+                        Layout.preferredHeight: 67
+                        radius: 18
+                        color: Theme.shellDeep
+                        border.width: 1
+                        border.color: Theme.electricBlue
+
+                        Image {
+                            anchors.fill: parent
+                            anchors.margins: 5
+                            source: "qrc:/qt/qml/Business/RealEstate/assets/property-mark.svg"
+                            fillMode: Image.PreserveAspectFit
+                        }
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 2
+                        Text {
+                            Layout.fillWidth: true
+                            text: apiClient.tenantSettings.brand_name || apiClient.tenantSettings.name || "YOUR COMPANY"
+                            color: Theme.platinum
+                            font.pixelSize: 19
+                            font.bold: true
+                            font.letterSpacing: 2
+                            horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
+                        }
+                        Text {
+                            Layout.fillWidth: true
+                            text: appState.localize(appState.language, "نظام إدارة الأعمال العقارية", "REAL ESTATE BUSINESS OS")
+                            color: Theme.electricCyan
+                            font.pixelSize: 11
+                            font.bold: true
+                            font.letterSpacing: 1.1
+                            horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
+                        }
+                        Text {
+                            Layout.fillWidth: true
+                            text: appState.localize(appState.language, "إدارة · مبيعات · نمو", "OPERATIONS · SALES · GROWTH")
+                            color: Theme.gold
+                            font.pixelSize: 11
+                            horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
+                        }
+                    }
+                }
+
+                Rectangle { Layout.fillWidth: true; height: 1; color: Theme.borderSoft }
+
+                ScrollView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    clip: true
+                    ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                    ScrollBar.vertical.policy: ScrollBar.AsNeeded
+
+                    ColumnLayout {
+                        width: parent.width
+                        spacing: 5
+
+                        Repeater {
+                            model: root.navItems
+                            delegate: SidebarItem {
+                                required property var modelData
+                                required property int index
+                                label: (appState.language, appState.t(modelData.key))
+                                iconName: modelData.icon
+                                pageId: modelData.page
+                                itemIndex: index
+                            }
+                        }
+                    }
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 62
+                    radius: 11
+                    color: Theme.shellDeep
+                    border.width: 1
+                    border.color: Theme.borderSoft
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.margins: 10
+                        layoutDirection: appState.rtl ? Qt.RightToLeft : Qt.LeftToRight
+
+                        Rectangle {
+                            width: 8; height: 8; radius: 4
+                            color: apiClient.healthStatus === "ok" ? Theme.emerald : Theme.gold
+                        }
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 1
+                            Text {
+                                text: apiClient.loggedIn ? apiClient.userName : "API + RBAC"
+                                color: Theme.platinum
+                                font.pixelSize: 11
+                            }
+                            Text {
+                                text: apiClient.loggedIn ? apiClient.userRole : apiClient.healthStatus
+                                color: Theme.muted
+                                font.pixelSize: 11
+                            }
+                        }
+
+                        Button {
+                            visible: apiClient.loggedIn
+                            text: "×"
+                            flat: true
+                            onClicked: {
+                                apiClient.logout()
+                                appState.resetNavigation()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            spacing: 0
+
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 76
+                color: Theme.shellDeep
+                border.width: 1
+                border.color: Theme.borderSoft
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: 18
+                    anchors.rightMargin: 18
+                    spacing: 10
+                    layoutDirection: appState.rtl ? Qt.RightToLeft : Qt.LeftToRight
+
+                    Button {
+                        visible: apiClient.loggedIn && appState.currentPage !== "dashboard"
+                        text: (appState.localize(appState.language, "→ ", "← ")) + (appState.language, appState.t("back"))
+                        onClicked: appState.goBack()
+                    }
+
+                    Item { Layout.fillWidth: true }
+
+                    Rectangle {
+                        Layout.preferredWidth: 170
+                        Layout.preferredHeight: 50
+                        radius: 11
+                        color: Theme.panel
+                        border.width: 1
+                        border.color: Theme.borderSoft
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.margins: 8
+                            spacing: 8
+                            layoutDirection: appState.rtl ? Qt.RightToLeft : Qt.LeftToRight
+
+                            Text {
+                                text: "◷"
+                                color: Theme.electricCyan
+                                font.pixelSize: 19
+                            }
+                            ColumnLayout {
+                                spacing: 0
+                                Text {
+                                    text: appState.currentTime
+                                    color: Theme.platinum
+                                    font.family: "Consolas"
+                                    font.pixelSize: 15
+                                    font.bold: true
+                                    font.letterSpacing: 1
+                                }
+                                Text {
+                                    text: appState.currentDate
+                                    color: Theme.muted
+                                    font.pixelSize: 11
+                                }
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.preferredWidth: 194
+                        Layout.preferredHeight: 50
+                        radius: 11
+                        color: Theme.panel
+                        border.width: 2
+                        border.color: Theme.metallicSilver
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.margins: 7
+                            spacing: 7
+
+                            Rectangle {
+                                width: 18; height: 18; radius: 9
+                                color: Theme.emerald
+                                border.width: 2
+                                border.color: Theme.metallicSilverLight
+                            }
+                            ComboBox {
+                                Layout.fillWidth: true
+                                model: appState.themeNames
+                                currentIndex: Math.max(0, appState.themeCodes.indexOf(appState.theme))
+                                onActivated: appState.theme = appState.themeCodes[currentIndex]
+                            }
+                        }
+                    }
+
+                    ComboBox {
+                        Layout.preferredWidth: 168
+                        model: appState.languageNames
+                        currentIndex: Math.max(0, appState.languageCodes.indexOf(appState.language))
+                        onActivated: appState.language = appState.languageCodes[currentIndex]
+                    }
+                }
+            }
+
+            Item {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+
+                Rectangle {
+                    anchors.fill: parent
+                    anchors.margins: 8
+                    radius: 20
+                    color: "transparent"
+                    border.width: 3
+                    border.color: Theme.metallicSilverDark
+                    opacity: .48
+                }
+
+                Rectangle {
+                    anchors.fill: parent
+                    anchors.margins: 12
+                    radius: 17
+                    color: "transparent"
+                    border.width: 1
+                    border.color: Theme.glow
+                    opacity: .72
+                }
+
+                Loader {
+                    anchors.fill: parent
+                    anchors.margins: 22
+                    sourceComponent: (!apiClient.licenseKnown || !apiClient.licenseValid || !appState.licenseGateAccepted)
+                        ? licenseComponent
+                    : !apiClient.loggedIn
+                        ? (!apiClient.setupKnown
+                            ? startupComponent
+                            : apiClient.needsSetup
+                                ? firstRunSetupComponent
+                                : loginComponent)
+                        : appState.currentPage === "dashboard"
+                            ? dashboardComponent
+                            : appState.currentPage === "leads"
+                                ? leadsComponent
+                                : appState.currentPage === "inventory"
+                                    ? inventoryComponent
+                                    : appState.currentPage === "appointments"
+                                        ? appointmentsComponent
+                                        : appState.currentPage === "finance"
+                                        ? financeComponent
+                                        : appState.currentPage === "enterprise"
+                                            ? enterpriseComponent
+                                            : appState.currentPage === "timeline"
+                                                ? timelineComponent
+                                                : appState.currentPage === "inbox"
+                                                    ? omnichannelComponent
+                                                    : appState.currentPage === "knowledge"
+                                                        ? knowledgeComponent
+                                                        : appState.currentPage === "tasks"
+                                                            ? tasksComponent
+                                                            : appState.currentPage === "team"
+                                                                ? teamComponent
+                                                                : appState.currentPage === "growth"
+                                                                    ? growthComponent
+                                                                    : appState.currentPage === "seo"
+                                                                        ? seoComponent
+                                                                        : appState.currentPage === "automation"
+                                                                            ? automationComponent
+                                                                            : appState.currentPage === "ai"
+                                                                                ? aiComponent
+                                                                                : appState.currentPage === "about"
+                                                                                    ? aboutComponent
+                                                                                    : appState.currentPage === "legal"
+                                                                                        ? legalComponent
+                                                                                    : appState.currentPage === "settings"
+                                                                                        ? settingsComponent
+                                                                                        : appState.currentPage === "company"
+                                                                                            ? companyComponent
+                                                                                            : migrationComponent
+                }
+            }
+        }
+    }
+
+    Component {
+        id: licenseComponent
+        LicensePage {}
+    }
+
+    Component {
+        id: startupComponent
+        Item {
+            ColumnLayout {
+                anchors.centerIn: parent
+                width: Math.min(520, parent.width - 40)
+                spacing: 14
+
+                Rectangle {
+                    Layout.alignment: Qt.AlignHCenter
+                    width: 68
+                    height: 68
+                    radius: 18
+                    color: Theme.panel
+                    border.width: 1
+                    border.color: apiClient.healthStatus === "ok" ? Theme.emerald : Theme.electricBlue
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: apiClient.healthStatus === "ok" ? "✓" : "…"
+                        color: apiClient.healthStatus === "ok" ? Theme.emerald : Theme.electricCyan
+                        font.pixelSize: 24
+                        font.bold: true
+                    }
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    text: appState.localize(appState.language, "جاري تجهيز مساحة العمل المحلية", "Preparing the local workspace")
+                    color: Theme.platinum
+                    font.family: appState.localize(appState.language, "Noto Kufi Arabic", "Segoe UI")
+                    font.pixelSize: 22
+                    font.bold: true
+                    horizontalAlignment: Text.AlignHCenter
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    text: appState.localize(appState.language, "يتم تشغيل الخدمة المحلية والتحقق من حالة الإعداد. لا تحتاج إلى أي أوامر يدوية.", "Starting the local service and checking setup state. No manual commands are required.")
+                    color: Theme.muted
+                    font.pixelSize: 12
+                    wrapMode: Text.WordWrap
+                    horizontalAlignment: Text.AlignHCenter
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    text: "API · " + apiClient.healthStatus
+                    color: apiClient.healthStatus === "ok" ? Theme.emerald : Theme.gold
+                    font.pixelSize: 11
+                    horizontalAlignment: Text.AlignHCenter
+                }
+            }
+        }
+    }
+
+    Component {
+        id: firstRunSetupComponent
+        FirstRunSetupPage {}
+    }
+
+    Component {
+        id: loginComponent
+        LoginPage {}
+    }
+
+    Component {
+        id: dashboardComponent
+        DashboardPage {}
+    }
+
+    Component {
+        id: leadsComponent
+        LeadsPage {}
+    }
+
+    Component {
+        id: inventoryComponent
+        InventoryPage {}
+    }
+
+    Component {
+        id: appointmentsComponent
+        AppointmentsPage {}
+    }
+
+    Component {
+        id: financeComponent
+        FinancePage {}
+    }
+
+    Component {
+        id: enterpriseComponent
+        EnterpriseCrmPage {}
+    }
+
+    Component {
+        id: timelineComponent
+        CustomerTimelinePage {}
+    }
+
+    Component {
+        id: omnichannelComponent
+        OmnichannelPage {}
+    }
+
+    Component {
+        id: knowledgeComponent
+        KnowledgePage {}
+    }
+
+    Component {
+        id: tasksComponent
+        TasksPage {}
+    }
+
+    Component {
+        id: teamComponent
+        TeamPage {}
+    }
+
+    Component {
+        id: growthComponent
+        GrowthPage {}
+    }
+
+    Component {
+        id: seoComponent
+        SeoPage {}
+    }
+
+    Component {
+        id: automationComponent
+        AutomationStudioPage {}
+    }
+
+    Component {
+        id: aiComponent
+        AiSalesPage {}
+    }
+
+    Component {
+        id: aboutComponent
+        AboutSystemPage {}
+    }
+
+    Component {
+        id: legalComponent
+        LegalPage {}
+    }
+
+    Component {
+        id: settingsComponent
+        SettingsPage {}
+    }
+
+    Component {
+        id: companyComponent
+        CompanyPage {}
+    }
+
+    Component {
+        id: migrationComponent
+        Item {
+            ColumnLayout {
+                anchors.centerIn: parent
+                width: Math.min(700, parent.width - 40)
+                spacing: 14
+
+                Rectangle {
+                    Layout.alignment: Qt.AlignHCenter
+                    width: 72; height: 72; radius: 18
+                    color: Theme.panelAlt
+                    border.width: 1
+                    border.color: Theme.violet
+                    Text {
+                        anchors.centerIn: parent
+                        text: "Qt"
+                        color: Theme.violet
+                        font.pixelSize: 20
+                        font.bold: true
+                    }
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    text: (appState.language, appState.t("nativeMigration")) + " · " + (appState.language, appState.t(appState.currentPage))
+                    color: Theme.platinum
+                    font.family: appState.localize(appState.language, "Noto Kufi Arabic", "Segoe UI")
+                    font.pixelSize: 26
+                    font.bold: true
+                    horizontalAlignment: Text.AlignHCenter
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    text: (appState.language, appState.t("migrationNotice"))
+                    color: Theme.muted
+                    font.pixelSize: 13
+                    wrapMode: Text.WordWrap
+                    horizontalAlignment: Text.AlignHCenter
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    text: "C++20  •  Qt 6  •  QML  •  CMake  •  Qt Network"
+                    color: Theme.electricCyan
+                    font.pixelSize: 12
+                    horizontalAlignment: Text.AlignHCenter
+                }
+            }
+        }
+    }
+}

@@ -16,8 +16,13 @@ from .models import AuditEvent, Tenant, User, UserRole
 from .quota import PLAN_DEFAULTS
 from .saas_models import PlatformAdmin, TenantLifecycle, TenantPlan, TenantSaaSProfile
 from .security import create_access_token, hash_password
+from .license_core import current_license_status
 
 router = APIRouter(prefix="/api/v1")
+
+WHITE_LABEL_SLUG = "workspace"
+LEGACY_DEVELOPMENT_SLUG = "nexvary-dev"
+LEGACY_FG_SLUG = "fg-machines"
 
 
 class SetupStatus(BaseModel):
@@ -54,7 +59,9 @@ def setup_status(db: Session = Depends(get_db)) -> SetupStatus:
     count = db.scalar(select(func.count()).select_from(Tenant)) or 0
     settings = get_settings()
     development_workspace = db.scalar(
-        select(func.count()).select_from(Tenant).where(Tenant.slug == "nexvary-dev")
+        select(func.count()).select_from(Tenant).where(
+            Tenant.slug.in_((WHITE_LABEL_SLUG, LEGACY_DEVELOPMENT_SLUG, LEGACY_FG_SLUG))
+        )
     ) or 0
     return SetupStatus(
         needs_setup=count == 0,
@@ -71,10 +78,12 @@ def bootstrap_first_owner(payload: BootstrapRequest, db: Session = Depends(get_d
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Initial setup is already complete")
 
     settings = get_settings()
+    licensed_company = str(current_license_status().get("company") or "").strip()
+    company_name = licensed_company or payload.company_name
     tenant = Tenant(
-        name=payload.company_name,
+        name=company_name,
         slug=payload.company_slug.lower(),
-        brand_name=payload.brand_name or payload.company_name,
+        brand_name=payload.brand_name or company_name,
         primary_color=payload.primary_color,
     )
     db.add(tenant)
@@ -142,12 +151,51 @@ def _write_development_marker() -> None:
             {
                 "enabled": True,
                 "schema_generation": os.getenv("NEXVARY_SCHEMA_GENERATION", "v1.5"),
-                "workspace_slug": "nexvary-dev",
+                "workspace_slug": WHITE_LABEL_SLUG,
             },
             indent=2,
         ),
         encoding="utf-8",
     )
+
+
+def _apply_neutral_identity(db: Session, tenant: Tenant, owner: User) -> None:
+    """Upgrade legacy desktop workspaces without exposing an upstream brand."""
+    legacy_identity = (
+        tenant.slug in {LEGACY_DEVELOPMENT_SLUG, LEGACY_FG_SLUG}
+        or "nexvary" in (tenant.name or "").lower()
+        or "fg machines" in (tenant.name or "").lower()
+        or "nexvary" in (tenant.brand_name or "").lower()
+        or "fg machines" in (tenant.brand_name or "").lower()
+    )
+    licensed_company = str(current_license_status().get("company") or "").strip()
+    neutral_name = licensed_company or "Your Company"
+    tenant.name = neutral_name
+    tenant.brand_name = neutral_name
+    tenant.slug = WHITE_LABEL_SLUG
+    if owner.display_name in {"Development Owner", "NEXVARY Development Owner", "FG Machines Owner"}:
+        owner.display_name = "Workspace Owner"
+
+    profile = db.scalar(
+        select(TenantSaaSProfile).where(TenantSaaSProfile.tenant_id == tenant.id)
+    )
+    if profile is not None:
+        profile.powered_by_nexvary = 0
+        for field in (
+            "contact_email",
+            "website_url",
+            "facebook_url",
+            "linkedin_url",
+            "youtube_url",
+            "x_url",
+            "tiktok_url",
+        ):
+            value = getattr(profile, field, None)
+            if legacy_identity or (value and "nexvary" in value.lower()):
+                setattr(profile, field, None)
+    db.commit()
+    db.refresh(tenant)
+    db.refresh(owner)
 
 
 @router.post("/auth/bootstrap-development", response_model=BootstrapResponse, status_code=201)
@@ -156,7 +204,9 @@ def bootstrap_development_workspace(db: Session = Depends(get_db)) -> BootstrapR
     if settings.app_env not in {"desktop", "development", "test"}:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Development setup is not available")
 
-    existing = db.scalar(select(Tenant).where(Tenant.slug == "nexvary-dev"))
+    existing = db.scalar(
+        select(Tenant).where(Tenant.slug.in_((WHITE_LABEL_SLUG, LEGACY_DEVELOPMENT_SLUG, LEGACY_FG_SLUG)))
+    )
     if existing is not None:
         owner = db.scalar(
             select(User).where(
@@ -167,6 +217,7 @@ def bootstrap_development_workspace(db: Session = Depends(get_db)) -> BootstrapR
         )
         if owner is None:
             raise HTTPException(status_code=409, detail="Development workspace owner is missing")
+        _apply_neutral_identity(db, existing, owner)
         token = create_access_token(user_id=owner.id, tenant_id=existing.id, role=owner.role.value)
         _write_development_marker()
         return BootstrapResponse(
@@ -180,10 +231,11 @@ def bootstrap_development_workspace(db: Session = Depends(get_db)) -> BootstrapR
             role=owner.role.value,
         )
 
+    licensed_company = str(current_license_status().get("company") or "").strip()
     tenant = Tenant(
-        name="NEXVARY Development Workspace",
-        slug="nexvary-dev",
-        brand_name="NEXVARY Development",
+        name=licensed_company or "Demo Workspace",
+        slug=WHITE_LABEL_SLUG,
+        brand_name=licensed_company or "Demo Workspace",
         primary_color="#128FE7",
     )
     db.add(tenant)
@@ -192,8 +244,8 @@ def bootstrap_development_workspace(db: Session = Depends(get_db)) -> BootstrapR
         generated_password = secrets.token_urlsafe(48)
         owner = User(
             tenant_id=tenant.id,
-            email="developer@nexvary.local",
-            display_name="Development Owner",
+            email="owner@workspace.local",
+            display_name="Workspace Owner",
             role=UserRole.owner,
             password_hash=hash_password(generated_password),
         )
@@ -211,11 +263,7 @@ def bootstrap_development_workspace(db: Session = Depends(get_db)) -> BootstrapR
                 tenant_id=tenant.id,
                 plan=TenantPlan.professional,
                 lifecycle=TenantLifecycle.active,
-                contact_email="info@nexvary.com",
-                website_url="https://nexvary.com/",
-                facebook_url="https://www.facebook.com/share/14p9krEn5ij/",
-                youtube_url="https://www.youtube.com/@NexvaryInc",
-                x_url="https://x.com/Nexvary",
+                powered_by_nexvary=0,
                 **PLAN_DEFAULTS[TenantPlan.professional],
             )
         )
@@ -251,9 +299,11 @@ def bootstrap_development_workspace(db: Session = Depends(get_db)) -> BootstrapR
 @router.post("/auth/development-session", response_model=BootstrapResponse)
 def development_session(db: Session = Depends(get_db)) -> BootstrapResponse:
     settings = get_settings()
-    if settings.app_env not in {"desktop", "test"}:
+    if settings.app_env not in {"desktop", "development", "test"}:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Desktop development session is not available")
-    tenant = db.scalar(select(Tenant).where(Tenant.slug == "nexvary-dev"))
+    tenant = db.scalar(
+        select(Tenant).where(Tenant.slug.in_((WHITE_LABEL_SLUG, LEGACY_DEVELOPMENT_SLUG, LEGACY_FG_SLUG)))
+    )
     if tenant is None:
         raise HTTPException(status_code=404, detail="Development workspace not found")
     owner = db.scalar(
@@ -265,6 +315,7 @@ def development_session(db: Session = Depends(get_db)) -> BootstrapResponse:
     )
     if owner is None:
         raise HTTPException(status_code=404, detail="Development owner not found")
+    _apply_neutral_identity(db, tenant, owner)
     _write_development_marker()
     token = create_access_token(user_id=owner.id, tenant_id=tenant.id, role=owner.role.value)
     return BootstrapResponse(

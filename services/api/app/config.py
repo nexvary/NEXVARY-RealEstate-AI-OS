@@ -4,11 +4,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    app_name: str = "NEXVARY RealEstate AI OS"
+    app_name: str = "Real Estate Business OS"
     app_env: str = "development"
     database_url: str = "sqlite:///./nexvary_realestate.db"
     redis_url: str = "redis://localhost:6379/0"
-    default_locale: str = "ar"
+    default_locale: str = "en"
 
     jwt_secret: str = "dev-jwt-secret-change-me-please-use-production-secret"
     jwt_algorithm: str = "HS256"

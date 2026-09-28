@@ -4,14 +4,16 @@ from datetime import date, datetime, timezone
 import json
 from decimal import Decimal
 from typing import Any
+from urllib.parse import urlsplit
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .automation_models import AutomationApproval, AutomationEdge, AutomationNode, AutomationNodeRun, AutomationRun, AutomationWorkflow
 from .commercial_models import BankTransferSubmission, BillingInvoice, SaaSSubscription, SEOEntityPage, TenantTemplate, WhatsAppChannel
+from .crm_models import Expense, Invoice, Payment, Proposal, Reminder, SupportTicket
 from .db import get_db
 from .finance_models import BrokerCommission, Contract, Installment
 from .growth_models import AudienceSegment, CustomerFeedback, CustomerJourneyEvent, MarketingCampaign, PropertyMediaAsset, SalesPlaybook
@@ -71,6 +73,17 @@ class TenantSettingsUpdate(BaseModel):
     youtube_url: str | None = Field(default=None, max_length=500)
     x_url: str | None = Field(default=None, max_length=500)
     tiktok_url: str | None = Field(default=None, max_length=500)
+
+    @field_validator("website_url", "facebook_url", "linkedin_url", "youtube_url", "x_url", "tiktok_url")
+    @classmethod
+    def validate_public_url(cls, value: str | None) -> str | None:
+        if value is None or not value.strip():
+            return None
+        normalized = value.strip()
+        parsed = urlsplit(normalized)
+        if parsed.scheme != "https" or not parsed.hostname:
+            raise ValueError("Public links must begin with https://")
+        return normalized
 
 
 class AuditRead(BaseModel):
@@ -247,6 +260,12 @@ def export_backup(
         "contracts": (Contract, set()),
         "installments": (Installment, set()),
         "broker_commissions": (BrokerCommission, set()),
+        "crm_proposals": (Proposal, set()),
+        "crm_invoices": (Invoice, set()),
+        "crm_payments": (Payment, set()),
+        "crm_expenses": (Expense, set()),
+        "crm_support_tickets": (SupportTicket, set()),
+        "crm_reminders": (Reminder, set()),
         "knowledge_documents": (KnowledgeDocument, {"content"}),
         "inbox_conversations": (InboxConversation, set()),
         "inbox_messages": (InboxMessage, set()),
@@ -287,8 +306,8 @@ def export_backup(
         raise HTTPException(status_code=404, detail="Tenant not found")
 
     data: dict[str, Any] = {
-        "format": "NEXVARY-RealEstate-AI-OS-backup",
-        "version": "1.8.0",
+        "format": "Real-Estate-Business-OS-backup",
+        "version": "2.2.1",
         "exported_at": datetime.now(timezone.utc).isoformat(),
         "tenant": row_dict(tenant),
         "tables": {},

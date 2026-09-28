@@ -1,32 +1,20 @@
-NEXVARY RealEstate AI OS — White-Label v1.8.0
+Real Estate Business OS — International White-Label v2.2.1
 
-A complete operating platform for modern real-estate teams.
+This installer contains a neutral business edition. No vendor or customer brand is shown before activation. After activation, the customer can set its company name, logo, cover, colors, contact details and social-media links.
 
-• CRM & Sales Command Center
-  Leads, qualification, pipeline, appointments and follow-up.
+Included workspace
+- Leads, customer history, appointments and follow-up
+- Projects, units, availability, reservations and contracts
+- Installments, invoices, payments, expenses and broker commissions
+- Proposals, support tickets, reminders and enterprise CRM
+- Omnichannel conversations and WhatsApp configuration
+- Knowledge base and sales assistance
+- Growth intelligence, SEO workspace and automation studio
+- Arabic, English, Turkish, Russian, German, Italian, Spanish and French
+- English first-run default with selectable languages
+- Six persistent dark themes: Neon Fusion, Electric Blue, Neon Green, Amber, Metallic Silver and Violet
 
-• Real-Estate Inventory
-  Projects, buildings, units, live availability, prices and payment plans.
+Licensing
+Activation requires a signed license issued for this computer. The signing key is never included with the installer. Copying, resale, reverse engineering, circumvention or disabling protection is prohibited by the neutral international user and license agreement. Local mandatory law applies where the software is used.
 
-• AI Sales Copilot
-  Grounded responses based on verified inventory and company knowledge.
-
-• Omnichannel & WhatsApp
-  Campaign referral, unified conversations, approval-aware outbox and human handoff.
-
-• Growth & Sales Intelligence
-  Customer journeys, Audience 360, media intelligence, attribution and playbooks.
-
-• SEO Autopilot
-  Database-grounded project/unit pages, structured data and guarded change plans.
-
-• Automation Studio
-  Visual workflows connecting CRM, inventory, tasks, approvals and business actions.
-
-• White-Label Branding
-  Company name, logo, cover artwork, colors, links and custom tenant identity.
-
-• Security & Governance
-  RBAC, tenant isolation, encrypted integration secrets, audit trail and safe exports.
-
-NEXVARY — Secure Today, Protect Tomorrow.
+Before continuing, confirm that you are authorized to install and use this copy.

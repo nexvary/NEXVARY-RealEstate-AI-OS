@@ -18,8 +18,8 @@ def test_development_skip_creates_workspace_and_quick_entry_session():
     skipped = client.post("/api/v1/auth/bootstrap-development")
     assert skipped.status_code == 201
     body = skipped.json()
-    assert body["tenant_slug"] == "nexvary-dev"
-    assert body["user_email"] == "developer@nexvary.local"
+    assert body["tenant_slug"] == "workspace"
+    assert body["user_email"] == "owner@workspace.local"
     assert body["role"] == "owner"
     assert body["access_token"]
 
@@ -33,7 +33,7 @@ def test_development_skip_creates_workspace_and_quick_entry_session():
     assert quick.status_code == 200
     quick_body = quick.json()
     assert quick_body["tenant_id"] == body["tenant_id"]
-    assert quick_body["tenant_slug"] == "nexvary-dev"
+    assert quick_body["tenant_slug"] == "workspace"
     assert quick_body["user_id"] == body["user_id"]
     assert quick_body["access_token"]
 
@@ -46,7 +46,7 @@ def test_development_workspace_can_be_created_alongside_existing_companies():
 
     response = client.post("/api/v1/auth/bootstrap-development")
     assert response.status_code == 201
-    assert response.json()["tenant_slug"] == "nexvary-dev"
+    assert response.json()["tenant_slug"] == "workspace"
 
     status = client.get("/api/v1/setup/status")
     assert status.status_code == 200

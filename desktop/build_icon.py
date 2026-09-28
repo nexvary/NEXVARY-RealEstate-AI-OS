@@ -1,45 +1,24 @@
 from pathlib import Path
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 
 
 OUT = Path(__file__).resolve().parent / "nexvary-realestate.ico"
 SIZE = 512
-img = Image.new("RGBA", (SIZE, SIZE), (1, 4, 9, 255))
+img = Image.new("RGBA", (SIZE, SIZE), (2, 7, 13, 255))
 draw = ImageDraw.Draw(img)
 
-# NEXVARY-style circular metallic/electric frame.
-for width, inset, color in [
-    (7, 14, (215, 231, 242, 255)),
-    (6, 23, (29, 187, 255, 255)),
-    (2, 42, (75, 132, 176, 220)),
-]:
-    draw.ellipse((inset, inset, SIZE-inset, SIZE-inset), outline=color, width=width)
+# Neutral metallic/electric rounded-square frame.
+draw.rounded_rectangle((14, 14, 498, 498), radius=108, fill=(3, 14, 25, 255), outline=(225, 238, 247, 255), width=8)
+draw.rounded_rectangle((31, 31, 481, 481), radius=92, outline=(39, 201, 255, 255), width=8)
+draw.rounded_rectangle((48, 48, 464, 464), radius=80, outline=(55, 106, 145, 220), width=3)
 
-# Security lock.
-draw.arc((225, 68, 287, 130), start=180, end=360, fill=(75, 220, 255, 255), width=8)
-draw.rounded_rectangle((218, 103, 294, 167), radius=9, fill=(20, 170, 245, 255), outline=(110, 230, 255, 255), width=3)
-draw.ellipse((250, 126, 262, 138), fill=(1, 12, 21, 255))
-draw.rectangle((254, 136, 258, 151), fill=(1, 12, 21, 255))
-
-# Circuit accents.
-for y in (214, 256, 298):
-    draw.line((55, y, 156, y), fill=(25, 196, 255, 255), width=3)
-    draw.line((356, y, 457, y), fill=(25, 196, 255, 255), width=3)
-    draw.ellipse((46, y-6, 58, y+6), outline=(25, 196, 255, 255), width=2)
-    draw.ellipse((454, y-6, 466, y+6), outline=(25, 196, 255, 255), width=2)
-
-# Metallic NX monogram.
-try:
-    mono = ImageFont.truetype("arialbd.ttf", 176)
-except OSError:
-    mono = ImageFont.load_default()
-for offset, color in [(5, (22, 111, 168, 255)), (0, (229, 239, 247, 255))]:
-    bbox = draw.textbbox((0, 0), "NX", font=mono)
-    tw = bbox[2] - bbox[0]
-    draw.text(((SIZE - tw) / 2 + offset, 165 + offset), "NX", font=mono, fill=color)
-
-# Electric diagonal accent.
-draw.polygon([(271, 203), (309, 165), (326, 180), (289, 219)], fill=(24, 182, 255, 255))
+# Neutral property mark with no company letters.
+silver = (231, 241, 248, 255)
+blue = (52, 207, 255, 255)
+draw.line((100, 225, 256, 105, 412, 225), fill=blue, width=28, joint="curve")
+draw.line((135, 215, 135, 390, 377, 390, 377, 215), fill=silver, width=25, joint="curve")
+draw.line((215, 390, 215, 285, 297, 285, 297, 390), fill=silver, width=23, joint="curve")
+draw.line((95, 425, 417, 425), fill=(69, 221, 255, 220), width=8)
 
 img.save(
     OUT,
