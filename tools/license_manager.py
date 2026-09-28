@@ -12,6 +12,43 @@ from cryptography.hazmat.primitives import serialization
 
 PRODUCT_ID = "real-estate-business-os"
 ALL_FEATURES = ["crm", "inventory", "finance", "omnichannel", "growth", "seo", "automation", "ai"]
+EXPECTED_PUBLIC_KEY_PEM = b"""-----BEGIN PUBLIC KEY-----
+MCowBQYDK2VwAyEA2xSe4ZUhRpB7VXZgDRg7wgbTISdaxOPTzGQGR1gl3VU=
+-----END PUBLIC KEY-----
+"""
+
+
+def load_vendor_private_key(private_key_path: Path):
+    raw = private_key_path.read_bytes()
+    if raw.lstrip().startswith(b"{"):
+        raise ValueError(
+            "This is an old JSON key and does not belong to this product. "
+            "Select real-estate-license-private.pem from the new vendor-key package."
+        )
+    if b"-----BEGIN PRIVATE KEY-----" not in raw:
+        raise ValueError(
+            "The selected file is not a PEM private key. "
+            "Select real-estate-license-private.pem (not the public key)."
+        )
+    try:
+        private_key = serialization.load_pem_private_key(raw, password=None)
+        expected_public_key = serialization.load_pem_public_key(EXPECTED_PUBLIC_KEY_PEM)
+        actual_public = private_key.public_key().public_bytes(
+            serialization.Encoding.Raw,
+            serialization.PublicFormat.Raw,
+        )
+        expected_public = expected_public_key.public_bytes(
+            serialization.Encoding.Raw,
+            serialization.PublicFormat.Raw,
+        )
+    except (TypeError, ValueError) as exc:
+        raise ValueError("Unable to read the PEM private key. Use real-estate-license-private.pem.") from exc
+    if actual_public != expected_public:
+        raise ValueError(
+            "This PEM key belongs to another product. "
+            "Use real-estate-license-private.pem from this product's vendor-key package."
+        )
+    return private_key
 
 
 def canonical(payload: dict) -> bytes:
@@ -26,7 +63,7 @@ def create_license(private_key_path: Path, company: str, customer: str, machine_
         raise ValueError("Computer code must be the six-part code shown in the application")
     if days < 0:
         raise ValueError("Validity days cannot be negative")
-    private_key = serialization.load_pem_private_key(private_key_path.read_bytes(), password=None)
+    private_key = load_vendor_private_key(private_key_path)
     now = datetime.now(timezone.utc).replace(microsecond=0)
     expires_at = None if days == 0 else (now + timedelta(days=days)).isoformat().replace("+00:00", "Z")
     payload = {
@@ -65,21 +102,42 @@ def run_gui() -> None:
     frame.pack(fill="both", expand=True)
     ttk.Label(frame, text="WHITE-LABEL LICENSE MANAGER", font=("Segoe UI", 20, "bold"), foreground="#39C8FF").pack(anchor="w", pady=(0, 18))
 
-    def row(label: str, key: str, browse: bool = False):
+    def row(label: str, key: str, browse: str = ""):
         ttk.Label(frame, text=label).pack(anchor="w", pady=(8, 3))
         line = ttk.Frame(frame)
         line.pack(fill="x")
         ttk.Entry(line, textvariable=values[key], font=("Segoe UI", 11)).pack(side="left", fill="x", expand=True)
-        if browse:
-            ttk.Button(line, text="Browse", command=lambda: values[key].set(filedialog.askopenfilename() or values[key].get())).pack(side="left", padx=(8, 0))
+        if browse == "open_key":
+            ttk.Button(
+                line,
+                text="Browse",
+                command=lambda: values[key].set(
+                    filedialog.askopenfilename(
+                        title="Select real-estate-license-private.pem",
+                        filetypes=[("PEM private key", "*.pem")],
+                    ) or values[key].get()
+                ),
+            ).pack(side="left", padx=(8, 0))
+        elif browse == "save_license":
+            ttk.Button(
+                line,
+                text="Browse",
+                command=lambda: values[key].set(
+                    filedialog.asksaveasfilename(
+                        title="Save customer license",
+                        defaultextension=".license",
+                        filetypes=[("License file", "*.license")],
+                    ) or values[key].get()
+                ),
+            ).pack(side="left", padx=(8, 0))
 
-    row("Vendor private key (keep secret)", "key", True)
+    row("Vendor private key — choose real-estate-license-private.pem", "key", "open_key")
     row("Licensed company", "company")
     row("Customer / contact name", "customer")
     row("Computer code", "machine")
     row("Validity in days (0 = perpetual)", "days")
     row("Edition", "edition")
-    row("Output license file", "output")
+    row("Output license file", "output", "save_license")
 
     def generate():
         try:
