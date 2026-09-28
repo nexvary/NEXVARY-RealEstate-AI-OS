@@ -216,7 +216,7 @@ jobs:
           if-no-files-found: error
 
       - name: Publish direct Windows release download
-        if: runner.os == 'Windows' && github.event_name == 'push'
+        if: runner.os == 'Windows' && (github.event_name == 'push' || github.head_ref == 'migration/qt6-cpp-qml-v2')
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
