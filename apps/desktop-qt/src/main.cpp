@@ -23,22 +23,22 @@
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
-    QGuiApplication::setOrganizationName(QStringLiteral("FG Machines"));
-    QGuiApplication::setOrganizationDomain(QStringLiteral("fgmachines.local"));
-    QGuiApplication::setApplicationName(QStringLiteral("FG Machines Real Estate OS"));
-    QGuiApplication::setApplicationVersion(QStringLiteral("2.0.2"));
-    QGuiApplication::setWindowIcon(QIcon(QStringLiteral(":/qt/qml/Nexvary/RealEstate/assets/nexvary-mark.svg")));
+    QGuiApplication::setOrganizationName(QStringLiteral("White Label Business Software"));
+    QGuiApplication::setOrganizationDomain(QStringLiteral("localhost"));
+    QGuiApplication::setApplicationName(QStringLiteral("Real Estate Business OS"));
+    QGuiApplication::setApplicationVersion(QStringLiteral("2.1.0"));
+    QGuiApplication::setWindowIcon(QIcon(QStringLiteral(":/qt/qml/Business/RealEstate/assets/property-mark.svg")));
 
     QQuickStyle::setStyle(QStringLiteral("Basic"));
 
     QCommandLineParser parser;
-    parser.setApplicationDescription(QStringLiteral("FG Machines Real Estate OS — native desktop"));
+    parser.setApplicationDescription(QStringLiteral("Real Estate Business OS — desktop application"));
     parser.addHelpOption();
     parser.addVersionOption();
 
     QCommandLineOption languageOption(
         QStringList{QStringLiteral("language")},
-        QStringLiteral("Initial UI language (ar/en)."),
+        QStringLiteral("Initial UI language (ar/en/tr/ru/de/it/es/fr)."),
         QStringLiteral("code"),
         QStringLiteral("ar"));
     QCommandLineOption apiUrlOption(
@@ -83,9 +83,9 @@ int main(int argc, char *argv[])
     } else {
         const QString sidecarName =
 #ifdef Q_OS_WIN
-            QStringLiteral("FG-Machines-RealEstate-Service.exe");
+            QStringLiteral("Real-Estate-Business-Service.exe");
 #else
-            QStringLiteral("FG-Machines-RealEstate-Service");
+            QStringLiteral("Real-Estate-Business-Service");
 #endif
         const QString sidecarPath = QDir(QCoreApplication::applicationDirPath()).filePath(sidecarName);
         if (QFileInfo::exists(sidecarPath)) {
@@ -116,14 +116,14 @@ int main(int argc, char *argv[])
             qmlDiagnostics.append(warning.toString());
     });
 
-    engine.loadFromModule(QStringLiteral("Nexvary.RealEstate"), QStringLiteral("Main"));
+    engine.loadFromModule(QStringLiteral("Business.RealEstate"), QStringLiteral("Main"));
     if (engine.rootObjects().isEmpty()) {
         const QString logPath = qEnvironmentVariable("NEXVARY_QT_LOG");
         if (!logPath.isEmpty()) {
             QFile logFile(logPath);
             if (logFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
                 QTextStream stream(&logFile);
-                stream << "FG Machines Qt QML startup failure\n";
+                stream << "Real Estate Business OS QML startup failure\n";
                 stream << "applicationDir=" << QCoreApplication::applicationDirPath() << "\n";
                 stream << "importPaths=" << engine.importPathList().join(QStringLiteral(";")) << "\n";
                 for (const QString &line : qmlDiagnostics)
@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
         auto *smokeProbe = new QTimer(&app);
         smokeProbe->setInterval(250);
         QObject::connect(smokeProbe, &QTimer::timeout, &app, [&api, &app, smokeProbe] {
-            if (api.healthStatus() == QStringLiteral("ok") && api.setupKnown()) {
+            if (api.healthStatus() == QStringLiteral("ok") && api.licenseKnown()) {
                 smokeProbe->stop();
                 app.exit(0);
             }

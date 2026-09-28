@@ -30,11 +30,11 @@ Flickable {
         }
 
         function titleText() {
-            if (mode === "campaign") return appState.rtl ? "حملة جديدة" : "New Campaign"
-            if (mode === "audience") return appState.rtl ? "شريحة جمهور" : "Audience Segment"
-            if (mode === "media") return appState.rtl ? "وسائط عقارية" : "Property Media"
-            if (mode === "playbook") return appState.rtl ? "دليل مبيعات" : "Sales Playbook"
-            return appState.rtl ? "ملاحظة عميل" : "Customer Feedback"
+            if (mode === "campaign") return appState.localize(appState.language, "حملة جديدة", "New Campaign")
+            if (mode === "audience") return appState.localize(appState.language, "شريحة جمهور", "Audience Segment")
+            if (mode === "media") return appState.localize(appState.language, "وسائط عقارية", "Property Media")
+            if (mode === "playbook") return appState.localize(appState.language, "دليل مبيعات", "Sales Playbook")
+            return appState.localize(appState.language, "ملاحظة عميل", "Customer Feedback")
         }
 
         contentItem: ColumnLayout {
@@ -42,34 +42,34 @@ Flickable {
             Text { text: addDialog.titleText(); color: Theme.platinum; font.pixelSize: 20; font.bold: true }
             TextField {
                 id: field1; Layout.fillWidth: true
-                placeholderText: addDialog.mode === "campaign" ? (appState.rtl ? "اسم الحملة" : "Campaign name")
-                    : addDialog.mode === "audience" ? (appState.rtl ? "اسم الشريحة" : "Segment name")
-                    : addDialog.mode === "media" ? (appState.rtl ? "عنوان الوسائط" : "Media title")
-                    : addDialog.mode === "playbook" ? (appState.rtl ? "اسم الدليل" : "Playbook name")
-                    : (appState.rtl ? "التصنيف" : "Category")
+                placeholderText: addDialog.mode === "campaign" ? (appState.localize(appState.language, "اسم الحملة", "Campaign name"))
+                    : addDialog.mode === "audience" ? (appState.localize(appState.language, "اسم الشريحة", "Segment name"))
+                    : addDialog.mode === "media" ? (appState.localize(appState.language, "عنوان الوسائط", "Media title"))
+                    : addDialog.mode === "playbook" ? (appState.localize(appState.language, "اسم الدليل", "Playbook name"))
+                    : (appState.localize(appState.language, "التصنيف", "Category"))
             }
             TextField {
                 id: field2; Layout.fillWidth: true
-                placeholderText: addDialog.mode === "campaign" ? (appState.rtl ? "القناة: facebook / google / ..." : "Channel: facebook / google / ...")
-                    : addDialog.mode === "audience" ? (appState.rtl ? "المصدر مثل facebook" : "Lead source")
+                placeholderText: addDialog.mode === "campaign" ? (appState.localize(appState.language, "القناة: facebook / google / ...", "Channel: facebook / google / ..."))
+                    : addDialog.mode === "audience" ? (appState.localize(appState.language, "المصدر مثل facebook", "Lead source"))
                     : addDialog.mode === "media" ? "https://..."
-                    : addDialog.mode === "playbook" ? (appState.rtl ? "مرحلة التشغيل" : "Trigger stage")
-                    : (appState.rtl ? "القناة" : "Channel")
+                    : addDialog.mode === "playbook" ? (appState.localize(appState.language, "مرحلة التشغيل", "Trigger stage"))
+                    : (appState.localize(appState.language, "القناة", "Channel"))
             }
             TextField {
                 id: field3; Layout.fillWidth: true
-                placeholderText: addDialog.mode === "campaign" ? (appState.rtl ? "الهدف" : "Objective")
-                    : addDialog.mode === "audience" ? (appState.rtl ? "المدينة" : "City")
-                    : addDialog.mode === "media" ? (appState.rtl ? "نوع الوسائط" : "Media type")
-                    : addDialog.mode === "playbook" ? (appState.rtl ? "الوصف" : "Description")
+                placeholderText: addDialog.mode === "campaign" ? (appState.localize(appState.language, "الهدف", "Objective"))
+                    : addDialog.mode === "audience" ? (appState.localize(appState.language, "المدينة", "City"))
+                    : addDialog.mode === "media" ? (appState.localize(appState.language, "نوع الوسائط", "Media type"))
+                    : addDialog.mode === "playbook" ? (appState.localize(appState.language, "الوصف", "Description"))
                     : ""
                 visible: addDialog.mode !== "feedback"
             }
             RowLayout {
                 Layout.fillWidth: true
                 visible: addDialog.mode === "campaign" || addDialog.mode === "audience"
-                TextField { id: amount1; Layout.fillWidth: true; placeholderText: addDialog.mode === "campaign" ? (appState.rtl ? "الميزانية" : "Budget") : (appState.rtl ? "أقل ميزانية" : "Min budget"); inputMethodHints: Qt.ImhFormattedNumbersOnly }
-                TextField { id: amount2; Layout.fillWidth: true; placeholderText: addDialog.mode === "campaign" ? (appState.rtl ? "المصروف" : "Spend") : (appState.rtl ? "أقصى ميزانية" : "Max budget"); inputMethodHints: Qt.ImhFormattedNumbersOnly }
+                TextField { id: amount1; Layout.fillWidth: true; placeholderText: addDialog.mode === "campaign" ? (appState.localize(appState.language, "الميزانية", "Budget")) : (appState.localize(appState.language, "أقل ميزانية", "Min budget")); inputMethodHints: Qt.ImhFormattedNumbersOnly }
+                TextField { id: amount2; Layout.fillWidth: true; placeholderText: addDialog.mode === "campaign" ? (appState.localize(appState.language, "المصروف", "Spend")) : (appState.localize(appState.language, "أقصى ميزانية", "Max budget")); inputMethodHints: Qt.ImhFormattedNumbersOnly }
             }
             ComboBox {
                 id: relationPicker
@@ -94,17 +94,17 @@ Flickable {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 100
                 placeholderText: addDialog.mode === "playbook"
-                    ? (appState.rtl ? "كل خطوة في سطر مستقل" : "One step per line")
+                    ? (appState.localize(appState.language, "كل خطوة في سطر مستقل", "One step per line"))
                     : addDialog.mode === "feedback"
-                        ? (appState.rtl ? "تعليق العميل" : "Customer comment")
-                        : (appState.rtl ? "وصف / ملاحظات" : "Description / notes")
+                        ? (appState.localize(appState.language, "تعليق العميل", "Customer comment"))
+                        : (appState.localize(appState.language, "وصف / ملاحظات", "Description / notes"))
                 wrapMode: TextEdit.WordWrap
             }
             RowLayout {
                 Layout.fillWidth: true; layoutDirection: appState.rtl ? Qt.RightToLeft : Qt.LeftToRight
                 Button {
                     Layout.fillWidth: true; enabled: !apiClient.busy && field1.text.length >= 2
-                    text: appState.rtl ? "حفظ" : "Save"
+                    text: appState.localize(appState.language, "حفظ", "Save")
                     onClicked: {
                         if (addDialog.mode === "campaign")
                             apiClient.createGrowthCampaign(field1.text, field2.text, field3.text, Number(amount1.text||0), Number(amount2.text||0), "EGP", "", "", field1.text)
@@ -119,18 +119,18 @@ Flickable {
                         addDialog.close()
                     }
                 }
-                Button { text: appState.rtl ? "إلغاء" : "Cancel"; onClicked: addDialog.close() }
+                Button { text: appState.localize(appState.language, "إلغاء", "Cancel"); onClicked: addDialog.close() }
             }
         }
     }
 
     Menu {
         id: addMenu
-        MenuItem { text: appState.rtl ? "حملة" : "Campaign"; onTriggered: addDialog.openFor("campaign") }
-        MenuItem { text: appState.rtl ? "جمهور" : "Audience"; onTriggered: addDialog.openFor("audience") }
-        MenuItem { text: appState.rtl ? "وسائط" : "Media"; onTriggered: addDialog.openFor("media") }
-        MenuItem { text: appState.rtl ? "Playbook" : "Playbook"; onTriggered: addDialog.openFor("playbook") }
-        MenuItem { text: appState.rtl ? "Feedback" : "Feedback"; onTriggered: addDialog.openFor("feedback") }
+        MenuItem { text: appState.localize(appState.language, "حملة", "Campaign"); onTriggered: addDialog.openFor("campaign") }
+        MenuItem { text: appState.localize(appState.language, "جمهور", "Audience"); onTriggered: addDialog.openFor("audience") }
+        MenuItem { text: appState.localize(appState.language, "وسائط", "Media"); onTriggered: addDialog.openFor("media") }
+        MenuItem { text: appState.localize(appState.language, "Playbook", "Playbook"); onTriggered: addDialog.openFor("playbook") }
+        MenuItem { text: appState.localize(appState.language, "Feedback", "Feedback"); onTriggered: addDialog.openFor("feedback") }
     }
 
     ColumnLayout {
@@ -142,10 +142,10 @@ Flickable {
             Layout.fillWidth: true; layoutDirection: appState.rtl ? Qt.RightToLeft : Qt.LeftToRight
             ColumnLayout {
                 Layout.fillWidth: true
-                Text { text: (appState.language, appState.t("growth")); color: Theme.platinum; font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"; font.pixelSize: 29; font.bold: true }
-                Text { text: appState.rtl ? "الإسناد التسويقي والجمهور والوسائط وPlaybooks ورضا العملاء" : "Attribution, audiences, property media, playbooks and feedback"; color: Theme.muted; font.pixelSize: 12 }
+                Text { text: (appState.language, appState.t("growth")); color: Theme.platinum; font.family: appState.localize(appState.language, "Noto Kufi Arabic", "Segoe UI"); font.pixelSize: 29; font.bold: true }
+                Text { text: appState.localize(appState.language, "الإسناد التسويقي والجمهور والوسائط وPlaybooks ورضا العملاء", "Attribution, audiences, property media, playbooks and feedback"); color: Theme.muted; font.pixelSize: 12 }
             }
-            Button { visible: root.canManage; text: appState.rtl ? "+ إضافة" : "+ Add"; onClicked: addMenu.open() }
+            Button { visible: root.canManage; text: appState.localize(appState.language, "+ إضافة", "+ Add"); onClicked: addMenu.open() }
             Button { text: (appState.language, appState.t("refresh")); onClicked: apiClient.refreshGrowth() }
         }
 
@@ -155,10 +155,10 @@ Flickable {
             columnSpacing: 8
             Repeater {
                 model: [
-                    {v:apiClient.growthCampaigns.length,l:appState.rtl?"الحملات":"Campaigns",c:Theme.electricBlue},
-                    {v:apiClient.growthAudiences.length,l:appState.rtl?"شرائح الجمهور":"Audiences",c:Theme.violet},
-                    {v:apiClient.growthMedia.filter(function(x){return x.is_verified}).length,l:appState.rtl?"وسائط موثقة":"Verified Media",c:Theme.emerald},
-                    {v:apiClient.growthFeedbackSummary.average_rating===undefined||apiClient.growthFeedbackSummary.average_rating===null?"—":apiClient.growthFeedbackSummary.average_rating,l:appState.rtl?"رضا العملاء":"Avg Rating",c:Theme.gold}
+                    {v:apiClient.growthCampaigns.length,l:appState.localize(appState.language, "الحملات", "Campaigns"),c:Theme.electricBlue},
+                    {v:apiClient.growthAudiences.length,l:appState.localize(appState.language, "شرائح الجمهور", "Audiences"),c:Theme.violet},
+                    {v:apiClient.growthMedia.filter(function(x){return x.is_verified}).length,l:appState.localize(appState.language, "وسائط موثقة", "Verified Media"),c:Theme.emerald},
+                    {v:apiClient.growthFeedbackSummary.average_rating===undefined||apiClient.growthFeedbackSummary.average_rating===null?"—":apiClient.growthFeedbackSummary.average_rating,l:appState.localize(appState.language, "رضا العملاء", "Avg Rating"),c:Theme.gold}
                 ]
                 Rectangle {
                     required property var modelData
@@ -167,7 +167,7 @@ Flickable {
                     RowLayout {
                         anchors.fill: parent; anchors.margins: 12; layoutDirection: appState.rtl ? Qt.RightToLeft : Qt.LeftToRight
                         Rectangle { width:30;height:30;radius:8;color:"#071522";border.width:1;border.color:modelData.c;Text{anchors.centerIn:parent;text:"◆";color:modelData.c} }
-                        ColumnLayout { Layout.fillWidth:true; Text{text:String(modelData.v);color:Theme.platinum;font.pixelSize:20;font.bold:true} Text{text:modelData.l;color:Theme.muted;font.pixelSize:9} }
+                        ColumnLayout { Layout.fillWidth:true; Text{text:String(modelData.v);color:Theme.platinum;font.pixelSize:20;font.bold:true} Text{text:modelData.l;color:Theme.muted;font.pixelSize: 11} }
                     }
                 }
             }
@@ -183,7 +183,7 @@ Flickable {
                 color: Theme.panel; border.width:1; border.color:Qt.rgba(.67,.76,.83,.25)
                 ColumnLayout {
                     anchors.fill:parent;anchors.margins:12;spacing:6
-                    Text{text:appState.rtl?"أداء الحملات والإسناد":"Campaign Attribution";color:Theme.platinum;font.pixelSize:16;font.bold:true}
+                    Text{text:appState.localize(appState.language, "أداء الحملات والإسناد", "Campaign Attribution");color:Theme.platinum;font.pixelSize:16;font.bold:true}
                     ListView {
                         id:attrList;Layout.fillWidth:true;Layout.fillHeight:true;clip:true;spacing:5;model:apiClient.growthAttribution
                         delegate:Rectangle {
@@ -192,8 +192,8 @@ Flickable {
                             RowLayout {
                                 anchors.fill:parent;anchors.margins:8;layoutDirection:appState.rtl?Qt.RightToLeft:Qt.LeftToRight
                                 ColumnLayout { Layout.fillWidth:true; Text{Layout.fillWidth:true;text:modelData.campaign_name||"—";color:Theme.platinum;font.pixelSize:11;font.bold:true;elide:Text.ElideRight} Text{text:(modelData.channel||"")+" · "+String(modelData.leads_touched||0)+" leads";color:Theme.muted;font.pixelSize:8} }
-                                Text{text:"ROAS "+(modelData.roas_last_touch===null||modelData.roas_last_touch===undefined?"—":String(modelData.roas_last_touch));color:Theme.emerald;font.pixelSize:9;font.bold:true}
-                                Text{text:Number(modelData.spend||0).toLocaleString(Qt.locale("en_US"),"f",0)+" "+(modelData.currency||"");color:Theme.gold;font.pixelSize:9}
+                                Text{text:"ROAS "+(modelData.roas_last_touch===null||modelData.roas_last_touch===undefined?"—":String(modelData.roas_last_touch));color:Theme.emerald;font.pixelSize: 11;font.bold:true}
+                                Text{text:Number(modelData.spend||0).toLocaleString(Qt.locale("en_US"),"f",0)+" "+(modelData.currency||"");color:Theme.gold;font.pixelSize: 11}
                             }
                         }
                     }
@@ -204,7 +204,7 @@ Flickable {
                 Layout.fillWidth:true;Layout.preferredHeight:310;radius:14;color:Theme.panel;border.width:1;border.color:Qt.rgba(.67,.76,.83,.25)
                 ColumnLayout {
                     anchors.fill:parent;anchors.margins:12;spacing:6
-                    Text{text:appState.rtl?"Audience 360":"Audience 360";color:Theme.platinum;font.pixelSize:16;font.bold:true}
+                    Text{text:appState.localize(appState.language, "Audience 360", "Audience 360");color:Theme.platinum;font.pixelSize:16;font.bold:true}
                     ListView {
                         id:audList;Layout.fillWidth:true;Layout.fillHeight:true;clip:true;spacing:5;model:apiClient.growthAudiences
                         delegate:Rectangle {
@@ -225,14 +225,14 @@ Flickable {
                 Layout.fillWidth:true;Layout.preferredHeight:280;radius:14;color:Theme.panel;border.width:1;border.color:Qt.rgba(.67,.76,.83,.25)
                 ColumnLayout {
                     anchors.fill:parent;anchors.margins:12;spacing:6
-                    Text{text:appState.rtl?"Property Media Intelligence":"Property Media Intelligence";color:Theme.platinum;font.pixelSize:16;font.bold:true}
+                    Text{text:appState.localize(appState.language, "Property Media Intelligence", "Property Media Intelligence");color:Theme.platinum;font.pixelSize:16;font.bold:true}
                     ListView {
                         id:mediaList;Layout.fillWidth:true;Layout.fillHeight:true;clip:true;spacing:5;model:apiClient.growthMedia
                         delegate:Rectangle{
                             required property var modelData
                             width:mediaList.width;height:54;radius:8;color:index%2?"#071521":"#0A1B2A"
                             RowLayout{anchors.fill:parent;anchors.margins:8;layoutDirection:appState.rtl?Qt.RightToLeft:Qt.LeftToRight
-                                Text{Layout.fillWidth:true;text:modelData.title||"—";color:Theme.platinum;font.pixelSize:10;font.bold:true;elide:Text.ElideRight}
+                                Text{Layout.fillWidth:true;text:modelData.title||"—";color:Theme.platinum;font.pixelSize: 11;font.bold:true;elide:Text.ElideRight}
                                 Text{text:modelData.media_type||"";color:Theme.electricCyan;font.pixelSize:8}
                                 Text{text:modelData.is_verified?"VERIFIED":"UNVERIFIED";color:modelData.is_verified?Theme.emerald:Theme.gold;font.pixelSize:8;font.bold:true}
                             }
@@ -245,13 +245,13 @@ Flickable {
                 Layout.fillWidth:true;Layout.preferredHeight:280;radius:14;color:Theme.panel;border.width:1;border.color:Qt.rgba(.67,.76,.83,.25)
                 ColumnLayout {
                     anchors.fill:parent;anchors.margins:12;spacing:6
-                    Text{text:appState.rtl?"Sales Playbooks & Feedback":"Sales Playbooks & Feedback";color:Theme.platinum;font.pixelSize:16;font.bold:true}
+                    Text{text:appState.localize(appState.language, "Sales Playbooks & Feedback", "Sales Playbooks & Feedback");color:Theme.platinum;font.pixelSize:16;font.bold:true}
                     ListView {
                         id:playList;Layout.fillWidth:true;Layout.preferredHeight:125;clip:true;spacing:4;model:apiClient.growthPlaybooks
                         delegate:Rectangle{
                             required property var modelData;width:playList.width;height:48;radius:8;color:index%2?"#071521":"#0A1B2A"
                             RowLayout{anchors.fill:parent;anchors.margins:8;layoutDirection:appState.rtl?Qt.RightToLeft:Qt.LeftToRight
-                                Text{Layout.fillWidth:true;text:modelData.name||"—";color:Theme.platinum;font.pixelSize:10;font.bold:true;elide:Text.ElideRight}
+                                Text{Layout.fillWidth:true;text:modelData.name||"—";color:Theme.platinum;font.pixelSize: 11;font.bold:true;elide:Text.ElideRight}
                                 Text{text:modelData.trigger_stage||"all";color:Theme.violet;font.pixelSize:8}
                             }
                         }
@@ -262,8 +262,8 @@ Flickable {
                         delegate:Rectangle{
                             required property var modelData;width:feedList.width;height:48;radius:8;color:index%2?"#071521":"#0A1B2A"
                             RowLayout{anchors.fill:parent;anchors.margins:8;layoutDirection:appState.rtl?Qt.RightToLeft:Qt.LeftToRight
-                                Text{Layout.fillWidth:true;text:modelData.comment||"—";color:Theme.silver;font.pixelSize:9;elide:Text.ElideRight}
-                                Text{text:modelData.rating?String(modelData.rating)+"/5":"—";color:Theme.gold;font.pixelSize:9;font.bold:true}
+                                Text{Layout.fillWidth:true;text:modelData.comment||"—";color:Theme.silver;font.pixelSize: 11;elide:Text.ElideRight}
+                                Text{text:modelData.rating?String(modelData.rating)+"/5":"—";color:Theme.gold;font.pixelSize: 11;font.bold:true}
                             }
                         }
                     }

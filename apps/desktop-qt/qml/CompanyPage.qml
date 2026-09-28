@@ -9,7 +9,7 @@ Flickable {
     contentHeight: body.implicitHeight + 28
     clip: true
 
-    readonly property string companyName: apiClient.tenantSettings.brand_name || apiClient.tenantSettings.name || "FG Machines"
+    readonly property string companyName: apiClient.tenantSettings.brand_name || apiClient.tenantSettings.name || "Your Company"
     readonly property var socialLinks: [
         {label:"Facebook", url:apiClient.tenantSettings.facebook_url || "", color:"#5AA7FF"},
         {label:"LinkedIn", url:apiClient.tenantSettings.linkedin_url || "", color:"#79C8FF"},
@@ -29,7 +29,7 @@ Flickable {
             radius: 20
             color: "#061321"
             border.width: 1
-            border.color: Qt.rgba(.72,.82,.89,.34)
+            border.color: Theme.metallicSilver
             clip: true
 
             Image {
@@ -64,7 +64,7 @@ Flickable {
                     Image {
                         anchors.fill: parent
                         anchors.margins: 10
-                        source: apiClient.tenantSettings.logo_data_url || "qrc:/qt/qml/Nexvary/RealEstate/assets/nexvary-mark.svg"
+                        source: apiClient.tenantSettings.logo_data_url || "qrc:/qt/qml/Business/RealEstate/assets/property-mark.svg"
                         fillMode: Image.PreserveAspectFit
                     }
                 }
@@ -76,14 +76,14 @@ Flickable {
                         Layout.fillWidth: true
                         text: root.companyName
                         color: Theme.platinum
-                        font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"
+                        font.family: appState.localize(appState.language, "Noto Kufi Arabic", "Segoe UI")
                         font.pixelSize: 36
                         font.bold: true
                         horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
                     }
                     Text {
                         Layout.fillWidth: true
-                        text: appState.rtl ? "حلول متكاملة لإدارة المبيعات والعقارات وخدمة العملاء" : "Integrated real-estate, sales and customer operations"
+                        text: appState.localize(appState.language, "حلول متكاملة لإدارة المبيعات والعقارات وخدمة العملاء", "Integrated real-estate, sales and customer operations")
                         color: Theme.electricCyan
                         font.pixelSize: 15
                         font.bold: true
@@ -91,7 +91,7 @@ Flickable {
                     }
                     Text {
                         Layout.fillWidth: true
-                        text: appState.rtl ? "نحو عمليات أسرع، قرارات أوضح، وتجربة عميل أكثر احترافية." : "Faster operations, clearer decisions and a more professional customer experience."
+                        text: appState.localize(appState.language, "نحو عمليات أسرع، قرارات أوضح، وتجربة عميل أكثر احترافية.", "Faster operations, clearer decisions and a more professional customer experience.")
                         color: Theme.silver
                         font.pixelSize: 12
                         wrapMode: Text.WordWrap
@@ -109,8 +109,8 @@ Flickable {
                     Column {
                         anchors.centerIn: parent
                         spacing: 4
-                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: appState.rtl ? "حالة المنصة" : "PLATFORM STATUS"; color: Theme.muted; font.pixelSize: 9 }
-                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: appState.rtl ? "نشطة" : "ACTIVE"; color: Theme.emerald; font.pixelSize: 17; font.bold: true }
+                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: appState.localize(appState.language, "حالة المنصة", "PLATFORM STATUS"); color: Theme.muted; font.pixelSize: 11 }
+                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: appState.localize(appState.language, "نشطة", "ACTIVE"); color: Theme.emerald; font.pixelSize: 17; font.bold: true }
                     }
                 }
             }
@@ -124,9 +124,9 @@ Flickable {
 
             Repeater {
                 model: [
-                    {icon:"◎", color:Theme.electricBlue, title:appState.rtl ? "إدارة العملاء" : "Customer Management", desc:appState.rtl ? "متابعة العملاء المحتملين والتواصل والفرص من مكان واحد." : "Track leads, communication and opportunities from one workspace."},
-                    {icon:"▦", color:Theme.emerald, title:appState.rtl ? "إدارة العقارات" : "Real Estate Operations", desc:appState.rtl ? "تنظيم المشروعات والوحدات والحجوزات والعقود والتحصيل." : "Organize projects, units, reservations, contracts and collections."},
-                    {icon:"✦", color:Theme.violet, title:appState.rtl ? "النمو الذكي" : "Intelligent Growth", desc:appState.rtl ? "أتمتة الأعمال وتحليل الأداء ودعم قرارات المبيعات." : "Automate workflows, analyze performance and support sales decisions."}
+                    {icon:"◎", color:Theme.electricBlue, title:appState.localize(appState.language, "إدارة العملاء", "Customer Management"), desc:appState.localize(appState.language, "متابعة العملاء المحتملين والتواصل والفرص من مكان واحد.", "Track leads, communication and opportunities from one workspace.")},
+                    {icon:"▦", color:Theme.emerald, title:appState.localize(appState.language, "إدارة العقارات", "Real Estate Operations"), desc:appState.localize(appState.language, "تنظيم المشروعات والوحدات والحجوزات والعقود والتحصيل.", "Organize projects, units, reservations, contracts and collections.")},
+                    {icon:"✦", color:Theme.violet, title:appState.localize(appState.language, "النمو الذكي", "Intelligent Growth"), desc:appState.localize(appState.language, "أتمتة الأعمال وتحليل الأداء ودعم قرارات المبيعات.", "Automate workflows, analyze performance and support sales decisions.")}
                 ]
                 Rectangle {
                     required property var modelData
@@ -135,7 +135,7 @@ Flickable {
                     radius: 16
                     color: Theme.panel
                     border.width: 1
-                    border.color: Qt.rgba(.68,.78,.85,.26)
+                    border.color: Theme.metallicSilverDark
                     RowLayout {
                         anchors.fill: parent
                         anchors.margins: 16
@@ -165,13 +165,13 @@ Flickable {
             radius: 16
             color: Theme.panel
             border.width: 1
-            border.color: Qt.rgba(.68,.78,.85,.27)
+            border.color: Theme.metallicSilverDark
 
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: 17
                 spacing: 11
-                Text { Layout.fillWidth: true; text: appState.rtl ? "التواصل مع الشركة" : "Contact the company"; color: Theme.platinum; font.pixelSize: 18; font.bold: true; horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft }
+                Text { Layout.fillWidth: true; text: appState.localize(appState.language, "التواصل مع الشركة", "Contact the company"); color: Theme.platinum; font.pixelSize: 18; font.bold: true; horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft }
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 10
@@ -194,7 +194,7 @@ Flickable {
                             contentItem: Text { text: parent.text; color: modelData.color; font.pixelSize: 11; font.bold: true; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
                         }
                     }
-                    Text { visible: root.socialLinks.every(function(item){ return item.url.length === 0 }); text: appState.rtl ? "يمكن إضافة روابط التواصل من إعدادات الشركة." : "Social links can be added in Company Settings."; color: Theme.muted; font.pixelSize: 11 }
+                    Text { visible: root.socialLinks.every(function(item){ return item.url.length === 0 }); text: appState.localize(appState.language, "يمكن إضافة روابط التواصل من إعدادات الشركة.", "Social links can be added in Company Settings."); color: Theme.muted; font.pixelSize: 11 }
                     Item { Layout.fillWidth: true }
                 }
             }

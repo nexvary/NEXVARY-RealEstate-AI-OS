@@ -15,9 +15,18 @@ Flickable {
     property bool saveRequested: false
     property bool savedSuccessfully: false
 
+    function validWebLink(value) {
+        var text = String(value || "").trim()
+        return text.length === 0 || /^https:\/\/[A-Za-z0-9.-]+(?::[0-9]+)?(?:[\/?#].*)?$/.test(text)
+    }
+    readonly property bool linksValid: validWebLink(websiteField.text)
+        && validWebLink(facebookField.text) && validWebLink(linkedinField.text)
+        && validWebLink(youtubeField.text) && validWebLink(xField.text)
+        && validWebLink(tiktokField.text)
+
     function loadSettings() {
         var s = apiClient.tenantSettings
-        brandField.text = s.brand_name || s.name || "FG Machines"
+        brandField.text = s.brand_name || s.name || "Your Company"
         colorField.text = s.primary_color || "#128FE7"
         emailField.text = s.contact_email || ""
         websiteField.text = s.website_url || ""
@@ -51,7 +60,7 @@ Flickable {
 
     FileDialog {
         id: logoDialog
-        title: appState.rtl ? "اختر شعار الشركة" : "Choose company logo"
+        title: appState.localize(appState.language, "اختر شعار الشركة", "Choose company logo")
         nameFilters: ["Images (*.png *.jpg *.jpeg *.webp)"]
         onAccepted: {
             var data = apiClient.imageFileToDataUrl(selectedFile, 1100000)
@@ -61,7 +70,7 @@ Flickable {
 
     FileDialog {
         id: coverDialog
-        title: appState.rtl ? "اختر صورة غلاف الشركة" : "Choose company cover"
+        title: appState.localize(appState.language, "اختر صورة غلاف الشركة", "Choose company cover")
         nameFilters: ["Images (*.png *.jpg *.jpeg *.webp)"]
         onAccepted: {
             var data = apiClient.imageFileToDataUrl(selectedFile, 3000000)
@@ -82,19 +91,19 @@ Flickable {
                 Text {
                     text: (appState.language, appState.t("settings"))
                     color: Theme.platinum
-                    font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"
+                    font.family: appState.localize(appState.language, "Noto Kufi Arabic", "Segoe UI")
                     font.pixelSize: 29
                     font.bold: true
                 }
                 Text {
-                    text: appState.rtl ? "هوية White-Label وروابط الشركة" : "White-label identity and company links"
+                    text: appState.localize(appState.language, "هوية White-Label وروابط الشركة", "White-label identity and company links")
                     color: Theme.muted
                     font.pixelSize: 12
                 }
             }
             Button {
-                text: appState.rtl ? "حفظ التغييرات" : "Save Changes"
-                enabled: !apiClient.busy
+                text: appState.localize(appState.language, "حفظ التغييرات", "Save Changes")
+                enabled: !apiClient.busy && root.linksValid
                 onClicked: {
                     root.savedSuccessfully = false
                     root.saveRequested = true
@@ -120,7 +129,7 @@ Flickable {
             radius: 15
             color: Theme.panel
             border.width: 1
-            border.color: Qt.rgba(.68,.78,.85,.28)
+            border.color: Theme.metallicSilverDark
             clip: true
 
             Image {
@@ -152,21 +161,21 @@ Flickable {
                     Image {
                         anchors.fill: parent
                         anchors.margins: 7
-                        source: root.logoData.length > 0 ? root.logoData : "qrc:/qt/qml/Nexvary/RealEstate/assets/nexvary-mark.svg"
+                        source: root.logoData.length > 0 ? root.logoData : "qrc:/qt/qml/Business/RealEstate/assets/property-mark.svg"
                         fillMode: Image.PreserveAspectFit
                     }
                 }
 
                 ColumnLayout {
                     Layout.fillWidth: true
-                    Text { text: brandField.text || "FG Machines"; color: Theme.platinum; font.pixelSize: 25; font.bold: true }
-                    Text { text: appState.rtl ? "معاينة الهوية داخل النظام" : "In-app brand preview"; color: Theme.electricCyan; font.pixelSize: 11 }
-                    Text { text: appState.rtl ? "يمكن لكل شركة رفع شعار وغلاف مستقلين." : "Each white-label company can use its own logo and cover."; color: Theme.silver; font.pixelSize: 10 }
+                    Text { text: brandField.text || "Your Company"; color: Theme.platinum; font.pixelSize: 25; font.bold: true }
+                    Text { text: appState.localize(appState.language, "معاينة الهوية داخل النظام", "In-app brand preview"); color: Theme.electricCyan; font.pixelSize: 11 }
+                    Text { text: appState.localize(appState.language, "يمكن لكل شركة رفع شعار وغلاف مستقلين.", "Each white-label company can use its own logo and cover."); color: Theme.silver; font.pixelSize: 11 }
                 }
 
                 ColumnLayout {
-                    Button { text: appState.rtl ? "اختيار الشعار" : "Choose Logo"; onClicked: logoDialog.open() }
-                    Button { text: appState.rtl ? "اختيار الغلاف" : "Choose Cover"; onClicked: coverDialog.open() }
+                    Button { text: appState.localize(appState.language, "اختيار الشعار", "Choose Logo"); onClicked: logoDialog.open() }
+                    Button { text: appState.localize(appState.language, "اختيار الغلاف", "Choose Cover"); onClicked: coverDialog.open() }
                 }
             }
         }
@@ -183,25 +192,25 @@ Flickable {
                 radius: 15
                 color: Theme.panel
                 border.width: 1
-                border.color: Qt.rgba(.68,.78,.85,.25)
+                border.color: Theme.metallicSilverDark
 
                 ColumnLayout {
                     anchors.fill: parent
                     anchors.margins: 15
                     spacing: 9
-                    Text { text: appState.rtl ? "هوية الشركة" : "Company Identity"; color: Theme.platinum; font.pixelSize: 16; font.bold: true }
-                    Text { text: appState.rtl ? "اسم الشركة" : "Company name"; color: Theme.muted; font.pixelSize: 10 }
-                    TextField { id: brandField; Layout.fillWidth: true; placeholderText: appState.rtl ? "اسم العلامة التجارية" : "Brand name"; selectByMouse: true }
-                    Text { text: appState.rtl ? "اللون الرئيسي" : "Primary color"; color: Theme.muted; font.pixelSize: 10 }
+                    Text { text: appState.localize(appState.language, "هوية الشركة", "Company Identity"); color: Theme.platinum; font.pixelSize: 16; font.bold: true }
+                    Text { text: appState.localize(appState.language, "اسم الشركة", "Company name"); color: Theme.muted; font.pixelSize: 11 }
+                    TextField { id: brandField; Layout.fillWidth: true; placeholderText: appState.localize(appState.language, "اسم العلامة التجارية", "Brand name"); selectByMouse: true }
+                    Text { text: appState.localize(appState.language, "اللون الرئيسي", "Primary color"); color: Theme.muted; font.pixelSize: 11 }
                     TextField { id: colorField; Layout.fillWidth: true; placeholderText: "#128FE7"; selectByMouse: true }
-                    Text { text: appState.rtl ? "البريد الإلكتروني" : "Contact email"; color: Theme.muted; font.pixelSize: 10 }
+                    Text { text: appState.localize(appState.language, "البريد الإلكتروني", "Contact email"); color: Theme.muted; font.pixelSize: 11 }
                     TextField { id: emailField; Layout.fillWidth: true; placeholderText: "info@example.com"; selectByMouse: true }
-                    Text { text: appState.rtl ? "الموقع الإلكتروني" : "Website"; color: Theme.muted; font.pixelSize: 10 }
+                    Text { text: appState.localize(appState.language, "الموقع الإلكتروني", "Website"); color: Theme.muted; font.pixelSize: 11 }
                     TextField { id: websiteField; Layout.fillWidth: true; placeholderText: "https://example.com"; selectByMouse: true }
                     RowLayout {
                         Layout.fillWidth: true
-                        Button { text: appState.rtl ? "إزالة الشعار" : "Remove Logo"; onClicked: root.logoData = "" }
-                        Button { text: appState.rtl ? "إزالة الغلاف" : "Remove Cover"; onClicked: root.coverData = "" }
+                        Button { text: appState.localize(appState.language, "إزالة الشعار", "Remove Logo"); onClicked: root.logoData = "" }
+                        Button { text: appState.localize(appState.language, "إزالة الغلاف", "Remove Cover"); onClicked: root.coverData = "" }
                     }
                 }
             }
@@ -212,31 +221,39 @@ Flickable {
                 radius: 15
                 color: Theme.panel
                 border.width: 1
-                border.color: Qt.rgba(.68,.78,.85,.25)
+                border.color: Theme.metallicSilverDark
 
                 ColumnLayout {
                     anchors.fill: parent
                     anchors.margins: 15
                     spacing: 9
-                    Text { text: appState.rtl ? "روابط السوشيال ميديا — قابلة للتحرير" : "Editable social media links"; color: Theme.platinum; font.pixelSize: 16; font.bold: true }
-                    Text { text: "Facebook"; color: Theme.muted; font.pixelSize: 10 }
+                    Text { text: appState.localize(appState.language, "روابط السوشيال ميديا — قابلة للتحرير", "Editable social media links"); color: Theme.platinum; font.pixelSize: 16; font.bold: true }
+                    Text { text: "Facebook"; color: Theme.muted; font.pixelSize: 11 }
                     TextField { id: facebookField; Layout.fillWidth: true; placeholderText: "https://facebook.com/..."; selectByMouse: true; inputMethodHints: Qt.ImhUrlCharactersOnly }
-                    Text { text: "LinkedIn"; color: Theme.muted; font.pixelSize: 10 }
+                    Text { text: "LinkedIn"; color: Theme.muted; font.pixelSize: 11 }
                     TextField { id: linkedinField; Layout.fillWidth: true; placeholderText: "https://linkedin.com/..."; selectByMouse: true; inputMethodHints: Qt.ImhUrlCharactersOnly }
-                    Text { text: "YouTube"; color: Theme.muted; font.pixelSize: 10 }
+                    Text { text: "YouTube"; color: Theme.muted; font.pixelSize: 11 }
                     TextField { id: youtubeField; Layout.fillWidth: true; placeholderText: "https://youtube.com/..."; selectByMouse: true; inputMethodHints: Qt.ImhUrlCharactersOnly }
-                    Text { text: "X / Twitter"; color: Theme.muted; font.pixelSize: 10 }
+                    Text { text: "X / Twitter"; color: Theme.muted; font.pixelSize: 11 }
                     TextField { id: xField; Layout.fillWidth: true; placeholderText: "https://x.com/..."; selectByMouse: true; inputMethodHints: Qt.ImhUrlCharactersOnly }
-                    Text { text: "TikTok"; color: Theme.muted; font.pixelSize: 10 }
+                    Text { text: "TikTok"; color: Theme.muted; font.pixelSize: 11 }
                     TextField { id: tiktokField; Layout.fillWidth: true; placeholderText: "https://tiktok.com/@..."; selectByMouse: true; inputMethodHints: Qt.ImhUrlCharactersOnly }
                 }
             }
         }
 
         Text {
+            visible: !root.linksValid
+            Layout.fillWidth: true
+            text: appState.localize(appState.language, "استخدم روابط صحيحة تبدأ بـ https:// أو اترك الخانة فارغة.", "Use valid links beginning with https://, or leave the field empty.")
+            color: Theme.danger
+            font.pixelSize: 12
+        }
+
+        Text {
             visible: root.savedSuccessfully
             Layout.fillWidth: true
-            text: appState.rtl ? "تم حفظ بيانات الشركة وروابط السوشيال ميديا." : "Company details and social links were saved."
+            text: appState.localize(appState.language, "تم حفظ بيانات الشركة وروابط السوشيال ميديا.", "Company details and social links were saved.")
             color: Theme.emerald
             font.pixelSize: 11
             font.bold: true

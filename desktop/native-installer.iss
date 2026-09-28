@@ -1,8 +1,8 @@
-#define MyAppName "FG Machines Real Estate OS"
-#define MyAppVersion "2.0.2"
-#define MyAppPublisher "FG Machines"
+#define MyAppName "Real Estate Business OS"
+#define MyAppVersion "2.1.0"
+#define MyAppPublisher "White-Label Business Software"
 #define MyAppURL ""
-#define MyAppExeName "fg_machines_realestate.exe"
+#define MyAppExeName "real_estate_business_os.exe"
 
 [Setup]
 AppId={{8E7D0B3C-6E8A-4C2E-8E85-A872C7C90850}
@@ -11,11 +11,11 @@ AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
-DefaultDirName={autopf}\FG Machines\Real Estate OS
-DefaultGroupName=FG Machines Real Estate OS
+DefaultDirName={autopf}\Real Estate Business OS
+DefaultGroupName=Real Estate Business OS
 DisableProgramGroupPage=yes
 OutputDir=..\native-installer
-OutputBaseFilename=FG-Machines-Real-Estate-OS-v2.0.2-Windows-Setup
+OutputBaseFilename=Real-Estate-Business-OS-v2.1.0-Windows-Setup
 SetupIconFile=nexvary-realestate.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 Compression=lzma2/ultra64
@@ -44,11 +44,11 @@ Type: files; Name: "{autodesktop}\NEXVARY RealEstate AI OS Native.lnk"
 Type: files; Name: "{autoprograms}\NEXVARY RealEstate AI OS Native.lnk"
 
 [Icons]
-Name: "{autoprograms}\FG Machines Real Estate OS"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"
-Name: "{autodesktop}\FG Machines Real Estate OS"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{autoprograms}\Real Estate Business OS"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"
+Name: "{autodesktop}\Real Estate Business OS"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "Launch FG Machines Real Estate OS"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#MyAppExeName}"; Description: "Launch Real Estate Business OS"; Flags: nowait postinstall skipifsilent
 
 [Code]
 procedure CurInstallProgressChanged(CurProgress, MaxProgress: Integer);
@@ -68,5 +68,5 @@ begin
   else if Pct < 88 then
     WizardForm.StatusLabel.Caption := 'Preparing white-label branding, company cover and RTL interface...'
   else
-    WizardForm.StatusLabel.Caption := 'Finalizing FG Machines secure local services...';
+    WizardForm.StatusLabel.Caption := 'Finalizing secure local services...';
 end;

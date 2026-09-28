@@ -11,6 +11,8 @@ class AppState final : public QObject
     Q_OBJECT
     Q_PROPERTY(QString language READ language WRITE setLanguage NOTIFY languageChanged)
     Q_PROPERTY(bool rtl READ rtl NOTIFY languageChanged)
+    Q_PROPERTY(QStringList languageCodes READ languageCodes CONSTANT)
+    Q_PROPERTY(QStringList languageNames READ languageNames CONSTANT)
     Q_PROPERTY(QString currentPage READ currentPage NOTIFY currentPageChanged)
     Q_PROPERTY(QString currentTime READ currentTime NOTIFY clockChanged)
     Q_PROPERTY(QString currentDate READ currentDate NOTIFY clockChanged)
@@ -21,12 +23,15 @@ public:
     QString language() const;
     void setLanguage(const QString &language);
     bool rtl() const;
+    QStringList languageCodes() const;
+    QStringList languageNames() const;
 
     QString currentPage() const;
     QString currentTime() const;
     QString currentDate() const;
 
     Q_INVOKABLE QString t(const QString &key) const;
+    Q_INVOKABLE QString localize(const QString &language, const QString &arabic, const QString &english) const;
     Q_INVOKABLE void navigate(const QString &page);
     Q_INVOKABLE void goBack();
     Q_INVOKABLE void resetNavigation();

@@ -59,6 +59,10 @@ QString ApiClient::healthStatus() const { return m_healthStatus; }
 bool ApiClient::setupKnown() const { return m_setupKnown; }
 bool ApiClient::needsSetup() const { return m_needsSetup; }
 bool ApiClient::developmentWorkspace() const { return m_developmentWorkspace; }
+bool ApiClient::licenseKnown() const { return m_licenseKnown; }
+bool ApiClient::licenseValid() const { return m_licenseValid; }
+QString ApiClient::machineCode() const { return m_machineCode; }
+QVariantMap ApiClient::licenseInfo() const { return m_licenseInfo; }
 QVariantMap ApiClient::overview() const { return m_overview; }
 QVariantList ApiClient::leads() const { return m_leads; }
 QVariantList ApiClient::units() const { return m_units; }
@@ -178,12 +182,81 @@ void ApiClient::health()
                 m_healthStatus = nextStatus;
                 emit healthChanged();
             }
-            if (!loggedIn() && !m_setupKnown)
+            if (!m_licenseKnown)
+                refreshLicense();
+            else if (m_licenseValid && !loggedIn() && !m_setupKnown)
                 fetchSetupStatus();
             setError(QString());
         }
         reply->deleteLater();
     });
+}
+
+void ApiClient::refreshLicense()
+{
+    auto *reply = m_network.get(makeRequest(QStringLiteral("/api/v1/license/status"), false));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        if (reply->error() == QNetworkReply::NoError) {
+            const QJsonObject object = QJsonDocument::fromJson(body).object();
+            m_licenseKnown = true;
+            m_licenseValid = object.value(QStringLiteral("valid")).toBool(false);
+            m_machineCode = object.value(QStringLiteral("machine_code")).toString();
+            m_licenseInfo = object.toVariantMap();
+            emit licenseChanged();
+            if (m_licenseValid && !loggedIn() && !m_setupKnown)
+                fetchSetupStatus();
+        }
+        reply->deleteLater();
+    });
+}
+
+void ApiClient::activateLicense(const QString &licenseText, bool agreementAccepted)
+{
+    if (m_busy)
+        return;
+    const QJsonDocument licenseDocument = QJsonDocument::fromJson(licenseText.toUtf8());
+    if (!licenseDocument.isObject()) {
+        setError(QStringLiteral("The license file is not valid JSON."));
+        return;
+    }
+    setBusy(true);
+    setError(QString());
+    QJsonObject payload;
+    payload.insert(QStringLiteral("license_document"), licenseDocument.object());
+    payload.insert(QStringLiteral("agreement_accepted"), agreementAccepted);
+    auto *reply = m_network.post(
+        makeRequest(QStringLiteral("/api/v1/license/activate"), false),
+        QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        const QByteArray body = reply->readAll();
+        setBusy(false);
+        if (reply->error() == QNetworkReply::NoError) {
+            const QJsonObject object = QJsonDocument::fromJson(body).object();
+            m_licenseKnown = true;
+            m_licenseValid = object.value(QStringLiteral("valid")).toBool(false);
+            m_machineCode = object.value(QStringLiteral("machine_code")).toString();
+            m_licenseInfo = object.toVariantMap();
+            emit licenseChanged();
+            if (m_licenseValid)
+                fetchSetupStatus();
+        } else {
+            setError(apiErrorMessage(body, reply->errorString()));
+        }
+        reply->deleteLater();
+    });
+}
+
+QString ApiClient::readTextFile(const QUrl &fileUrl, int maxBytes)
+{
+    if (!fileUrl.isLocalFile() || maxBytes <= 0)
+        return QString();
+    QFile file(fileUrl.toLocalFile());
+    if (!file.open(QIODevice::ReadOnly) || file.size() > maxBytes) {
+        setError(QStringLiteral("Unable to read the selected license file."));
+        return QString();
+    }
+    return QString::fromUtf8(file.readAll());
 }
 
 void ApiClient::fetchSetupStatus()

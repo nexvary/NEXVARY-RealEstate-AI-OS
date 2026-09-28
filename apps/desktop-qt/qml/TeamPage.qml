@@ -15,23 +15,23 @@ Item {
         background: Rectangle { radius: 18; color: Theme.panel; border.width: 1; border.color: Qt.rgba(.72,.82,.89,.34) }
         contentItem: ColumnLayout {
             spacing: 9
-            Text { text: appState.rtl ? "إضافة عضو للفريق" : "Add Team Member"; color: Theme.platinum; font.pixelSize: 20; font.bold: true }
-            TextField { id: nameField; Layout.fillWidth: true; placeholderText: appState.rtl ? "الاسم" : "Display name" }
+            Text { text: appState.localize(appState.language, "إضافة عضو للفريق", "Add Team Member"); color: Theme.platinum; font.pixelSize: 20; font.bold: true }
+            TextField { id: nameField; Layout.fillWidth: true; placeholderText: appState.localize(appState.language, "الاسم", "Display name") }
             TextField { id: emailField; Layout.fillWidth: true; placeholderText: "Email" }
-            TextField { id: passwordField; Layout.fillWidth: true; echoMode: TextInput.Password; placeholderText: appState.rtl ? "كلمة مرور مبدئية" : "Initial password" }
+            TextField { id: passwordField; Layout.fillWidth: true; echoMode: TextInput.Password; placeholderText: appState.localize(appState.language, "كلمة مرور مبدئية", "Initial password") }
             ComboBox { id: roleField; Layout.fillWidth: true; model: ["admin","sales_manager","sales_agent","finance","viewer"] }
             RowLayout {
                 Layout.fillWidth: true; layoutDirection: appState.rtl ? Qt.RightToLeft : Qt.LeftToRight
                 Button {
                     Layout.fillWidth: true
                     enabled: root.canManage && nameField.text.length >= 2 && emailField.text.length >= 5 && passwordField.text.length >= 10
-                    text: appState.rtl ? "إضافة المستخدم" : "Add User"
+                    text: appState.localize(appState.language, "إضافة المستخدم", "Add User")
                     onClicked: {
                         apiClient.createUser(emailField.text, nameField.text, passwordField.text, roleField.currentText)
                         userDialog.close()
                     }
                 }
-                Button { text: appState.rtl ? "إلغاء" : "Cancel"; onClicked: userDialog.close() }
+                Button { text: appState.localize(appState.language, "إلغاء", "Cancel"); onClicked: userDialog.close() }
             }
         }
     }
@@ -43,10 +43,10 @@ Item {
             Layout.fillWidth: true; layoutDirection: appState.rtl ? Qt.RightToLeft : Qt.LeftToRight
             ColumnLayout {
                 Layout.fillWidth: true
-                Text { text: (appState.language, appState.t("team")); color: Theme.platinum; font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"; font.pixelSize: 29; font.bold: true }
-                Text { text: appState.rtl ? "الفريق والأدوار والصلاحيات المعتمدة على RBAC" : "Team, roles and RBAC permissions"; color: Theme.muted; font.pixelSize: 12 }
+                Text { text: (appState.language, appState.t("team")); color: Theme.platinum; font.family: appState.localize(appState.language, "Noto Kufi Arabic", "Segoe UI"); font.pixelSize: 29; font.bold: true }
+                Text { text: appState.localize(appState.language, "الفريق والأدوار والصلاحيات المعتمدة على RBAC", "Team, roles and RBAC permissions"); color: Theme.muted; font.pixelSize: 12 }
             }
-            Button { visible: root.canManage; text: appState.rtl ? "+ مستخدم" : "+ User"; onClicked: userDialog.open() }
+            Button { visible: root.canManage; text: appState.localize(appState.language, "+ مستخدم", "+ User"); onClicked: userDialog.open() }
             Button { text: (appState.language, appState.t("refresh")); onClicked: apiClient.refreshWorkspace() }
         }
 
@@ -57,7 +57,7 @@ Item {
                 anchors.fill: parent; anchors.margins: 13; spacing: 8
                 RowLayout {
                     Layout.fillWidth: true
-                    Text { text: appState.rtl ? "أعضاء الشركة" : "Company Members"; color: Theme.platinum; font.pixelSize: 17; font.bold: true }
+                    Text { text: appState.localize(appState.language, "أعضاء الشركة", "Company Members"); color: Theme.platinum; font.pixelSize: 17; font.bold: true }
                     Item { Layout.fillWidth: true }
                     Text { text: String(apiClient.users.length); color: Theme.electricCyan; font.pixelSize: 12; font.bold: true }
                 }
@@ -81,11 +81,11 @@ Item {
                             ColumnLayout {
                                 Layout.fillWidth: true; spacing: 2
                                 Text { Layout.fillWidth: true; text: modelData.display_name || "—"; color: Theme.platinum; font.pixelSize: 12; font.bold: true; elide: Text.ElideRight }
-                                Text { Layout.fillWidth: true; text: modelData.email || ""; color: Theme.muted; font.pixelSize: 9; elide: Text.ElideRight }
+                                Text { Layout.fillWidth: true; text: modelData.email || ""; color: Theme.muted; font.pixelSize: 11; elide: Text.ElideRight }
                             }
                             Rectangle {
                                 width: 120; height: 28; radius: 8; color: Qt.rgba(.1,.35,.55,.14); border.width: 1; border.color: Qt.rgba(.35,.7,.95,.18)
-                                Text { anchors.centerIn: parent; text: modelData.role || "—"; color: Theme.silver; font.pixelSize: 9; font.bold: true }
+                                Text { anchors.centerIn: parent; text: modelData.role || "—"; color: Theme.silver; font.pixelSize: 11; font.bold: true }
                             }
                         }
                     }

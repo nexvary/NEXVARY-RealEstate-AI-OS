@@ -15,12 +15,12 @@ Item {
 
         contentItem: ColumnLayout {
             spacing: 9
-            Text { text: appState.rtl ? "معاينة / موعد جديد" : "New Viewing / Appointment"; color: Theme.platinum; font.pixelSize: 19; font.bold: true }
+            Text { text: appState.localize(appState.language, "معاينة / موعد جديد", "New Viewing / Appointment"); color: Theme.platinum; font.pixelSize: 19; font.bold: true }
             ComboBox { id: leadField; Layout.fillWidth: true; model: apiClient.leads; textRole: "full_name"; valueRole: "id" }
             ComboBox {
                 id: projectField
                 Layout.fillWidth: true
-                model: [{id:"",name:appState.rtl ? "بدون مشروع محدد" : "No project"}].concat(apiClient.projects)
+                model: [{id:"",name:appState.localize(appState.language, "بدون مشروع محدد", "No project")}].concat(apiClient.projects)
                 textRole: "name"
                 valueRole: "id"
             }
@@ -34,7 +34,7 @@ Item {
                 id: notesField
                 Layout.fillWidth: true
                 Layout.preferredHeight: 80
-                placeholderText: appState.rtl ? "ملاحظات الموعد" : "Appointment notes"
+                placeholderText: appState.localize(appState.language, "ملاحظات الموعد", "Appointment notes")
                 wrapMode: TextEdit.WordWrap
             }
             RowLayout {
@@ -42,7 +42,7 @@ Item {
                 Button {
                     Layout.fillWidth: true
                     enabled: leadField.count > 0 && !apiClient.busy
-                    text: appState.rtl ? "حفظ الموعد" : "Save Appointment"
+                    text: appState.localize(appState.language, "حفظ الموعد", "Save Appointment")
                     onClicked: {
                         apiClient.createAppointment(
                             leadField.currentValue || "",
@@ -52,7 +52,7 @@ Item {
                         appointmentDialog.close()
                     }
                 }
-                Button { text: appState.rtl ? "إلغاء" : "Cancel"; onClicked: appointmentDialog.close() }
+                Button { text: appState.localize(appState.language, "إلغاء", "Cancel"); onClicked: appointmentDialog.close() }
             }
         }
     }
@@ -69,17 +69,17 @@ Item {
                 Text {
                     text: (appState.language, appState.t("appointments"))
                     color: Theme.platinum
-                    font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"
+                    font.family: appState.localize(appState.language, "Noto Kufi Arabic", "Segoe UI")
                     font.pixelSize: 29
                     font.bold: true
                 }
                 Text {
-                    text: appState.rtl ? "جدولة المعاينات ومتابعة المواعيد المرتبطة بالعملاء" : "Schedule viewings and track customer appointments"
+                    text: appState.localize(appState.language, "جدولة المعاينات ومتابعة المواعيد المرتبطة بالعملاء", "Schedule viewings and track customer appointments")
                     color: Theme.muted
                     font.pixelSize: 12
                 }
             }
-            Button { text: appState.rtl ? "+ موعد" : "+ Appointment"; enabled: apiClient.leads.length > 0; onClicked: appointmentDialog.open() }
+            Button { text: appState.localize(appState.language, "+ موعد", "+ Appointment"); enabled: apiClient.leads.length > 0; onClicked: appointmentDialog.open() }
             Button { text: (appState.language, appState.t("refresh")); onClicked: apiClient.refreshAll() }
         }
 
@@ -99,7 +99,7 @@ Item {
                 RowLayout {
                     Layout.fillWidth: true
                     layoutDirection: appState.rtl ? Qt.RightToLeft : Qt.LeftToRight
-                    Text { text: appState.rtl ? "المواعيد القادمة" : "Appointments"; color: Theme.platinum; font.pixelSize: 17; font.bold: true }
+                    Text { text: appState.localize(appState.language, "المواعيد القادمة", "Appointments"); color: Theme.platinum; font.pixelSize: 17; font.bold: true }
                     Item { Layout.fillWidth: true }
                     Text { text: String(apiClient.appointments.length); color: Theme.electricCyan; font.pixelSize: 12; font.bold: true }
                 }
@@ -140,7 +140,7 @@ Item {
                                 spacing: 2
                                 Text {
                                     Layout.fillWidth: true
-                                    text: appState.rtl ? "معاينة مرتبطة بالعميل" : "Customer viewing"
+                                    text: appState.localize(appState.language, "معاينة مرتبطة بالعميل", "Customer viewing")
                                     color: Theme.platinum
                                     font.pixelSize: 12
                                     font.bold: true
@@ -149,17 +149,17 @@ Item {
                                     Layout.fillWidth: true
                                     text: (modelData.lead_id || "").slice(0,8) + (modelData.project_id ? " · " + String(modelData.project_id).slice(0,8) : "")
                                     color: Theme.muted
-                                    font.pixelSize: 9
+                                    font.pixelSize: 11
                                 }
                             }
 
                             ColumnLayout {
                                 Text {
-                                    text: modelData.starts_at ? new Date(modelData.starts_at).toLocaleString(Qt.locale(appState.rtl ? "ar_EG" : "en_GB"), "dd MMM yyyy  HH:mm") : "—"
+                                    text: modelData.starts_at ? new Date(modelData.starts_at).toLocaleString(Qt.locale(appState.localize(appState.language, "ar_EG", "en_GB")), "dd MMM yyyy  HH:mm") : "—"
                                     color: Theme.silver
-                                    font.pixelSize: 10
+                                    font.pixelSize: 11
                                 }
-                                Text { text: modelData.status || "—"; color: Theme.electricBlue; font.pixelSize: 9 }
+                                Text { text: modelData.status || "—"; color: Theme.electricBlue; font.pixelSize: 11 }
                             }
                         }
                     }

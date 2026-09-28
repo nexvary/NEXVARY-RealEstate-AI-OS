@@ -14,7 +14,7 @@ def diagnostic_log_path() -> Path:
     if override:
         return Path(override)
     local_app_data = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
-    return local_app_data / "FG Machines" / "Real Estate OS" / "sidecar-boot.log"
+    return local_app_data / "Real Estate Business OS" / "Data" / "sidecar-boot.log"
 
 
 def write_diagnostic(message: str) -> None:
@@ -28,7 +28,7 @@ def write_diagnostic(message: str) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="FG Machines Real Estate OS local service")
+    parser = argparse.ArgumentParser(description="Real Estate Business OS local service")
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--host", default="127.0.0.1")
     args = parser.parse_args()

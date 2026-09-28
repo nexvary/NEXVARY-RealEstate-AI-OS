@@ -57,25 +57,25 @@ Item {
             Text {
                 Layout.fillWidth: true
                 text: leadDialog.editing
-                    ? (appState.rtl ? "تعديل العميل المحتمل" : "Edit Lead")
-                    : (appState.rtl ? "عميل محتمل جديد" : "New Lead")
+                    ? (appState.localize(appState.language, "تعديل العميل المحتمل", "Edit Lead"))
+                    : (appState.localize(appState.language, "عميل محتمل جديد", "New Lead"))
                 color: Theme.platinum
-                font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"
+                font.family: appState.localize(appState.language, "Noto Kufi Arabic", "Segoe UI")
                 font.pixelSize: 20
                 font.bold: true
                 horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
             }
-            TextField { id: nameField; visible: !leadDialog.editing; Layout.fillWidth: true; placeholderText: appState.rtl ? "الاسم" : "Full name" }
-            TextField { id: phoneField; visible: !leadDialog.editing; Layout.fillWidth: true; placeholderText: appState.rtl ? "الهاتف" : "Phone" }
-            TextField { id: emailField; visible: !leadDialog.editing; Layout.fillWidth: true; placeholderText: appState.rtl ? "البريد الإلكتروني" : "Email" }
-            TextField { id: sourceField; visible: !leadDialog.editing; Layout.fillWidth: true; placeholderText: appState.rtl ? "المصدر" : "Source" }
-            TextField { id: cityField; Layout.fillWidth: true; placeholderText: appState.rtl ? "المدينة المفضلة" : "Preferred city" }
+            TextField { id: nameField; visible: !leadDialog.editing; Layout.fillWidth: true; placeholderText: appState.localize(appState.language, "الاسم", "Full name") }
+            TextField { id: phoneField; visible: !leadDialog.editing; Layout.fillWidth: true; placeholderText: appState.localize(appState.language, "الهاتف", "Phone") }
+            TextField { id: emailField; visible: !leadDialog.editing; Layout.fillWidth: true; placeholderText: appState.localize(appState.language, "البريد الإلكتروني", "Email") }
+            TextField { id: sourceField; visible: !leadDialog.editing; Layout.fillWidth: true; placeholderText: appState.localize(appState.language, "المصدر", "Source") }
+            TextField { id: cityField; Layout.fillWidth: true; placeholderText: appState.localize(appState.language, "المدينة المفضلة", "Preferred city") }
             RowLayout {
                 Layout.fillWidth: true
                 TextField {
                     id: budgetField
                     Layout.fillWidth: true
-                    placeholderText: appState.rtl ? "الميزانية" : "Budget"
+                    placeholderText: appState.localize(appState.language, "الميزانية", "Budget")
                     inputMethodHints: Qt.ImhFormattedNumbersOnly
                 }
                 SpinBox {
@@ -96,7 +96,7 @@ Item {
                 id: notesField
                 Layout.fillWidth: true
                 Layout.preferredHeight: 90
-                placeholderText: appState.rtl ? "ملاحظات" : "Notes"
+                placeholderText: appState.localize(appState.language, "ملاحظات", "Notes")
                 wrapMode: TextEdit.WordWrap
             }
             Text {
@@ -104,7 +104,7 @@ Item {
                 Layout.fillWidth: true
                 text: apiClient.lastError
                 color: Theme.danger
-                font.pixelSize: 10
+                font.pixelSize: 11
                 wrapMode: Text.WordWrap
             }
             RowLayout {
@@ -113,7 +113,7 @@ Item {
                 Button {
                     Layout.fillWidth: true
                     enabled: !apiClient.busy
-                    text: apiClient.busy ? "…" : (appState.rtl ? "حفظ" : "Save")
+                    text: apiClient.busy ? "…" : (appState.localize(appState.language, "حفظ", "Save"))
                     onClicked: {
                         if (leadDialog.editing && root.selectedLead) {
                             apiClient.updateLead(
@@ -137,7 +137,7 @@ Item {
                         leadDialog.close()
                     }
                 }
-                Button { text: appState.rtl ? "إلغاء" : "Cancel"; onClicked: leadDialog.close() }
+                Button { text: appState.localize(appState.language, "إلغاء", "Cancel"); onClicked: leadDialog.close() }
             }
         }
     }
@@ -154,12 +154,12 @@ Item {
                 Text {
                     text: (appState.language, appState.t("leads"))
                     color: Theme.platinum
-                    font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"
+                    font.family: appState.localize(appState.language, "Noto Kufi Arabic", "Segoe UI")
                     font.pixelSize: 29
                     font.bold: true
                 }
                 Text {
-                    text: appState.rtl ? "إدارة العملاء المحتملين والتأهيل والمتابعة" : "Lead management, qualification and follow-up"
+                    text: appState.localize(appState.language, "إدارة العملاء المحتملين والتأهيل والمتابعة", "Lead management, qualification and follow-up")
                     color: Theme.muted
                     font.pixelSize: 12
                 }
@@ -173,10 +173,10 @@ Item {
                     anchors.centerIn: parent
                     spacing: 1
                     Text { anchors.horizontalCenter: parent.horizontalCenter; text: String(apiClient.leads.length); color: Theme.electricCyan; font.pixelSize: 18; font.bold: true }
-                    Text { anchors.horizontalCenter: parent.horizontalCenter; text: appState.rtl ? "إجمالي العملاء" : "Total leads"; color: Theme.muted; font.pixelSize: 9 }
+                    Text { anchors.horizontalCenter: parent.horizontalCenter; text: appState.localize(appState.language, "إجمالي العملاء", "Total leads"); color: Theme.muted; font.pixelSize: 11 }
                 }
             }
-            Button { text: appState.rtl ? "+ عميل جديد" : "+ New Lead"; onClicked: leadDialog.openNew() }
+            Button { text: appState.localize(appState.language, "+ عميل جديد", "+ New Lead"); onClicked: leadDialog.openNew() }
             Button { text: (appState.language, appState.t("refresh")); onClicked: apiClient.refreshAll() }
         }
 
@@ -203,11 +203,11 @@ Item {
                         anchors.leftMargin: 12
                         anchors.rightMargin: 12
                         layoutDirection: appState.rtl ? Qt.RightToLeft : Qt.LeftToRight
-                        Text { Layout.preferredWidth: 210; text: appState.rtl ? "العميل" : "Lead"; color: Theme.silver; font.pixelSize: 10; font.bold: true }
-                        Text { Layout.preferredWidth: 100; text: appState.rtl ? "الحالة" : "Status"; color: Theme.silver; font.pixelSize: 10; font.bold: true }
-                        Text { Layout.preferredWidth: 70; text: appState.rtl ? "التقييم" : "Score"; color: Theme.silver; font.pixelSize: 10; font.bold: true }
-                        Text { Layout.fillWidth: true; text: appState.rtl ? "المصدر / المدينة" : "Source / City"; color: Theme.silver; font.pixelSize: 10; font.bold: true }
-                        Text { Layout.preferredWidth: 150; text: appState.rtl ? "إجراءات" : "Actions"; color: Theme.silver; font.pixelSize: 10; font.bold: true }
+                        Text { Layout.preferredWidth: 210; text: appState.localize(appState.language, "العميل", "Lead"); color: Theme.silver; font.pixelSize: 11; font.bold: true }
+                        Text { Layout.preferredWidth: 100; text: appState.localize(appState.language, "الحالة", "Status"); color: Theme.silver; font.pixelSize: 11; font.bold: true }
+                        Text { Layout.preferredWidth: 70; text: appState.localize(appState.language, "التقييم", "Score"); color: Theme.silver; font.pixelSize: 11; font.bold: true }
+                        Text { Layout.fillWidth: true; text: appState.localize(appState.language, "المصدر / المدينة", "Source / City"); color: Theme.silver; font.pixelSize: 11; font.bold: true }
+                        Text { Layout.preferredWidth: 150; text: appState.localize(appState.language, "إجراءات", "Actions"); color: Theme.silver; font.pixelSize: 11; font.bold: true }
                     }
                 }
 
@@ -239,7 +239,7 @@ Item {
                                 Layout.preferredWidth: 210
                                 spacing: 1
                                 Text { Layout.fillWidth: true; text: modelData.full_name || "—"; color: Theme.platinum; font.pixelSize: 12; font.bold: true; elide: Text.ElideRight }
-                                Text { Layout.fillWidth: true; text: modelData.phone || ""; color: Theme.muted; font.pixelSize: 9; elide: Text.ElideRight }
+                                Text { Layout.fillWidth: true; text: modelData.phone || ""; color: Theme.muted; font.pixelSize: 11; elide: Text.ElideRight }
                             }
 
                             Rectangle {
@@ -249,7 +249,7 @@ Item {
                                 color: modelData.status === "won" ? Qt.rgba(.15,.55,.38,.18)
                                     : modelData.status === "lost" ? Qt.rgba(.65,.2,.25,.15)
                                     : Qt.rgba(.15,.45,.7,.14)
-                                Text { anchors.centerIn: parent; text: modelData.status || "—"; color: modelData.status === "won" ? Theme.emerald : modelData.status === "lost" ? Theme.danger : Theme.electricBlue; font.pixelSize: 9; font.bold: true }
+                                Text { anchors.centerIn: parent; text: modelData.status || "—"; color: modelData.status === "won" ? Theme.emerald : modelData.status === "lost" ? Theme.danger : Theme.electricBlue; font.pixelSize: 11; font.bold: true }
                             }
 
                             Text {
@@ -264,16 +264,16 @@ Item {
                                 Layout.fillWidth: true
                                 text: (modelData.source || "—") + " · " + (modelData.preferred_city || "—")
                                 color: Theme.muted
-                                font.pixelSize: 10
+                                font.pixelSize: 11
                                 elide: Text.ElideRight
                             }
 
                             RowLayout {
                                 Layout.preferredWidth: 150
                                 spacing: 5
-                                Button { text: appState.rtl ? "تعديل" : "Edit"; onClicked: leadDialog.openEdit(modelData) }
+                                Button { text: appState.localize(appState.language, "تعديل", "Edit"); onClicked: leadDialog.openEdit(modelData) }
                                 Button {
-                                    text: appState.rtl ? "السجل" : "Timeline"
+                                    text: appState.localize(appState.language, "السجل", "Timeline")
                                     onClicked: {
                                         apiClient.loadTimeline(modelData.id)
                                         appState.navigate("timeline")

@@ -16,11 +16,13 @@ from .models import AuditEvent, Tenant, User, UserRole
 from .quota import PLAN_DEFAULTS
 from .saas_models import PlatformAdmin, TenantLifecycle, TenantPlan, TenantSaaSProfile
 from .security import create_access_token, hash_password
+from .license_core import current_license_status
 
 router = APIRouter(prefix="/api/v1")
 
-WHITE_LABEL_SLUG = "fg-machines"
+WHITE_LABEL_SLUG = "workspace"
 LEGACY_DEVELOPMENT_SLUG = "nexvary-dev"
+LEGACY_FG_SLUG = "fg-machines"
 
 
 class SetupStatus(BaseModel):
@@ -58,7 +60,7 @@ def setup_status(db: Session = Depends(get_db)) -> SetupStatus:
     settings = get_settings()
     development_workspace = db.scalar(
         select(func.count()).select_from(Tenant).where(
-            Tenant.slug.in_((WHITE_LABEL_SLUG, LEGACY_DEVELOPMENT_SLUG))
+            Tenant.slug.in_((WHITE_LABEL_SLUG, LEGACY_DEVELOPMENT_SLUG, LEGACY_FG_SLUG))
         )
     ) or 0
     return SetupStatus(
@@ -76,10 +78,12 @@ def bootstrap_first_owner(payload: BootstrapRequest, db: Session = Depends(get_d
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Initial setup is already complete")
 
     settings = get_settings()
+    licensed_company = str(current_license_status().get("company") or "").strip()
+    company_name = licensed_company or payload.company_name
     tenant = Tenant(
-        name=payload.company_name,
+        name=company_name,
         slug=payload.company_slug.lower(),
-        brand_name=payload.brand_name or payload.company_name,
+        brand_name=payload.brand_name or company_name,
         primary_color=payload.primary_color,
     )
     db.add(tenant)
@@ -155,18 +159,22 @@ def _write_development_marker() -> None:
     )
 
 
-def _apply_fg_machines_identity(db: Session, tenant: Tenant, owner: User) -> None:
-    """Upgrade the bundled desktop workspace without exposing the upstream brand."""
+def _apply_neutral_identity(db: Session, tenant: Tenant, owner: User) -> None:
+    """Upgrade legacy desktop workspaces without exposing an upstream brand."""
     legacy_identity = (
-        tenant.slug == LEGACY_DEVELOPMENT_SLUG
+        tenant.slug in {LEGACY_DEVELOPMENT_SLUG, LEGACY_FG_SLUG}
         or "nexvary" in (tenant.name or "").lower()
+        or "fg machines" in (tenant.name or "").lower()
         or "nexvary" in (tenant.brand_name or "").lower()
+        or "fg machines" in (tenant.brand_name or "").lower()
     )
-    tenant.name = "FG Machines"
-    tenant.brand_name = "FG Machines"
+    licensed_company = str(current_license_status().get("company") or "").strip()
+    neutral_name = licensed_company or "Your Company"
+    tenant.name = neutral_name
+    tenant.brand_name = neutral_name
     tenant.slug = WHITE_LABEL_SLUG
-    if owner.display_name in {"Development Owner", "NEXVARY Development Owner"}:
-        owner.display_name = "FG Machines Owner"
+    if owner.display_name in {"Development Owner", "NEXVARY Development Owner", "FG Machines Owner"}:
+        owner.display_name = "Workspace Owner"
 
     profile = db.scalar(
         select(TenantSaaSProfile).where(TenantSaaSProfile.tenant_id == tenant.id)
@@ -197,7 +205,7 @@ def bootstrap_development_workspace(db: Session = Depends(get_db)) -> BootstrapR
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Development setup is not available")
 
     existing = db.scalar(
-        select(Tenant).where(Tenant.slug.in_((WHITE_LABEL_SLUG, LEGACY_DEVELOPMENT_SLUG)))
+        select(Tenant).where(Tenant.slug.in_((WHITE_LABEL_SLUG, LEGACY_DEVELOPMENT_SLUG, LEGACY_FG_SLUG)))
     )
     if existing is not None:
         owner = db.scalar(
@@ -209,7 +217,7 @@ def bootstrap_development_workspace(db: Session = Depends(get_db)) -> BootstrapR
         )
         if owner is None:
             raise HTTPException(status_code=409, detail="Development workspace owner is missing")
-        _apply_fg_machines_identity(db, existing, owner)
+        _apply_neutral_identity(db, existing, owner)
         token = create_access_token(user_id=owner.id, tenant_id=existing.id, role=owner.role.value)
         _write_development_marker()
         return BootstrapResponse(
@@ -223,10 +231,11 @@ def bootstrap_development_workspace(db: Session = Depends(get_db)) -> BootstrapR
             role=owner.role.value,
         )
 
+    licensed_company = str(current_license_status().get("company") or "").strip()
     tenant = Tenant(
-        name="FG Machines",
+        name=licensed_company or "Demo Workspace",
         slug=WHITE_LABEL_SLUG,
-        brand_name="FG Machines",
+        brand_name=licensed_company or "Demo Workspace",
         primary_color="#128FE7",
     )
     db.add(tenant)
@@ -235,8 +244,8 @@ def bootstrap_development_workspace(db: Session = Depends(get_db)) -> BootstrapR
         generated_password = secrets.token_urlsafe(48)
         owner = User(
             tenant_id=tenant.id,
-            email="owner@fgmachines.local",
-            display_name="FG Machines Owner",
+            email="owner@workspace.local",
+            display_name="Workspace Owner",
             role=UserRole.owner,
             password_hash=hash_password(generated_password),
         )
@@ -290,10 +299,10 @@ def bootstrap_development_workspace(db: Session = Depends(get_db)) -> BootstrapR
 @router.post("/auth/development-session", response_model=BootstrapResponse)
 def development_session(db: Session = Depends(get_db)) -> BootstrapResponse:
     settings = get_settings()
-    if settings.app_env not in {"desktop", "test"}:
+    if settings.app_env not in {"desktop", "development", "test"}:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Desktop development session is not available")
     tenant = db.scalar(
-        select(Tenant).where(Tenant.slug.in_((WHITE_LABEL_SLUG, LEGACY_DEVELOPMENT_SLUG)))
+        select(Tenant).where(Tenant.slug.in_((WHITE_LABEL_SLUG, LEGACY_DEVELOPMENT_SLUG, LEGACY_FG_SLUG)))
     )
     if tenant is None:
         raise HTTPException(status_code=404, detail="Development workspace not found")
@@ -306,7 +315,7 @@ def development_session(db: Session = Depends(get_db)) -> BootstrapResponse:
     )
     if owner is None:
         raise HTTPException(status_code=404, detail="Development owner not found")
-    _apply_fg_machines_identity(db, tenant, owner)
+    _apply_neutral_identity(db, tenant, owner)
     _write_development_marker()
     token = create_access_token(user_id=owner.id, tenant_id=tenant.id, role=owner.role.value)
     return BootstrapResponse(

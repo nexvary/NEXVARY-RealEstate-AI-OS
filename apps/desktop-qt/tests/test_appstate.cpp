@@ -28,6 +28,21 @@ private slots:
         QCOMPARE(state.language(), QStringLiteral("en"));
     }
 
+    void supportsAllRequestedLanguages()
+    {
+        AppState state;
+        const QStringList codes{"ar", "en", "tr", "ru", "de", "it", "es", "fr"};
+        QCOMPARE(state.languageCodes(), codes);
+        for (const QString &code : codes) {
+            state.setLanguage(code);
+            QCOMPARE(state.language(), code);
+            QVERIFY(!state.t(QStringLiteral("dashboard")).isEmpty());
+            QVERIFY(!state.t(QStringLiteral("legal")).isEmpty());
+        }
+        state.setLanguage(QStringLiteral("de"));
+        QCOMPARE(state.localize(QStringLiteral("de"), QStringLiteral("حفظ"), QStringLiteral("Save")), QStringLiteral("Speichern"));
+    }
+
     void navigationKeepsBackStack()
     {
         AppState state;

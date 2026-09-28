@@ -27,12 +27,12 @@ Dialog {
     }
 
     function modeTitle() {
-        if (mode === "proposal") return appState.rtl ? "عرض عقاري جديد" : "New Proposal"
-        if (mode === "invoice") return appState.rtl ? "فاتورة جديدة" : "New Invoice"
-        if (mode === "payment") return appState.rtl ? "تسجيل دفعة" : "Record Payment"
-        if (mode === "ticket") return appState.rtl ? "تذكرة دعم جديدة" : "New Support Ticket"
-        if (mode === "reminder") return appState.rtl ? "تذكير جديد" : "New Reminder"
-        return appState.rtl ? "تسجيل مصروف" : "Record Expense"
+        if (mode === "proposal") return appState.localize(appState.language, "عرض عقاري جديد", "New Proposal")
+        if (mode === "invoice") return appState.localize(appState.language, "فاتورة جديدة", "New Invoice")
+        if (mode === "payment") return appState.localize(appState.language, "تسجيل دفعة", "Record Payment")
+        if (mode === "ticket") return appState.localize(appState.language, "تذكرة دعم جديدة", "New Support Ticket")
+        if (mode === "reminder") return appState.localize(appState.language, "تذكير جديد", "New Reminder")
+        return appState.localize(appState.language, "تسجيل مصروف", "Record Expense")
     }
 
     background: Rectangle {
@@ -79,7 +79,7 @@ Dialog {
                     Layout.fillWidth: true
                     text: root.modeTitle()
                     color: Theme.platinum
-                    font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"
+                    font.family: appState.localize(appState.language, "Noto Kufi Arabic", "Segoe UI")
                     font.pixelSize: 18
                     font.bold: true
                     horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
@@ -122,12 +122,12 @@ Dialog {
                 visible: root.mode === "proposal" || root.mode === "invoice" || root.mode === "payment" || root.mode === "expense"
                 Layout.fillWidth: true
                 placeholderText: root.mode === "proposal"
-                    ? (appState.rtl ? "رقم العرض" : "Proposal number")
+                    ? (appState.localize(appState.language, "رقم العرض", "Proposal number"))
                     : root.mode === "invoice"
-                        ? (appState.rtl ? "رقم الفاتورة" : "Invoice number")
+                        ? (appState.localize(appState.language, "رقم الفاتورة", "Invoice number"))
                         : root.mode === "payment"
-                            ? (appState.rtl ? "مرجع الدفع" : "Payment reference")
-                            : (appState.rtl ? "تصنيف المصروف" : "Expense category")
+                            ? (appState.localize(appState.language, "مرجع الدفع", "Payment reference"))
+                            : (appState.localize(appState.language, "تصنيف المصروف", "Expense category"))
                 horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
             }
 
@@ -136,12 +136,12 @@ Dialog {
                 visible: root.mode !== "payment"
                 Layout.fillWidth: true
                 placeholderText: root.mode === "ticket"
-                    ? (appState.rtl ? "موضوع التذكرة" : "Ticket subject")
+                    ? (appState.localize(appState.language, "موضوع التذكرة", "Ticket subject"))
                     : root.mode === "reminder"
-                        ? (appState.rtl ? "عنوان التذكير" : "Reminder title")
+                        ? (appState.localize(appState.language, "عنوان التذكير", "Reminder title"))
                         : root.mode === "expense"
-                            ? (appState.rtl ? "وصف مختصر للمصروف" : "Expense description")
-                            : (appState.rtl ? "العنوان" : "Title")
+                            ? (appState.localize(appState.language, "وصف مختصر للمصروف", "Expense description"))
+                            : (appState.localize(appState.language, "العنوان", "Title"))
                 horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
             }
 
@@ -150,7 +150,7 @@ Dialog {
                 visible: root.mode === "ticket"
                 Layout.fillWidth: true
                 Layout.preferredHeight: 90
-                placeholderText: appState.rtl ? "تفاصيل التذكرة" : "Ticket details"
+                placeholderText: appState.localize(appState.language, "تفاصيل التذكرة", "Ticket details")
                 wrapMode: TextEdit.WordWrap
             }
 
@@ -158,7 +158,7 @@ Dialog {
                 id: amountField
                 visible: root.mode === "proposal" || root.mode === "invoice" || root.mode === "payment" || root.mode === "expense"
                 Layout.fillWidth: true
-                placeholderText: appState.rtl ? "المبلغ" : "Amount"
+                placeholderText: appState.localize(appState.language, "المبلغ", "Amount")
                 inputMethodHints: Qt.ImhFormattedNumbersOnly
                 horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
             }
@@ -209,7 +209,7 @@ Dialog {
                     text: apiClient.lastError
                     color: Theme.danger
                     wrapMode: Text.WordWrap
-                    font.pixelSize: 10
+                    font.pixelSize: 11
                 }
             }
 
@@ -222,7 +222,7 @@ Dialog {
                 Button {
                     Layout.fillWidth: true
                     enabled: !apiClient.busy
-                    text: apiClient.busy ? "…" : (appState.rtl ? "حفظ" : "Save")
+                    text: apiClient.busy ? "…" : (appState.localize(appState.language, "حفظ", "Save"))
                     onClicked: {
                         var amount = Number(amountField.text || 0)
                         if (root.mode === "proposal")
@@ -242,7 +242,7 @@ Dialog {
                 }
 
                 Button {
-                    text: appState.rtl ? "إلغاء" : "Cancel"
+                    text: appState.localize(appState.language, "إلغاء", "Cancel")
                     onClicked: root.close()
                 }
             }

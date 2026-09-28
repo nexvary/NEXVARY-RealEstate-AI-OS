@@ -92,13 +92,13 @@ Item {
         background:Rectangle{radius:18;color:Theme.panel;border.width:1;border.color:Qt.rgba(.72,.82,.89,.34)}
         contentItem:ColumnLayout{
             spacing:9
-            Text{text:appState.rtl?"Workflow جديد":"New Workflow";color:Theme.platinum;font.pixelSize:20;font.bold:true}
-            TextField{id:wfName;Layout.fillWidth:true;placeholderText:appState.rtl?"اسم الـWorkflow":"Workflow name"}
-            TextArea{id:wfDescription;Layout.fillWidth:true;Layout.preferredHeight:90;placeholderText:appState.rtl?"الوصف":"Description";wrapMode:TextEdit.WordWrap}
+            Text{text:appState.localize(appState.language, "Workflow جديد", "New Workflow");color:Theme.platinum;font.pixelSize:20;font.bold:true}
+            TextField{id:wfName;Layout.fillWidth:true;placeholderText:appState.localize(appState.language, "اسم الـWorkflow", "Workflow name")}
+            TextArea{id:wfDescription;Layout.fillWidth:true;Layout.preferredHeight:90;placeholderText:appState.localize(appState.language, "الوصف", "Description");wrapMode:TextEdit.WordWrap}
             RowLayout{
                 Layout.fillWidth:true
-                Button{Layout.fillWidth:true;enabled:wfName.text.length>=2;text:appState.rtl?"إنشاء":"Create";onClicked:{apiClient.createAutomationWorkflow(wfName.text,wfDescription.text);createDialog.close()}}
-                Button{text:appState.rtl?"إلغاء":"Cancel";onClicked:createDialog.close()}
+                Button{Layout.fillWidth:true;enabled:wfName.text.length>=2;text:appState.localize(appState.language, "إنشاء", "Create");onClicked:{apiClient.createAutomationWorkflow(wfName.text,wfDescription.text);createDialog.close()}}
+                Button{text:appState.localize(appState.language, "إلغاء", "Cancel");onClicked:createDialog.close()}
             }
         }
     }
@@ -112,10 +112,10 @@ Item {
             layoutDirection:appState.rtl?Qt.RightToLeft:Qt.LeftToRight
             ColumnLayout{
                 Layout.fillWidth:true
-                Text{text:(appState.language, appState.t("automation"));color:Theme.platinum;font.family:appState.rtl?"Noto Kufi Arabic":"Segoe UI";font.pixelSize:29;font.bold:true}
-                Text{text:appState.rtl?"Workflow Editor أصلي · تنفيذ داخلي آمن · اعتماد بشري":"Native workflow editor · safe internal actions · human approvals";color:Theme.muted;font.pixelSize:12}
+                Text{text:(appState.language, appState.t("automation"));color:Theme.platinum;font.family:appState.localize(appState.language, "Noto Kufi Arabic", "Segoe UI");font.pixelSize:29;font.bold:true}
+                Text{text:appState.localize(appState.language, "Workflow Editor أصلي · تنفيذ داخلي آمن · اعتماد بشري", "Native workflow editor · safe internal actions · human approvals");color:Theme.muted;font.pixelSize:12}
             }
-            Button{visible:root.canEdit;text:appState.rtl?"+ Workflow":"+ Workflow";onClicked:createDialog.open()}
+            Button{visible:root.canEdit;text:appState.localize(appState.language, "+ Workflow", "+ Workflow");onClicked:createDialog.open()}
             Button{text:(appState.language, appState.t("refresh"));onClicked:apiClient.refreshAutomation()}
         }
 
@@ -132,9 +132,9 @@ Item {
                     onActivated:apiClient.selectAutomationWorkflow(currentValue)
                     Component.onCompleted:if(count>0)apiClient.selectAutomationWorkflow(currentValue)
                 }
-                Button{visible:root.canEdit&&apiClient.selectedAutomationWorkflowId.length>0;text:appState.rtl?"نسخ":"Duplicate";onClicked:apiClient.duplicateAutomationWorkflow(apiClient.selectedAutomationWorkflowId)}
-                Button{visible:root.canEdit&&draftNodes.count>0;text:appState.rtl?"حفظ الرسم":"Save Graph";onClicked:root.saveGraph()}
-                ComboBox{id:runLead;Layout.preferredWidth:190;model:[{id:"",full_name:appState.rtl?"تشغيل عام":"General run"}].concat(apiClient.leads);textRole:"full_name";valueRole:"id"}
+                Button{visible:root.canEdit&&apiClient.selectedAutomationWorkflowId.length>0;text:appState.localize(appState.language, "نسخ", "Duplicate");onClicked:apiClient.duplicateAutomationWorkflow(apiClient.selectedAutomationWorkflowId)}
+                Button{visible:root.canEdit&&draftNodes.count>0;text:appState.localize(appState.language, "حفظ الرسم", "Save Graph");onClicked:root.saveGraph()}
+                ComboBox{id:runLead;Layout.preferredWidth:190;model:[{id:"",full_name:appState.localize(appState.language, "تشغيل عام", "General run")}].concat(apiClient.leads);textRole:"full_name";valueRole:"id"}
                 Button{visible:root.canEdit&&apiClient.selectedAutomationWorkflowId.length>0;text:"▶ Run";onClicked:apiClient.runAutomationWorkflow(apiClient.selectedAutomationWorkflowId,runLead.currentValue||"")}
             }
         }
@@ -151,8 +151,8 @@ Item {
                 radius:14;color:Theme.panel;border.width:1;border.color:Qt.rgba(.67,.76,.83,.26)
                 ColumnLayout{
                     anchors.fill:parent;anchors.margins:11;spacing:7
-                    Text{text:appState.rtl?"العناصر":"Node Catalog";color:Theme.platinum;font.pixelSize:16;font.bold:true}
-                    Text{text:appState.rtl?"اضغط لإضافة العنصر إلى الـCanvas":"Click to add to the canvas";color:Theme.muted;font.pixelSize:9}
+                    Text{text:appState.localize(appState.language, "العناصر", "Node Catalog");color:Theme.platinum;font.pixelSize:16;font.bold:true}
+                    Text{text:appState.localize(appState.language, "اضغط لإضافة العنصر إلى الـCanvas", "Click to add to the canvas");color:Theme.muted;font.pixelSize: 11}
                     ListView{
                         id:catalogList;Layout.fillWidth:true;Layout.fillHeight:true;clip:true;spacing:5;model:apiClient.automationCatalog
                         delegate:Rectangle{
@@ -179,9 +179,9 @@ Item {
                     anchors.fill:parent;anchors.margins:8;spacing:6
                     RowLayout{
                         Layout.fillWidth:true
-                        Text{text:appState.rtl?"Canvas":"Canvas";color:Theme.platinum;font.pixelSize:16;font.bold:true}
+                        Text{text:appState.localize(appState.language, "Canvas", "Canvas");color:Theme.platinum;font.pixelSize:16;font.bold:true}
                         Item{Layout.fillWidth:true}
-                        Text{text:String(draftNodes.count)+" nodes · "+String(draftEdges.count)+" edges";color:Theme.electricCyan;font.pixelSize:9}
+                        Text{text:String(draftNodes.count)+" nodes · "+String(draftEdges.count)+" edges";color:Theme.electricCyan;font.pixelSize: 11}
                     }
                     Flickable{
                         id:canvas
@@ -234,12 +234,12 @@ Item {
                     anchors.fill:parent;anchors.margins:10;clip:true
                     ColumnLayout{
                         width:parent.width;spacing:8
-                        Text{text:appState.rtl?"التشغيل والموافقات":"Runs & Approvals";color:Theme.platinum;font.pixelSize:16;font.bold:true}
+                        Text{text:appState.localize(appState.language, "التشغيل والموافقات", "Runs & Approvals");color:Theme.platinum;font.pixelSize:16;font.bold:true}
                         Text{
                             visible:root.selectedNode!==null
                             Layout.fillWidth:true
-                            text:root.selectedNode?((appState.rtl?"العنصر: ":"Node: ")+root.selectedNode.title):""
-                            color:Theme.electricCyan;font.pixelSize:10;wrapMode:Text.WordWrap
+                            text:root.selectedNode?((appState.localize(appState.language, "العنصر: ", "Node: "))+root.selectedNode.title):""
+                            color:Theme.electricCyan;font.pixelSize: 11;wrapMode:Text.WordWrap
                         }
                         Repeater{
                             model:apiClient.automationRuns.slice(0,16)
@@ -253,7 +253,7 @@ Item {
                                     anchors.fill:parent;anchors.margins:8;spacing:4
                                     RowLayout{
                                         Layout.fillWidth:true
-                                        Text{Layout.fillWidth:true;text:(modelData.trigger_type||"manual")+" · "+String(modelData.id||"").slice(0,8);color:Theme.platinum;font.pixelSize:9;font.bold:true}
+                                        Text{Layout.fillWidth:true;text:(modelData.trigger_type||"manual")+" · "+String(modelData.id||"").slice(0,8);color:Theme.platinum;font.pixelSize: 11;font.bold:true}
                                         Text{text:modelData.status||"";color:modelData.status==="succeeded"?Theme.emerald:modelData.status==="failed"?Theme.danger:Theme.gold;font.pixelSize:8;font.bold:true}
                                     }
                                     Text{visible:!!modelData.error;Layout.fillWidth:true;text:modelData.error||"";color:Theme.danger;font.pixelSize:8;wrapMode:Text.WordWrap}
@@ -278,6 +278,6 @@ Item {
             }
         }
 
-        Text{visible:apiClient.lastError.length>0;Layout.fillWidth:true;text:apiClient.lastError;color:Theme.danger;font.pixelSize:10;wrapMode:Text.WordWrap}
+        Text{visible:apiClient.lastError.length>0;Layout.fillWidth:true;text:apiClient.lastError;color:Theme.danger;font.pixelSize: 11;wrapMode:Text.WordWrap}
     }
 }

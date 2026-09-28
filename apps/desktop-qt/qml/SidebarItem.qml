@@ -48,7 +48,7 @@ Rectangle {
             Layout.fillWidth: true
             text: root.label
             color: root.active ? Theme.platinum : Theme.silver
-            font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"
+            font.family: appState.localize(appState.language, "Noto Kufi Arabic", "Segoe UI")
             font.pixelSize: 13
             font.bold: root.active
             horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
@@ -57,7 +57,7 @@ Rectangle {
 
         Text {
             visible: root.active
-            text: appState.rtl ? "‹" : "›"
+            text: appState.localize(appState.language, "‹", "›")
             color: Theme.electricCyan
             font.pixelSize: 22
         }

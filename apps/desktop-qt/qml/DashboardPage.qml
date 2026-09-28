@@ -24,7 +24,7 @@ Flickable {
                 Text {
                     text: (appState.language, appState.t("dashboard"))
                     color: Theme.platinum
-                    font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"
+                    font.family: appState.localize(appState.language, "Noto Kufi Arabic", "Segoe UI")
                     font.pixelSize: 30
                     font.bold: true
                 }
@@ -155,7 +155,7 @@ Flickable {
                                 Text {
                                     text: modelData.status || "—"
                                     color: Theme.emerald
-                                    font.pixelSize: 10
+                                    font.pixelSize: 11
                                 }
                             }
                         }
@@ -219,7 +219,7 @@ Flickable {
                                 Text {
                                     text: modelData.status || "—"
                                     color: modelData.status === "available" ? Theme.emerald : Theme.gold
-                                    font.pixelSize: 10
+                                    font.pixelSize: 11
                                 }
                             }
                         }

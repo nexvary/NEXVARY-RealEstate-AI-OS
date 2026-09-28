@@ -41,7 +41,7 @@ Item {
                 Image {
                     anchors.fill: parent
                     anchors.margins: 7
-                    source: "qrc:/qt/qml/Nexvary/RealEstate/assets/nexvary-mark.svg"
+                    source: "qrc:/qt/qml/Business/RealEstate/assets/property-mark.svg"
                     fillMode: Image.PreserveAspectFit
                 }
             }
@@ -60,7 +60,7 @@ Item {
                 Layout.fillWidth: true
                 text: (appState.language, appState.t("loginTitle"))
                 color: Theme.platinum
-                font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"
+                font.family: appState.localize(appState.language, "Noto Kufi Arabic", "Segoe UI")
                 font.pixelSize: 27
                 font.bold: true
                 horizontalAlignment: Text.AlignHCenter
@@ -159,7 +159,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 46
                 enabled: !apiClient.busy
-                text: appState.rtl ? "فتح مساحة العمل السابقة" : "Open previous workspace"
+                text: appState.localize(appState.language, "فتح مساحة العمل السابقة", "Open previous workspace")
                 onClicked: apiClient.resumeDevelopmentWorkspace()
 
                 background: Rectangle {
@@ -190,7 +190,7 @@ Item {
                 Text {
                     text: "API · " + apiClient.healthStatus
                     color: Theme.muted
-                    font.pixelSize: 10
+                    font.pixelSize: 11
                 }
             }
         }

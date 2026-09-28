@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(FGMachinesRealEstateNative VERSION 2.0.2 LANGUAGES CXX)
+project(RealEstateBusinessOS VERSION 2.1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -32,7 +32,7 @@ endif()
 qt_add_executable(nexvary_realestate_native
     src/main.cpp
 )
-set_target_properties(nexvary_realestate_native PROPERTIES OUTPUT_NAME "fg_machines_realestate")
+set_target_properties(nexvary_realestate_native PROPERTIES OUTPUT_NAME "real_estate_business_os")
 
 set(NEXVARY_QML_FILES
     qml/Main.qml
@@ -57,6 +57,8 @@ set(NEXVARY_QML_FILES
     qml/AutomationStudioPage.qml
     qml/AiSalesPage.qml
     qml/AboutSystemPage.qml
+    qml/LicensePage.qml
+    qml/LegalPage.qml
     qml/SidebarItem.qml
     qml/NavIcon.qml
 )
@@ -70,20 +72,22 @@ foreach(qml_file IN LISTS NEXVARY_QML_FILES)
 endforeach()
 
 set_source_files_properties(qml/Theme.js PROPERTIES QT_RESOURCE_ALIAS "Theme.js")
+set_source_files_properties(qml/LegalText.js PROPERTIES QT_RESOURCE_ALIAS "LegalText.js")
 set_source_files_properties(
-    assets/nexvary-mark.svg
-    PROPERTIES QT_RESOURCE_ALIAS "assets/nexvary-mark.svg"
+    assets/property-mark.svg
+    PROPERTIES QT_RESOURCE_ALIAS "assets/property-mark.svg"
 )
 
 qt_add_qml_module(nexvary_realestate_native
-    URI Nexvary.RealEstate
+    URI Business.RealEstate
     VERSION 1.0
     RESOURCE_PREFIX "/qt/qml"
     QML_FILES
         ${NEXVARY_QML_FILES}
     RESOURCES
         qml/Theme.js
-        assets/nexvary-mark.svg
+        qml/LegalText.js
+        assets/property-mark.svg
 )
 
 target_link_libraries(nexvary_realestate_native

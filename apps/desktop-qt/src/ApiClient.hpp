@@ -25,6 +25,10 @@ class ApiClient final : public QObject
     Q_PROPERTY(bool setupKnown READ setupKnown NOTIFY setupStatusChanged)
     Q_PROPERTY(bool needsSetup READ needsSetup NOTIFY setupStatusChanged)
     Q_PROPERTY(bool developmentWorkspace READ developmentWorkspace NOTIFY setupStatusChanged)
+    Q_PROPERTY(bool licenseKnown READ licenseKnown NOTIFY licenseChanged)
+    Q_PROPERTY(bool licenseValid READ licenseValid NOTIFY licenseChanged)
+    Q_PROPERTY(QString machineCode READ machineCode NOTIFY licenseChanged)
+    Q_PROPERTY(QVariantMap licenseInfo READ licenseInfo NOTIFY licenseChanged)
     Q_PROPERTY(QVariantMap overview READ overview NOTIFY overviewChanged)
     Q_PROPERTY(QVariantList leads READ leads NOTIFY leadsChanged)
     Q_PROPERTY(QVariantList units READ units NOTIFY unitsChanged)
@@ -89,6 +93,10 @@ public:
     bool setupKnown() const;
     bool needsSetup() const;
     bool developmentWorkspace() const;
+    bool licenseKnown() const;
+    bool licenseValid() const;
+    QString machineCode() const;
+    QVariantMap licenseInfo() const;
     QVariantMap overview() const;
     QVariantList leads() const;
     QVariantList units() const;
@@ -139,6 +147,9 @@ public:
     QString timelineLeadId() const;
 
     Q_INVOKABLE void health();
+    Q_INVOKABLE void refreshLicense();
+    Q_INVOKABLE void activateLicense(const QString &licenseText, bool agreementAccepted);
+    Q_INVOKABLE QString readTextFile(const QUrl &fileUrl, int maxBytes);
     Q_INVOKABLE void login(const QString &tenantSlug, const QString &email, const QString &password);
     Q_INVOKABLE void bootstrapFirstOwner(const QString &companyName, const QString &companySlug, const QString &brandName, const QString &ownerName, const QString &ownerEmail, const QString &ownerPassword);
     Q_INVOKABLE void resumeDevelopmentWorkspace();
@@ -214,6 +225,7 @@ signals:
     void lastErrorChanged();
     void healthChanged();
     void setupStatusChanged();
+    void licenseChanged();
     void overviewChanged();
     void leadsChanged();
     void unitsChanged();
@@ -312,6 +324,10 @@ private:
     bool m_setupKnown{false};
     bool m_needsSetup{false};
     bool m_developmentWorkspace{false};
+    bool m_licenseKnown{false};
+    bool m_licenseValid{false};
+    QString m_machineCode;
+    QVariantMap m_licenseInfo;
     bool m_healthRequestInFlight{false};
     QTimer m_healthTimer;
     QVariantMap m_overview;

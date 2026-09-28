@@ -12,9 +12,9 @@ import urllib.request
 from pathlib import Path
 
 
-APP_NAME = "FG Machines Real Estate OS"
-APP_DIR_NAME = "Real Estate OS"
-SCHEMA_GENERATION = "v1.8"
+APP_NAME = "Real Estate Business OS"
+APP_DIR_NAME = "Data"
+SCHEMA_GENERATION = "v2.1"
 
 
 def archive_orphaned_sqlite_sidecars(data_dir: Path) -> list[Path]:
@@ -76,14 +76,20 @@ def archive_incompatible_development_database(data_dir: Path) -> None:
 
 def configure_runtime() -> tuple[Path, Path]:
     local_app_data = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
-    data_dir = local_app_data / "FG Machines" / APP_DIR_NAME
-    legacy_data_dir = local_app_data / "NEXVARY" / "NEXVARY-RealEstate-AI-OS"
-    if legacy_data_dir.exists() and not data_dir.exists():
-        data_dir.parent.mkdir(parents=True, exist_ok=True)
-        try:
-            shutil.move(str(legacy_data_dir), str(data_dir))
-        except OSError:
-            data_dir = legacy_data_dir
+    data_dir = local_app_data / "Real Estate Business OS" / APP_DIR_NAME
+    legacy_locations = [
+        local_app_data / "FG Machines" / "Real Estate OS",
+        local_app_data / "NEXVARY" / "NEXVARY-RealEstate-AI-OS",
+    ]
+    if not data_dir.exists():
+        for legacy_data_dir in legacy_locations:
+            if legacy_data_dir.exists():
+                data_dir.parent.mkdir(parents=True, exist_ok=True)
+                try:
+                    shutil.copytree(legacy_data_dir, data_dir)
+                except OSError:
+                    pass
+                break
     data_dir.mkdir(parents=True, exist_ok=True)
     archive_orphaned_sqlite_sidecars(data_dir)
     archive_incompatible_development_database(data_dir)

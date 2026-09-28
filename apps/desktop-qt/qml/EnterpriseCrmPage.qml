@@ -16,20 +16,20 @@ Flickable {
 
     function money(key) {
         var n = Number(apiClient.enterpriseSummary[key] || 0)
-        return n.toLocaleString(Qt.locale(appState.rtl ? "ar_EG" : "en_US"), "f", 0) + " EGP"
+        return n.toLocaleString(Qt.locale(appState.localize(appState.language, "ar_EG", "en_US")), "f", 0) + " EGP"
     }
 
     CrmQuickAddDialog { id: quickAdd }
 
     Menu {
         id: quickMenu
-        MenuItem { text: appState.rtl ? "عرض عقاري جديد" : "New Proposal"; onTriggered: quickAdd.openFor("proposal") }
-        MenuItem { text: appState.rtl ? "فاتورة جديدة" : "New Invoice"; onTriggered: quickAdd.openFor("invoice") }
-        MenuItem { text: appState.rtl ? "تسجيل دفعة" : "Record Payment"; enabled: apiClient.invoices.length > 0; onTriggered: quickAdd.openFor("payment") }
+        MenuItem { text: appState.localize(appState.language, "عرض عقاري جديد", "New Proposal"); onTriggered: quickAdd.openFor("proposal") }
+        MenuItem { text: appState.localize(appState.language, "فاتورة جديدة", "New Invoice"); onTriggered: quickAdd.openFor("invoice") }
+        MenuItem { text: appState.localize(appState.language, "تسجيل دفعة", "Record Payment"); enabled: apiClient.invoices.length > 0; onTriggered: quickAdd.openFor("payment") }
         MenuSeparator {}
-        MenuItem { text: appState.rtl ? "تذكرة دعم" : "Support Ticket"; onTriggered: quickAdd.openFor("ticket") }
-        MenuItem { text: appState.rtl ? "تذكير" : "Reminder"; onTriggered: quickAdd.openFor("reminder") }
-        MenuItem { text: appState.rtl ? "مصروف" : "Expense"; onTriggered: quickAdd.openFor("expense") }
+        MenuItem { text: appState.localize(appState.language, "تذكرة دعم", "Support Ticket"); onTriggered: quickAdd.openFor("ticket") }
+        MenuItem { text: appState.localize(appState.language, "تذكير", "Reminder"); onTriggered: quickAdd.openFor("reminder") }
+        MenuItem { text: appState.localize(appState.language, "مصروف", "Expense"); onTriggered: quickAdd.openFor("expense") }
     }
 
     ColumnLayout {
@@ -48,21 +48,19 @@ Flickable {
                 Text {
                     text: (appState.language, appState.t("enterpriseCrm"))
                     color: Theme.platinum
-                    font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"
+                    font.family: appState.localize(appState.language, "Noto Kufi Arabic", "Segoe UI")
                     font.pixelSize: 29
                     font.bold: true
                 }
                 Text {
-                    text: appState.rtl
-                        ? "العروض والفواتير والتحصيل والدعم والتذكيرات في مركز واحد"
-                        : "Proposals, billing, collections, support and reminders in one workspace"
+                    text: appState.localize(appState.language, "العروض والفواتير والتحصيل والدعم والتذكيرات في مركز واحد", "Proposals, billing, collections, support and reminders in one workspace")
                     color: Theme.muted
                     font.pixelSize: 12
                 }
             }
 
             Button {
-                text: appState.rtl ? "+ إضافة" : "+ Quick Add"
+                text: appState.localize(appState.language, "+ إضافة", "+ Quick Add")
                 onClicked: quickMenu.open()
             }
 
@@ -129,7 +127,7 @@ Flickable {
                             Text {
                                 text: "LIVE"
                                 color: modelData.color
-                                font.pixelSize: 9
+                                font.pixelSize: 11
                                 font.bold: true
                             }
                         }
@@ -196,9 +194,9 @@ Flickable {
                                     Layout.fillWidth: true
                                     spacing: 1
                                     Text { text: modelData.title || modelData.proposal_number || "—"; color: Theme.platinum; font.pixelSize: 11; elide: Text.ElideRight; Layout.fillWidth: true }
-                                    Text { text: modelData.proposal_number || ""; color: Theme.muted; font.pixelSize: 9 }
+                                    Text { text: modelData.proposal_number || ""; color: Theme.muted; font.pixelSize: 11 }
                                 }
-                                Text { text: modelData.status || "—"; color: modelData.status === "accepted" ? Theme.emerald : Theme.gold; font.pixelSize: 10 }
+                                Text { text: modelData.status || "—"; color: modelData.status === "accepted" ? Theme.emerald : Theme.gold; font.pixelSize: 11 }
                             }
                         }
                     }
@@ -244,9 +242,9 @@ Flickable {
                                     Layout.fillWidth: true
                                     spacing: 1
                                     Text { text: modelData.title || modelData.invoice_number || "—"; color: Theme.platinum; font.pixelSize: 11; elide: Text.ElideRight; Layout.fillWidth: true }
-                                    Text { text: modelData.invoice_number || ""; color: Theme.muted; font.pixelSize: 9 }
+                                    Text { text: modelData.invoice_number || ""; color: Theme.muted; font.pixelSize: 11 }
                                 }
-                                Text { text: modelData.status || "—"; color: modelData.status === "paid" ? Theme.emerald : Theme.gold; font.pixelSize: 10 }
+                                Text { text: modelData.status || "—"; color: modelData.status === "paid" ? Theme.emerald : Theme.gold; font.pixelSize: 11 }
                             }
                         }
                     }
@@ -284,8 +282,8 @@ Flickable {
                                 anchors.rightMargin: 10
                                 layoutDirection: appState.rtl ? Qt.RightToLeft : Qt.LeftToRight
                                 Text { Layout.fillWidth: true; text: modelData.subject || "—"; color: Theme.platinum; font.pixelSize: 11; elide: Text.ElideRight }
-                                Text { text: modelData.priority || ""; color: modelData.priority === "urgent" ? Theme.danger : Theme.violet; font.pixelSize: 9 }
-                                Text { text: modelData.status || ""; color: Theme.muted; font.pixelSize: 9 }
+                                Text { text: modelData.priority || ""; color: modelData.priority === "urgent" ? Theme.danger : Theme.violet; font.pixelSize: 11 }
+                                Text { text: modelData.status || ""; color: Theme.muted; font.pixelSize: 11 }
                             }
                         }
                     }
@@ -323,7 +321,7 @@ Flickable {
                                 anchors.rightMargin: 10
                                 layoutDirection: appState.rtl ? Qt.RightToLeft : Qt.LeftToRight
                                 Text { Layout.fillWidth: true; text: modelData.title || "—"; color: Theme.platinum; font.pixelSize: 11; elide: Text.ElideRight }
-                                Text { text: modelData.status || ""; color: Theme.electricCyan; font.pixelSize: 9 }
+                                Text { text: modelData.status || ""; color: Theme.electricCyan; font.pixelSize: 11 }
                             }
                         }
                     }

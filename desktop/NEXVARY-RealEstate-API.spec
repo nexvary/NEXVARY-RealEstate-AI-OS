@@ -37,7 +37,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name="FG-Machines-RealEstate-Service",
+    name="Real-Estate-Business-Service",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

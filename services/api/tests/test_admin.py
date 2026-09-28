@@ -35,7 +35,7 @@ def test_white_label_settings_and_safe_export(admin_headers):
     exported = client.get("/api/v1/backup/export", headers=admin_headers)
     assert exported.status_code == 200
     data = exported.json()
-    assert data["format"] == "NEXVARY-RealEstate-AI-OS-backup"
+    assert data["format"] == "Real-Estate-Business-OS-backup"
     assert data["tenant"]["slug"] == "company-a"
     assert data["tables"]["users"]
     assert all("password_hash" not in user for user in data["tables"]["users"])

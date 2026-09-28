@@ -11,7 +11,7 @@ Flickable {
 
     function money(v, currency) {
         var n = Number(v || 0)
-        return n.toLocaleString(Qt.locale(appState.rtl ? "ar_EG" : "en_US"), "f", 0) + " " + (currency || "EGP")
+        return n.toLocaleString(Qt.locale(appState.localize(appState.language, "ar_EG", "en_US")), "f", 0) + " " + (currency || "EGP")
     }
 
     ColumnLayout {
@@ -30,14 +30,12 @@ Flickable {
                 Text {
                     text: (appState.language, appState.t("ai"))
                     color: Theme.platinum
-                    font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"
+                    font.family: appState.localize(appState.language, "Noto Kufi Arabic", "Segoe UI")
                     font.pixelSize: 29
                     font.bold: true
                 }
                 Text {
-                    text: appState.rtl
-                        ? "إجابات مبنية على المخزون الحقيقي وقاعدة المعرفة والوسائط الموثوقة"
-                        : "Grounded answers from live inventory, knowledge and verified media"
+                    text: appState.localize(appState.language, "إجابات مبنية على المخزون الحقيقي وقاعدة المعرفة والوسائط الموثوقة", "Grounded answers from live inventory, knowledge and verified media")
                     color: Theme.muted
                     font.pixelSize: 12
                 }
@@ -58,9 +56,9 @@ Flickable {
                         color: apiClient.healthStatus === "ok" ? Theme.emerald : Theme.gold
                     }
                     Text {
-                        text: appState.rtl ? "GROUNDING فعّال" : "GROUNDING ACTIVE"
+                        text: appState.localize(appState.language, "GROUNDING فعّال", "GROUNDING ACTIVE")
                         color: Theme.silver
-                        font.pixelSize: 9
+                        font.pixelSize: 11
                         font.bold: true
                     }
                 }
@@ -87,27 +85,25 @@ Flickable {
                     Layout.columnSpan: root.width > 1050 ? 4 : 2
                     Layout.fillWidth: true
                     Layout.preferredHeight: 82
-                    placeholderText: appState.rtl
-                        ? "مثال: أريد شقة 3 غرف في القاهرة بحد أقصى 4 مليون جنيه"
-                        : "Example: Find a 3-bedroom apartment in Cairo under EGP 4M"
+                    placeholderText: appState.localize(appState.language, "مثال: أريد شقة 3 غرف في القاهرة بحد أقصى 4 مليون جنيه", "Example: Find a 3-bedroom apartment in Cairo under EGP 4M")
                     wrapMode: TextEdit.WordWrap
                 }
 
                 TextField {
                     id: cityField
                     Layout.fillWidth: true
-                    placeholderText: appState.rtl ? "المدينة" : "City"
+                    placeholderText: appState.localize(appState.language, "المدينة", "City")
                 }
                 TextField {
                     id: minPriceField
                     Layout.fillWidth: true
-                    placeholderText: appState.rtl ? "أقل سعر" : "Min price"
+                    placeholderText: appState.localize(appState.language, "أقل سعر", "Min price")
                     inputMethodHints: Qt.ImhFormattedNumbersOnly
                 }
                 TextField {
                     id: maxPriceField
                     Layout.fillWidth: true
-                    placeholderText: appState.rtl ? "أعلى سعر" : "Max price"
+                    placeholderText: appState.localize(appState.language, "أعلى سعر", "Max price")
                     inputMethodHints: Qt.ImhFormattedNumbersOnly
                 }
                 RowLayout {
@@ -123,11 +119,11 @@ Flickable {
                     TextField {
                         id: typeField
                         Layout.fillWidth: true
-                        placeholderText: appState.rtl ? "نوع الوحدة" : "Unit type"
+                        placeholderText: appState.localize(appState.language, "نوع الوحدة", "Unit type")
                     }
                     Button {
                         enabled: !apiClient.busy && questionField.text.trim().length >= 2
-                        text: apiClient.busy ? "…" : (appState.rtl ? "تحليل" : "Analyze")
+                        text: apiClient.busy ? "…" : (appState.localize(appState.language, "تحليل", "Analyze"))
                         onClicked: apiClient.runAiSalesAssist(
                             questionField.text,
                             cityField.text,
@@ -165,7 +161,7 @@ Flickable {
                     }
                     Text {
                         Layout.fillWidth: true
-                        text: appState.rtl ? "الإجابة المبنية على البيانات" : "Grounded response"
+                        text: appState.localize(appState.language, "الإجابة المبنية على البيانات", "Grounded response")
                         color: Theme.platinum
                         font.pixelSize: 15
                         font.bold: true
@@ -173,7 +169,7 @@ Flickable {
                     Text {
                         text: apiClient.aiSalesResult.mode || ""
                         color: Theme.emerald
-                        font.pixelSize: 9
+                        font.pixelSize: 11
                     }
                 }
                 Text {
@@ -209,7 +205,7 @@ Flickable {
                     spacing: 7
                     RowLayout {
                         Layout.fillWidth: true
-                        Text { text: appState.rtl ? "الوحدات المطابقة" : "Matching Units"; color: Theme.platinum; font.pixelSize: 17; font.bold: true }
+                        Text { text: appState.localize(appState.language, "الوحدات المطابقة", "Matching Units"); color: Theme.platinum; font.pixelSize: 17; font.bold: true }
                         Item { Layout.fillWidth: true }
                         Text { text: String((apiClient.aiSalesResult.units || []).length); color: Theme.emerald; font.pixelSize: 11; font.bold: true }
                     }
@@ -239,9 +235,9 @@ Flickable {
                                     Layout.fillWidth: true
                                     spacing: 2
                                     Text { text: (modelData.code || "—") + " · " + (modelData.unit_type || ""); color: Theme.platinum; font.pixelSize: 11; font.bold: true }
-                                    Text { text: String(modelData.bedrooms === null ? "—" : modelData.bedrooms) + " BR · " + String(modelData.area_sqm || 0) + " m²"; color: Theme.muted; font.pixelSize: 9 }
+                                    Text { text: String(modelData.bedrooms === null ? "—" : modelData.bedrooms) + " BR · " + String(modelData.area_sqm || 0) + " m²"; color: Theme.muted; font.pixelSize: 11 }
                                 }
-                                Text { text: root.money(modelData.price, modelData.currency); color: Theme.gold; font.pixelSize: 10; font.bold: true }
+                                Text { text: root.money(modelData.price, modelData.currency); color: Theme.gold; font.pixelSize: 11; font.bold: true }
                             }
                         }
                     }
@@ -262,7 +258,7 @@ Flickable {
                     spacing: 7
                     RowLayout {
                         Layout.fillWidth: true
-                        Text { text: appState.rtl ? "الأدلة والمراجع" : "Evidence & Sources"; color: Theme.platinum; font.pixelSize: 17; font.bold: true }
+                        Text { text: appState.localize(appState.language, "الأدلة والمراجع", "Evidence & Sources"); color: Theme.platinum; font.pixelSize: 17; font.bold: true }
                         Item { Layout.fillWidth: true }
                         Text { text: String((apiClient.aiSalesResult.evidence || []).length); color: Theme.violet; font.pixelSize: 11; font.bold: true }
                     }
@@ -285,7 +281,7 @@ Flickable {
                                 spacing: 3
                                 RowLayout {
                                     Layout.fillWidth: true
-                                    Text { Layout.fillWidth: true; text: modelData.document_title || "—"; color: Theme.electricCyan; font.pixelSize: 10; font.bold: true; elide: Text.ElideRight }
+                                    Text { Layout.fillWidth: true; text: modelData.document_title || "—"; color: Theme.electricCyan; font.pixelSize: 11; font.bold: true; elide: Text.ElideRight }
                                     Text { text: "SCORE " + String(modelData.score || 0); color: Theme.emerald; font.pixelSize: 8; font.bold: true }
                                 }
                                 Text {
@@ -293,7 +289,7 @@ Flickable {
                                     Layout.fillWidth: true
                                     text: modelData.text || ""
                                     color: Theme.silver
-                                    font.pixelSize: 9
+                                    font.pixelSize: 11
                                     wrapMode: Text.WordWrap
                                     maximumLineCount: 4
                                     elide: Text.ElideRight
@@ -322,7 +318,7 @@ Flickable {
                 layoutDirection: appState.rtl ? Qt.RightToLeft : Qt.LeftToRight
 
                 Text {
-                    text: appState.rtl ? "وسائط موثوقة" : "Verified Media"
+                    text: appState.localize(appState.language, "وسائط موثوقة", "Verified Media")
                     color: Theme.platinum
                     font.pixelSize: 13
                     font.bold: true
@@ -340,7 +336,7 @@ Flickable {
                         ColumnLayout {
                             anchors.fill: parent
                             anchors.margins: 8
-                            Text { Layout.fillWidth: true; text: modelData.title || "—"; color: Theme.silver; font.pixelSize: 9; elide: Text.ElideRight }
+                            Text { Layout.fillWidth: true; text: modelData.title || "—"; color: Theme.silver; font.pixelSize: 11; elide: Text.ElideRight }
                             Text { text: modelData.media_type || ""; color: modelData.verified ? Theme.emerald : Theme.gold; font.pixelSize: 8 }
                         }
                     }
@@ -353,7 +349,7 @@ Flickable {
             Layout.fillWidth: true
             text: apiClient.lastError
             color: Theme.danger
-            font.pixelSize: 10
+            font.pixelSize: 11
             wrapMode: Text.WordWrap
         }
     }

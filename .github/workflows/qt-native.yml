@@ -65,7 +65,7 @@ jobs:
           pip install -r services/api/requirements.txt
           pip install -r desktop/requirements-desktop.txt
 
-      - name: Build FG Machines icon
+      - name: Build neutral application icon
         if: runner.os == 'Windows'
         shell: pwsh
         run: python desktop/build_icon.py
@@ -75,14 +75,19 @@ jobs:
         shell: pwsh
         run: pyinstaller desktop/NEXVARY-RealEstate-API.spec --noconfirm --clean
 
+      - name: Build vendor license manager (key not included)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: pyinstaller --noconfirm --clean --onefile --windowed --name White-Label-License-Manager tools/license_manager.py
+
       - name: Stage Qt native runtime
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           cmake --install build-qt --config Release --prefix native-dist
-          $exe = Resolve-Path "native-dist/bin/fg_machines_realestate.exe"
+          $exe = Resolve-Path "native-dist/bin/real_estate_business_os.exe"
           windeployqt --release --qmldir apps/desktop-qt/qml $exe
-          Copy-Item "dist/FG-Machines-RealEstate-Service.exe" "native-dist/bin/FG-Machines-RealEstate-Service.exe" -Force
+          Copy-Item "dist/Real-Estate-Business-Service.exe" "native-dist/bin/Real-Estate-Business-Service.exe" -Force
 
       - name: Smoke-test packaged API sidecar
         if: runner.os == 'Windows'
@@ -90,7 +95,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path native-dist/smoke | Out-Null
           $env:NEXVARY_SIDECAR_LOG = (Resolve-Path "native-dist/smoke").Path + "\sidecar-standalone.log"
-          $api = Start-Process -FilePath "native-dist/bin/FG-Machines-RealEstate-Service.exe" -ArgumentList "--port","8765" -PassThru
+          $api = Start-Process -FilePath "native-dist/bin/Real-Estate-Business-Service.exe" -ArgumentList "--port","8765" -PassThru
           try {
             $ready = $false
             for ($i = 0; $i -lt 60; $i++) {
@@ -105,9 +110,9 @@ jobs:
               throw "Packaged API sidecar did not become healthy"
             }
 
-            $setup = Invoke-RestMethod "http://127.0.0.1:8765/api/v1/setup/status" -TimeoutSec 3
-            if ($null -eq $setup.needs_setup) {
-              throw "Packaged API did not return first-run setup status"
+            $license = Invoke-RestMethod "http://127.0.0.1:8765/api/v1/license/status" -TimeoutSec 3
+            if ([string]::IsNullOrWhiteSpace($license.machine_code)) {
+              throw "Packaged API did not return a machine license code"
             }
           }
           finally {
@@ -124,7 +129,7 @@ jobs:
           $env:QT_QPA_PLATFORM = "minimal"
           $env:QT_QUICK_BACKEND = "software"
 
-          & "native-dist/bin/fg_machines_realestate.exe" --language ar --width 1600 --height 900 --smoke-test
+          & "native-dist/bin/real_estate_business_os.exe" --language ar --width 1600 --height 900 --smoke-test
           if ($LASTEXITCODE -ne 0) {
             if (Test-Path $env:NEXVARY_SIDECAR_LOG) {
               Write-Host "===== Auto sidecar log ====="
@@ -154,7 +159,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $installer = Resolve-Path "native-installer\FG-Machines-Real-Estate-OS-v2.0.2-Windows-Setup.exe"
+          $installer = Resolve-Path "native-installer\Real-Estate-Business-OS-v2.1.0-Windows-Setup.exe"
           $installDir = Join-Path $PWD "native-installed"
           New-Item -ItemType Directory -Force -Path $installDir | Out-Null
 
@@ -169,8 +174,8 @@ jobs:
             throw "Native release installer failed with exit code $($installProcess.ExitCode)"
           }
 
-          $client = Join-Path $installDir "fg_machines_realestate.exe"
-          $sidecar = Join-Path $installDir "FG-Machines-RealEstate-Service.exe"
+          $client = Join-Path $installDir "real_estate_business_os.exe"
+          $sidecar = Join-Path $installDir "Real-Estate-Business-Service.exe"
           if (-not (Test-Path $client)) { throw "Installed Qt client is missing" }
           if (-not (Test-Path $sidecar)) { throw "Installed API sidecar is missing" }
 
@@ -192,7 +197,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $file = Get-ChildItem "native-installer\FG-Machines-Real-Estate-OS-v2.0.2-Windows-Setup.exe"
+          $file = Get-ChildItem "native-installer\Real-Estate-Business-OS-v2.1.0-Windows-Setup.exe"
           $hash = (Get-FileHash $file.FullName -Algorithm SHA256).Hash.ToLower()
           "$hash  $($file.Name)" | Out-File -Encoding ascii "native-installer\SHA256.txt"
           Get-Content "native-installer\SHA256.txt"
@@ -201,10 +206,11 @@ jobs:
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
         with:
-          name: FG-Machines-Real-Estate-OS-v2.0.2-Windows
+          name: Real-Estate-Business-OS-v2.1.0-Windows
           path: |
-            native-installer/FG-Machines-Real-Estate-OS-v2.0.2-Windows-Setup.exe
+            native-installer/Real-Estate-Business-OS-v2.1.0-Windows-Setup.exe
             native-installer/SHA256.txt
+            dist/White-Label-License-Manager.exe
             native-dist/smoke/*.log
             native-installer/install-smoke/*.log
           if-no-files-found: error
@@ -215,18 +221,19 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $tag = "v2.0.2"
+          $tag = "v2.1.0"
           gh release view $tag --repo "${{ github.repository }}" *> $null
           if ($LASTEXITCODE -ne 0) {
             gh release create $tag `
               --repo "${{ github.repository }}" `
               --target "${{ github.sha }}" `
-              --title "FG Machines Real Estate OS v2.0.2" `
-              --notes "White-label Windows release: FG Machines identity, complete live language switching, editable social links, and redesigned company page."
+              --title "Real Estate Business OS v2.1.0" `
+              --notes "Neutral white-label Windows release with signed licensing, eight languages, editable company identity, metallic UI, legal agreement and complete business workspace."
           }
           gh release upload $tag `
-            "native-installer\FG-Machines-Real-Estate-OS-v2.0.2-Windows-Setup.exe" `
+            "native-installer\Real-Estate-Business-OS-v2.1.0-Windows-Setup.exe" `
             "native-installer\SHA256.txt" `
+            "dist\White-Label-License-Manager.exe" `
             --repo "${{ github.repository }}" `
             --clobber
 
@@ -238,7 +245,7 @@ jobs:
           QT_QUICK_BACKEND: software
         run: |
           mkdir -p build-qt/ui-gate
-          ./build-qt/fg_machines_realestate \
+          ./build-qt/real_estate_business_os \
             --language ar \
             --width 1600 \
             --height 900 \
@@ -253,13 +260,30 @@ jobs:
           QT_QPA_PLATFORM: offscreen
           QT_QUICK_BACKEND: software
         run: |
-          ./build-qt/fg_machines_realestate \
+          ./build-qt/real_estate_business_os \
             --language en \
             --width 1600 \
             --height 900 \
             --screenshot build-qt/ui-gate/native-en-1600x900.png 2>&1 | tee build-qt/ui-gate/native-en.log
           test -s build-qt/ui-gate/native-en-1600x900.png
           ! grep -E "QML .*Cannot open|QQmlApplicationEngine failed|module .* is not installed" build-qt/ui-gate/native-en.log
+
+      - name: QML Turkish Russian German Italian Spanish French gates
+        if: runner.os == 'Linux'
+        shell: bash
+        env:
+          QT_QPA_PLATFORM: offscreen
+          QT_QUICK_BACKEND: software
+        run: |
+          for language in tr ru de it es fr; do
+            ./build-qt/real_estate_business_os \
+              --language "$language" \
+              --width 1600 \
+              --height 900 \
+              --screenshot "build-qt/ui-gate/native-${language}-1600x900.png" 2>&1 | tee "build-qt/ui-gate/native-${language}.log"
+            test -s "build-qt/ui-gate/native-${language}-1600x900.png"
+            ! grep -E "QML .*Cannot open|QQmlApplicationEngine failed|module .* is not installed" "build-qt/ui-gate/native-${language}.log"
+          done
 
       - name: Upload native UI gate
         if: runner.os == 'Linux'

@@ -6,6 +6,13 @@ import "Theme.js" as Theme
 Item {
     id: root
 
+    Component.onCompleted: {
+        if (apiClient.licenseInfo.company)
+            companyName.text = apiClient.licenseInfo.company
+        if (apiClient.licenseInfo.company)
+            brandName.text = apiClient.licenseInfo.company
+    }
+
     Flickable {
         anchors.fill: parent
         contentWidth: width
@@ -44,7 +51,7 @@ Item {
                         Image {
                             anchors.fill: parent
                             anchors.margins: 7
-                            source: "qrc:/qt/qml/Nexvary/RealEstate/assets/nexvary-mark.svg"
+                            source: "qrc:/qt/qml/Business/RealEstate/assets/property-mark.svg"
                             fillMode: Image.PreserveAspectFit
                         }
                     }
@@ -57,7 +64,7 @@ Item {
                             Layout.fillWidth: true
                             text: "FIRST OWNER SETUP"
                             color: Theme.electricCyan
-                            font.pixelSize: 10
+                            font.pixelSize: 11
                             font.bold: true
                             font.letterSpacing: 1.5
                             horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
@@ -65,9 +72,9 @@ Item {
 
                         Text {
                             Layout.fillWidth: true
-                            text: appState.rtl ? "إعداد الشركة لأول مرة" : "Set up your company"
+                            text: appState.localize(appState.language, "إعداد الشركة لأول مرة", "Set up your company")
                             color: Theme.platinum
-                            font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"
+                            font.family: appState.localize(appState.language, "Noto Kufi Arabic", "Segoe UI")
                             font.pixelSize: 27
                             font.bold: true
                             horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
@@ -75,9 +82,7 @@ Item {
 
                         Text {
                             Layout.fillWidth: true
-                            text: appState.rtl
-                                ? "أنشئ مساحة الشركة وحساب المالك الأول. هذه الخطوة تظهر مرة واحدة فقط."
-                                : "Create the company workspace and first owner account. This appears only once."
+                            text: appState.localize(appState.language, "أنشئ مساحة الشركة وحساب المالك الأول. هذه الخطوة تظهر مرة واحدة فقط.", "Create the company workspace and first owner account. This appears only once.")
                             color: Theme.muted
                             font.pixelSize: 12
                             wrapMode: Text.WordWrap
@@ -102,7 +107,7 @@ Item {
                         id: companyName
                         Layout.fillWidth: true
                         Layout.preferredHeight: 48
-                        placeholderText: appState.rtl ? "اسم الشركة *" : "Company name *"
+                        placeholderText: appState.localize(appState.language, "اسم الشركة *", "Company name *")
                         horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
                     }
 
@@ -110,7 +115,7 @@ Item {
                         id: companySlug
                         Layout.fillWidth: true
                         Layout.preferredHeight: 48
-                        placeholderText: appState.rtl ? "معرّف الشركة بالإنجليزية *" : "Company identifier *"
+                        placeholderText: appState.localize(appState.language, "معرّف الشركة بالإنجليزية *", "Company identifier *")
                         validator: RegularExpressionValidator { regularExpression: /[a-z0-9][a-z0-9-]{1,98}[a-z0-9]/ }
                         horizontalAlignment: Text.AlignLeft
                         inputMethodHints: Qt.ImhLowercaseOnly | Qt.ImhNoPredictiveText
@@ -120,7 +125,7 @@ Item {
                         id: brandName
                         Layout.fillWidth: true
                         Layout.preferredHeight: 48
-                        placeholderText: appState.rtl ? "الاسم التجاري" : "Brand name"
+                        placeholderText: appState.localize(appState.language, "الاسم التجاري", "Brand name")
                         horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
                     }
 
@@ -128,7 +133,7 @@ Item {
                         id: ownerName
                         Layout.fillWidth: true
                         Layout.preferredHeight: 48
-                        placeholderText: appState.rtl ? "اسم المالك *" : "Owner name *"
+                        placeholderText: appState.localize(appState.language, "اسم المالك *", "Owner name *")
                         horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
                     }
 
@@ -136,7 +141,7 @@ Item {
                         id: ownerEmail
                         Layout.fillWidth: true
                         Layout.preferredHeight: 48
-                        placeholderText: appState.rtl ? "بريد المالك *" : "Owner email *"
+                        placeholderText: appState.localize(appState.language, "بريد المالك *", "Owner email *")
                         inputMethodHints: Qt.ImhEmailCharactersOnly
                         horizontalAlignment: Text.AlignLeft
                     }
@@ -145,7 +150,7 @@ Item {
                         id: ownerPassword
                         Layout.fillWidth: true
                         Layout.preferredHeight: 48
-                        placeholderText: appState.rtl ? "كلمة مرور المالك — 10 أحرف على الأقل *" : "Owner password — minimum 10 characters *"
+                        placeholderText: appState.localize(appState.language, "كلمة مرور المالك — 10 أحرف على الأقل *", "Owner password — minimum 10 characters *")
                         echoMode: TextInput.Password
                         horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
                     }
@@ -154,7 +159,7 @@ Item {
                         id: confirmPassword
                         Layout.fillWidth: true
                         Layout.preferredHeight: 48
-                        placeholderText: appState.rtl ? "تأكيد كلمة المرور *" : "Confirm password *"
+                        placeholderText: appState.localize(appState.language, "تأكيد كلمة المرور *", "Confirm password *")
                         echoMode: TextInput.Password
                         horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
                     }
@@ -184,9 +189,7 @@ Item {
 
                         Text {
                             Layout.fillWidth: true
-                            text: appState.rtl
-                                ? "سيتم إنشاء قاعدة البيانات المحلية الآمنة، الشركة، حساب المالك، والصلاحيات الأساسية تلقائيًا."
-                                : "The local workspace, company, owner account and base permissions will be initialized automatically."
+                            text: appState.localize(appState.language, "سيتم إنشاء قاعدة البيانات المحلية الآمنة، الشركة، حساب المالك، والصلاحيات الأساسية تلقائيًا.", "The local workspace, company, owner account and base permissions will be initialized automatically.")
                             color: Theme.silver
                             font.pixelSize: 11
                             wrapMode: Text.WordWrap
@@ -198,7 +201,7 @@ Item {
                 Text {
                     visible: ownerPassword.text.length > 0 && ownerPassword.text !== confirmPassword.text
                     Layout.fillWidth: true
-                    text: appState.rtl ? "كلمتا المرور غير متطابقتين." : "Passwords do not match."
+                    text: appState.localize(appState.language, "كلمتا المرور غير متطابقتين.", "Passwords do not match.")
                     color: Theme.gold
                     font.pixelSize: 11
                     horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
@@ -227,7 +230,7 @@ Item {
                         && ownerPassword.text === confirmPassword.text
                     text: apiClient.busy
                         ? "…"
-                        : (appState.rtl ? "إنشاء الشركة والدخول" : "Create company and enter")
+                        : (appState.localize(appState.language, "إنشاء الشركة والدخول", "Create company and enter"))
                     onClicked: apiClient.bootstrapFirstOwner(
                         companyName.text,
                         companySlug.text,
@@ -264,7 +267,7 @@ Item {
                     Text {
                         text: "LOCAL API · " + apiClient.healthStatus
                         color: Theme.muted
-                        font.pixelSize: 10
+                        font.pixelSize: 11
                     }
                 }
             }

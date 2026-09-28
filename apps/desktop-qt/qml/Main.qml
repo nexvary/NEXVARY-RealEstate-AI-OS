@@ -32,6 +32,7 @@ ApplicationWindow {
         {page:"growth", key:"growth", icon:"growth"},
         {page:"automation", key:"automation", icon:"automation"},
         {page:"about", key:"about", icon:"about"},
+        {page:"legal", key:"legal", icon:"about"},
         {page:"company", key:"company", icon:"company"}
     ]
 
@@ -75,7 +76,7 @@ ApplicationWindow {
                         Image {
                             anchors.fill: parent
                             anchors.margins: 5
-                            source: "qrc:/qt/qml/Nexvary/RealEstate/assets/nexvary-mark.svg"
+                            source: "qrc:/qt/qml/Business/RealEstate/assets/property-mark.svg"
                             fillMode: Image.PreserveAspectFit
                         }
                     }
@@ -85,7 +86,7 @@ ApplicationWindow {
                         spacing: 2
                         Text {
                             Layout.fillWidth: true
-                            text: apiClient.tenantSettings.brand_name || apiClient.tenantSettings.name || "FG Machines"
+                            text: apiClient.tenantSettings.brand_name || apiClient.tenantSettings.name || "YOUR COMPANY"
                             color: Theme.platinum
                             font.pixelSize: 19
                             font.bold: true
@@ -94,18 +95,18 @@ ApplicationWindow {
                         }
                         Text {
                             Layout.fillWidth: true
-                            text: appState.rtl ? "نظام إدارة العقارات" : "REAL ESTATE OS"
+                            text: appState.localize(appState.language, "نظام إدارة الأعمال العقارية", "REAL ESTATE BUSINESS OS")
                             color: Theme.electricCyan
-                            font.pixelSize: 9
+                            font.pixelSize: 11
                             font.bold: true
                             font.letterSpacing: 1.1
                             horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
                         }
                         Text {
                             Layout.fillWidth: true
-                            text: appState.rtl ? "إدارة · مبيعات · نمو" : "OPERATIONS · SALES · GROWTH"
+                            text: appState.localize(appState.language, "إدارة · مبيعات · نمو", "OPERATIONS · SALES · GROWTH")
                             color: Theme.gold
-                            font.pixelSize: 9
+                            font.pixelSize: 11
                             horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
                         }
                     }
@@ -167,7 +168,7 @@ ApplicationWindow {
                             Text {
                                 text: apiClient.loggedIn ? apiClient.userRole : apiClient.healthStatus
                                 color: Theme.muted
-                                font.pixelSize: 9
+                                font.pixelSize: 11
                             }
                         }
 
@@ -206,7 +207,7 @@ ApplicationWindow {
 
                     Button {
                         visible: apiClient.loggedIn && appState.currentPage !== "dashboard"
-                        text: (appState.rtl ? "→ " : "← ") + (appState.language, appState.t("back"))
+                        text: (appState.localize(appState.language, "→ ", "← ")) + (appState.language, appState.t("back"))
                         onClicked: appState.goBack()
                     }
 
@@ -244,15 +245,17 @@ ApplicationWindow {
                                 Text {
                                     text: appState.currentDate
                                     color: Theme.muted
-                                    font.pixelSize: 9
+                                    font.pixelSize: 11
                                 }
                             }
                         }
                     }
 
-                    Button {
-                        text: appState.language === "ar" ? "EN" : "AR"
-                        onClicked: appState.language = appState.language === "ar" ? "en" : "ar"
+                    ComboBox {
+                        Layout.preferredWidth: 168
+                        model: appState.languageNames
+                        currentIndex: Math.max(0, appState.languageCodes.indexOf(appState.language))
+                        onActivated: appState.language = appState.languageCodes[currentIndex]
                     }
                 }
             }
@@ -264,7 +267,11 @@ ApplicationWindow {
                 Loader {
                     anchors.fill: parent
                     anchors.margins: 22
-                    sourceComponent: !apiClient.loggedIn
+                    sourceComponent: !apiClient.licenseKnown
+                        ? startupComponent
+                        : !apiClient.licenseValid
+                            ? licenseComponent
+                    : !apiClient.loggedIn
                         ? (!apiClient.setupKnown
                             ? startupComponent
                             : apiClient.needsSetup
@@ -302,6 +309,8 @@ ApplicationWindow {
                                                                                 ? aiComponent
                                                                                 : appState.currentPage === "about"
                                                                                     ? aboutComponent
+                                                                                    : appState.currentPage === "legal"
+                                                                                        ? legalComponent
                                                                                     : appState.currentPage === "settings"
                                                                                         ? settingsComponent
                                                                                         : appState.currentPage === "company"
@@ -310,6 +319,11 @@ ApplicationWindow {
                 }
             }
         }
+    }
+
+    Component {
+        id: licenseComponent
+        LicensePage {}
     }
 
     Component {
@@ -340,9 +354,9 @@ ApplicationWindow {
 
                 Text {
                     Layout.fillWidth: true
-                    text: appState.rtl ? "جاري تجهيز مساحة العمل المحلية" : "Preparing the local workspace"
+                    text: appState.localize(appState.language, "جاري تجهيز مساحة العمل المحلية", "Preparing the local workspace")
                     color: Theme.platinum
-                    font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"
+                    font.family: appState.localize(appState.language, "Noto Kufi Arabic", "Segoe UI")
                     font.pixelSize: 22
                     font.bold: true
                     horizontalAlignment: Text.AlignHCenter
@@ -350,9 +364,7 @@ ApplicationWindow {
 
                 Text {
                     Layout.fillWidth: true
-                    text: appState.rtl
-                        ? "يتم تشغيل الخدمة المحلية والتحقق من حالة الإعداد. لا تحتاج إلى أي أوامر يدوية."
-                        : "Starting the local service and checking setup state. No manual commands are required."
+                    text: appState.localize(appState.language, "يتم تشغيل الخدمة المحلية والتحقق من حالة الإعداد. لا تحتاج إلى أي أوامر يدوية.", "Starting the local service and checking setup state. No manual commands are required.")
                     color: Theme.muted
                     font.pixelSize: 12
                     wrapMode: Text.WordWrap
@@ -363,7 +375,7 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     text: "API · " + apiClient.healthStatus
                     color: apiClient.healthStatus === "ok" ? Theme.emerald : Theme.gold
-                    font.pixelSize: 10
+                    font.pixelSize: 11
                     horizontalAlignment: Text.AlignHCenter
                 }
             }
@@ -461,6 +473,11 @@ ApplicationWindow {
     }
 
     Component {
+        id: legalComponent
+        LegalPage {}
+    }
+
+    Component {
         id: settingsComponent
         SettingsPage {}
     }
@@ -497,7 +514,7 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     text: (appState.language, appState.t("nativeMigration")) + " · " + (appState.language, appState.t(appState.currentPage))
                     color: Theme.platinum
-                    font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"
+                    font.family: appState.localize(appState.language, "Noto Kufi Arabic", "Segoe UI")
                     font.pixelSize: 26
                     font.bold: true
                     horizontalAlignment: Text.AlignHCenter

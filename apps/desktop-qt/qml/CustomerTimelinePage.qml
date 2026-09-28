@@ -21,7 +21,7 @@ Item {
                 Text {
                     text: (appState.language, appState.t("customerTimeline"))
                     color: Theme.platinum
-                    font.family: appState.rtl ? "Noto Kufi Arabic" : "Segoe UI"
+                    font.family: appState.localize(appState.language, "Noto Kufi Arabic", "Segoe UI")
                     font.pixelSize: 29
                     font.bold: true
                 }
@@ -114,16 +114,16 @@ Item {
                                 Layout.fillWidth: true
                                 text: (modelData.kind || "") + (modelData.channel ? " · " + modelData.channel : "")
                                 color: Theme.muted
-                                font.pixelSize: 9
+                                font.pixelSize: 11
                                 horizontalAlignment: appState.rtl ? Text.AlignRight : Text.AlignLeft
                                 elide: Text.ElideRight
                             }
                         }
 
                         Text {
-                            text: modelData.occurred_at ? new Date(modelData.occurred_at).toLocaleString(Qt.locale(appState.rtl ? "ar_EG" : "en_GB"), "dd MMM yyyy  HH:mm") : ""
+                            text: modelData.occurred_at ? new Date(modelData.occurred_at).toLocaleString(Qt.locale(appState.localize(appState.language, "ar_EG", "en_GB")), "dd MMM yyyy  HH:mm") : ""
                             color: Theme.silver
-                            font.pixelSize: 9
+                            font.pixelSize: 11
                         }
                     }
                 }
